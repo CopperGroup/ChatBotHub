@@ -292,7 +292,7 @@ export function ChatView({
     setTimeout(scrollToBottom, 50)
 
     try {
-      const res = await authFetch(`http://192.168.32.1:3001/api/chats/${chat._id}`, {
+      const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chats/${chat._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: JSON.stringify([...JSON.parse(chat.messages || "[]"), newMessage]) }),

@@ -41,7 +41,7 @@ export function CreateWebsiteForm({ userId }: CreateWebsiteFormProps) {
       Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 
     try {
-      const res = await authFetch("http://192.168.32.1:3001/api/websites", {
+      const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -66,7 +66,7 @@ export function CreateWebsiteForm({ userId }: CreateWebsiteFormProps) {
         setError(data.message || "Failed to create website.")
         toast.error("Failed to create website. Please try again.")
       } else {
-        const snippet = `<script src="http://192.168.32.1:3001/widget/chatbot-widget.js?chatbotCode=${generatedChatbotCode}"></script>`
+        const snippet = `<script src="${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${generatedChatbotCode}"></script>`
         setChatbotCodeSnippet(snippet)
         toast.success("Website created successfully! Your chatbot is ready to go.")
 

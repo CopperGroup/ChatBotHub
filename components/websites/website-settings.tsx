@@ -159,7 +159,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
         disallowedPaths: parsePathsInput(disallowedPathsText),
       }
 
-      const res = await authFetch(`http://192.168.32.1:3001/api/websites/${website._id}`, {
+      const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

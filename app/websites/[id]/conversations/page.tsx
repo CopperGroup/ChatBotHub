@@ -48,7 +48,7 @@ export default function ConversationsPage() {
     if (!user) return
 
     try {
-      const res = await authFetch(`http://192.168.32.1:3001/api/chats/owner/${user._id}/${website._id}`)
+      const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chats/owner/${user._id}/${website._id}`)
       const data = await res.json()
       if (res.ok) {
         const sortedChats = data.sort(

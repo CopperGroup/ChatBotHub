@@ -185,7 +185,7 @@ export function StaffDashboard() {
 
   const loadWebsiteData = async (websiteId: string) => {
     try {
-      const res = await authFetch(`http://192.168.32.1:3001/api/websites/${websiteId}`)
+      const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${websiteId}`)
       if (res.ok) {
         const websiteData = await res.json()
         setWebsite(websiteData)
@@ -201,7 +201,7 @@ export function StaffDashboard() {
 
   const loadChats = async (staffId: string, websiteId: string, token: string) => {
     try {
-      const res = await authFetch(`http://192.168.32.1:3001/api/chats/staff/${staffId}/${websiteId}`, {
+      const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chats/staff/${staffId}/${websiteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

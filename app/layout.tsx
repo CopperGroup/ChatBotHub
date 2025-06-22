@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         {children}
       <Toaster position="top-right" richColors expand={true} duration={4000} />
-      {/* <script src="https://2f39-217-173-198-202.ngrok-free.app/widget/chatbot-widget.js?chatbotCode=73ctl78r4st6ccjg4o3e1o"></script>       */}
+      <script src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=73ctl78r4st6ccjg4o3e1o"></script>
       </body>
     </html>
   );

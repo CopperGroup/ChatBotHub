@@ -128,7 +128,7 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
             currentSocketInstance = null;
         }
         console.log("useRealTime: Creating new Socket.IO instance for connection.");
-        currentSocketInstance = io("http://192.168.32.1:3001", {
+        currentSocketInstance = io(`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}`, {
             query: queryParams,
             reconnection: false, // We handle reconnection logic manually
         });

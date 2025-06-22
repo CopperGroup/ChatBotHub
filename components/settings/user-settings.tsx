@@ -74,7 +74,7 @@ export function UserSettings({ user }: UserSettingsProps) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const response = await authFetch(`http://192.168.32.1:3001/api/users/${user._id.toString()}/preferences`, {
+      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${user._id.toString()}/preferences`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

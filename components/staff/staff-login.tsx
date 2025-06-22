@@ -23,7 +23,7 @@ export function StaffLogin() {
     setError("")
 
     try {
-      const res = await fetch("http://192.168.32.1:3001/api/staff/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/staff/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

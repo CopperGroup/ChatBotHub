@@ -64,7 +64,7 @@ export default function PricingPage() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await authFetch('https://2f39-217-173-198-202.ngrok-free.app/api/plans', {
+        const response = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/plans`, {
             method: "GET"
         })
         if (response.ok) {
@@ -99,7 +99,7 @@ export default function PricingPage() {
     setUpgrading(planId)
     try {
       // Use the websiteId from the search parameters in the endpoint
-      const response = await authFetch(`http://192.168.32.1:3001/api/websites/${websiteId}/change-plan`, {
+      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${websiteId}/change-plan`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
