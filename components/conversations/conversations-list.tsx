@@ -21,6 +21,7 @@ interface ConversationsListProps {
   isVisible?: boolean // New prop for mobile visibility
 }
 
+const TRUNCATE_LENGTH=27
 export function ConversationsList({
   chats,
   selectedChat,
@@ -206,7 +207,7 @@ export function ConversationsList({
 
       {/* Chat List */}
       <ScrollArea className="flex-1 h-0">
-        <div className="h-full">
+        <div className="md:max-w-[320px]">
           {sortedAndFilteredChats.length === 0 ? (
             <div className="p-8 text-center">
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -231,13 +232,13 @@ export function ConversationsList({
                       : "When visitors start chatting, conversations will appear here."}
               </p>
               {/* Debug info */}
-              <p className="text-xs text-slate-400 mt-4">
+              {/* <p className="text-xs text-slate-400 mt-4">
                 Debug: {chats.length} total chats, {sortedAndFilteredChats.length} filtered
                 {isStaff && `, activeTab: ${activeTab}, staffId: ${staffInfo?.id}`}
-              </p>
+              </p> */}
             </div>
           ) : (
-            <div className="p-3 space-y-2">
+            <div className="p-3 space-y-2 max-w-full">
               {sortedAndFilteredChats.map((chat) => {
                 const messages = (() => {
                   try {
@@ -297,7 +298,7 @@ export function ConversationsList({
                         {lastUserMessage && (
                           <div className="mb-3">
                             <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                              <span className="font-medium text-slate-700">Latest:</span> {lastUserMessage.text}
+                              <span className="font-medium text-slate-700">Latest:</span> {lastUserMessage.text.slice(0, TRUNCATE_LENGTH)}{lastUserMessage.text.length > TRUNCATE_LENGTH && "..." }
                             </p>
                           </div>
                         )}

@@ -80,7 +80,7 @@ export function Message({ message, chatName, chatEmail, isStaff, staffInfo, dash
       </Avatar>
     )
   } else {
-    messageBubbleClass = `bg-white text-slate-900 border border-slate-200 shadow-sm`
+    messageBubbleClass = `bg-white text-slate-900 border border-slate-200`
     messageMetaColor = `text-slate-500`
 
     if (message.sender === "bot") {
@@ -170,8 +170,8 @@ export function Message({ message, chatName, chatEmail, isStaff, staffInfo, dash
       >
         {avatarComponent}
 
-        <div className="space-y-1">
-          <div className={`px-3 md:px-4 py-2 md:py-3 rounded-2xl relative ${messageBubbleClass}`}>
+        <div className="space-y-1 max-w-[100%]">
+          <div className={`px-3 md:px-4 py-2 md:py-3 rounded-2xl relative shadow-sm  ${messageBubbleClass}`}>
             {isIncomingMessage && (message.sender === "bot" || message.sender === "ai") && (
               <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-current/20">
                 {message.sender === "bot" ? (

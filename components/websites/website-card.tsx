@@ -140,14 +140,14 @@ export function WebsiteCard({ website }: WebsiteCardProps) {
           <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Chatbot Code</Label>
           <div className="flex items-center space-x-2">
             <code className="flex-1 bg-slate-50 px-3 py-2 rounded-lg text-xs font-mono text-slate-700 border border-slate-200 truncate">
-              {website.chatbotCode}
+              {`<script src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=${website.chatbotCode}"></script>`}
             </code>
             <Button
               size="sm"
               variant="outline"
               onClick={(e) => {
                 e.stopPropagation()
-                copyToClipboard(website.chatbotCode)
+                copyToClipboard(`<script src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=${website.chatbotCode}"></script>`)
               }}
               className="border-slate-200 text-slate-600 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 rounded-lg flex-shrink-0"
             >
