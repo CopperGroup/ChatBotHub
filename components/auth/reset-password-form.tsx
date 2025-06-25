@@ -12,9 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Zap, Loader2, Lock, Check } from "lucide-react"
 import { toast } from "sonner"
 
-export function ResetPasswordForm() {
-  const searchParams = useSearchParams()
-  const token = searchParams.get('token') // Get token from URL query params
+export function ResetPasswordForm({ token }: { token: string }) {
 
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
