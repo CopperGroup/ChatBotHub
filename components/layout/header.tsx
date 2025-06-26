@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Bell, Settings, Wifi, WifiOff, Loader2, Menu } from "lucide-react"
 import { useState } from "react"
+import Link from "next/link"
 
 interface HeaderProps {
   onToggleSidebar: () => void
@@ -163,13 +164,15 @@ export function Header({
             )}
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full"
-          >
-            <Settings className="w-4 h-4" />
-          </Button>
+          <Link href="/settings">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>          
+          </Link>
         </div>
       </div>
 

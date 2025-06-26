@@ -5,13 +5,14 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { WebsiteList } from "@/components/websites/website-list"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
+import { LoadingSpinner } from "@/components/ui/loading"
 
 export default function WebsitesPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
   if (loading) {
-    return <div>Loading...</div>
+    return <LoadingSpinner/>
   }
 
   if (!user) {
@@ -29,7 +30,7 @@ export default function WebsitesPage() {
           </div>
           <Button
             onClick={() => router.push("/websites/new")}
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Website

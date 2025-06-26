@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { WebsiteDetails } from "@/components/websites/website-details"
 import { WebsiteSettings } from "@/components/websites/website-settings"
 import { useAuth } from "@/hooks/use-auth"
+import { LoadingSpinner } from "@/components/ui/loading"
 
 export default function WebsitePage() {
   const { user, loading } = useAuth()
@@ -25,7 +26,7 @@ export default function WebsitePage() {
   }, [user, id, router])
 
   if (loading) {
-    return <div>Loading...</div>
+    return <LoadingSpinner/>
   }
 
   if (!user) {

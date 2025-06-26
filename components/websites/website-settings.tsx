@@ -16,6 +16,16 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { authFetch } from "@/lib/authFetch"
 import Link from "next/link"
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select" // Assuming you have a ShadCN Select component
+
+import { languages } from "@/constants/languages" // Import the languages object
+
 interface Website {
   _id: string
   name: string
@@ -43,6 +53,7 @@ interface Website {
     allowAIResponses: boolean
     allowedPaths?: string[]
     disallowedPaths?: string[]
+    language?: string; // Add language to preferences
   }
   createdAt: string
   updatedAt: string
@@ -104,6 +115,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
   const [allowAIResponses, setAllowAIResponses] = useState(website?.preferences?.allowAIResponses || false)
   const [gradient1, setGradient1] = useState(website?.preferences?.colors?.gradient1 || "#10b981")
   const [gradient2, setGradient2] = useState(website?.preferences?.colors?.gradient2 || "#059669")
+  const [selectedLanguage, setSelectedLanguage] = useState(website.preferences?.language || "en") // New state for language
 
   // States for paths
   const [allowedPathsText, setAllowedPathsText] = useState(website.preferences?.allowedPaths?.join("\n") || "")
@@ -127,6 +139,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     setAllowAIResponses(website.preferences?.allowAIResponses || false)
     setGradient1(website.preferences?.colors?.gradient1 || "#10b981")
     setGradient2(website.preferences?.colors?.gradient2 || "#059669")
+    setSelectedLanguage(website.preferences?.language || "en") // Sync language
     setAllowedPathsText(website.preferences?.allowedPaths?.join("\n") || "")
     setDisallowedPathsText(website.preferences?.disallowedPaths?.join("\n") || "")
 
@@ -157,6 +170,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
         },
         allowedPaths: parsePathsInput(allowedPathsText),
         disallowedPaths: parsePathsInput(disallowedPathsText),
+        language: selectedLanguage, // Pass the selected language code
       }
 
       const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`, {
@@ -194,6 +208,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     setAllowAIResponses(false)
     setGradient1("#10b981")
     setGradient2("#059669")
+    setSelectedLanguage("en") // Reset language to default
     setAllowedPathsText("")
     setDisallowedPathsText("")
     toast.info("Chatbot settings reset to defaults")
@@ -358,6 +373,28 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     </div>
                   </div>
                   <p className="text-xs text-slate-500">Credits are used for AI responses</p>
+                </div>
+
+                {/* Language Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="language" className="text-slate-700 font-medium">
+                    Chatbot Language
+                  </Label>
+                  <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
+                    <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl">
+                      <SelectValue placeholder="Select a language" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200 rounded-xl shadow-lg">
+                      {Object.entries(languages).map(([name, code]) => (
+                        <SelectItem key={code} value={code}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500">
+                    Set the default language for your chatbot.
+                  </p>
                 </div>
               </div>
             </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import { LoadingSpinner } from "@/components/ui/loading"
 import { CreateWebsiteForm } from "@/components/websites/create-website-form"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
@@ -10,7 +11,7 @@ export default function NewWebsitePage() {
   const router = useRouter()
 
   if (loading) {
-    return <div>Loading...</div>
+    return <LoadingSpinner/>
   }
 
   if (!user) {

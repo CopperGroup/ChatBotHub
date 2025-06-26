@@ -65,9 +65,6 @@ export function useAuth() {
         const freshUserData = await res.json();
         setUser(freshUserData);
         setToken(currentToken); // Confirm token is still active
-        // No longer store full userData in localStorage, always fetch fresh when needed.
-        // We only store token and userId now.
-        // localStorage.setItem("userData", JSON.stringify(freshUserData)); // REMOVED THIS LINE
         console.log("useAuth: User data successfully fetched/re-verified from server.");
         return true; // Refresh successful
       } else if (res.status === 401 || res.status === 403) {

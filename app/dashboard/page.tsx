@@ -371,13 +371,15 @@ export default function DashboardPage() {
                 <Send className="w-4 h-4 mr-3" />
                 Setup Telegram Bot
               </Button>
-              <Button
-                variant="outline"
-                className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 justify-start rounded-xl"
-              >
-                <Settings className="w-4 h-4 mr-3" />
-                Dashboard Settings
-              </Button>
+              <Link href="/settings">
+                <Button
+                  variant="outline"
+                  className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 justify-start rounded-xl"
+                >
+                  <Settings className="w-4 h-4 mr-3" />
+                  Dashboard Settings
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
