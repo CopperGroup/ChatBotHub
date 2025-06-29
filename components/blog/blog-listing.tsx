@@ -24,7 +24,7 @@ const blogPosts = [
     title: "Never Miss a Customer Message: Telegram Bot Notifications",
     excerpt:
       "Get instant Telegram notifications whenever customers send messages to your chatbot. Stay connected and respond faster than ever.",
-    image: "/placeholder.svg?height=300&width=600",
+    image: "/assets/telegram-bot-article.webp",
     category: "Integration",
     date: "December 20, 2024",
     readTime: "6 min read",
