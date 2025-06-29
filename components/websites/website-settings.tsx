@@ -8,7 +8,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Settings, Palette, Zap, Brain, Crown, Save, RefreshCw, AlertTriangle, Waypoints, Loader2 } from "lucide-react"
+import {
+  Settings,
+  Palette,
+  Zap,
+  Brain,
+  Crown,
+  Save,
+  RefreshCw,
+  AlertTriangle,
+  Waypoints,
+  Loader2,
+  GitBranch,
+  Plus,
+  Edit,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
@@ -16,15 +30,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { authFetch } from "@/lib/authFetch"
 import Link from "next/link"
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select" // Assuming you have a ShadCN Select component
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-import { languages } from "@/constants/languages" // Import the languages object
+import { languages } from "@/constants/languages"
 
 interface Website {
   _id: string
@@ -53,8 +61,9 @@ interface Website {
     allowAIResponses: boolean
     allowedPaths?: string[]
     disallowedPaths?: string[]
-    language?: string; // Add language to preferences
+    language?: string
   }
+  predefinedAnswers: string // JSON string
   createdAt: string
   updatedAt: string
 }
@@ -115,7 +124,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
   const [allowAIResponses, setAllowAIResponses] = useState(website?.preferences?.allowAIResponses || false)
   const [gradient1, setGradient1] = useState(website?.preferences?.colors?.gradient1 || "#10b981")
   const [gradient2, setGradient2] = useState(website?.preferences?.colors?.gradient2 || "#059669")
-  const [selectedLanguage, setSelectedLanguage] = useState(website.preferences?.language || "en") // New state for language
+  const [selectedLanguage, setSelectedLanguage] = useState(website.preferences?.language || "en")
 
   // States for paths
   const [allowedPathsText, setAllowedPathsText] = useState(website.preferences?.allowedPaths?.join("\n") || "")
@@ -130,6 +139,16 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
   const aiEnabledByPlan = website.plan.allowAI
   const currentCredits = website.creditCount
 
+  // Check if predefined workflows exist
+  const hasWorkflows = () => {
+    try {
+      const workflows = JSON.parse(website.predefinedAnswers || "[]")
+      return Array.isArray(workflows) && workflows.length > 0
+    } catch {
+      return false
+    }
+  }
+
   useEffect(() => {
     // Sync internal state with parent website prop changes
     setName(website.name)
@@ -139,7 +158,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     setAllowAIResponses(website.preferences?.allowAIResponses || false)
     setGradient1(website.preferences?.colors?.gradient1 || "#10b981")
     setGradient2(website.preferences?.colors?.gradient2 || "#059669")
-    setSelectedLanguage(website.preferences?.language || "en") // Sync language
+    setSelectedLanguage(website.preferences?.language || "en")
     setAllowedPathsText(website.preferences?.allowedPaths?.join("\n") || "")
     setDisallowedPathsText(website.preferences?.disallowedPaths?.join("\n") || "")
 
@@ -170,7 +189,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
         },
         allowedPaths: parsePathsInput(allowedPathsText),
         disallowedPaths: parsePathsInput(disallowedPathsText),
-        language: selectedLanguage, // Pass the selected language code
+        language: selectedLanguage,
       }
 
       const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`, {
@@ -208,7 +227,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     setAllowAIResponses(false)
     setGradient1("#10b981")
     setGradient2("#059669")
-    setSelectedLanguage("en") // Reset language to default
+    setSelectedLanguage("en")
     setAllowedPathsText("")
     setDisallowedPathsText("")
     toast.info("Chatbot settings reset to defaults")
@@ -235,13 +254,13 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     <p className="text-sm text-slate-600 line-clamp-2">{website.plan.description}</p>
                   </div>
                 </div>
-                <Link href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}>
-                    <Button
-                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl shadow-sm w-full sm:w-auto"
-                    >
+                <Link
+                  href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
+                >
+                  <Button className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl shadow-sm w-full sm:w-auto">
                     <Crown className="w-4 h-4 mr-2" />
                     Change Plan
-                    </Button>
+                  </Button>
                 </Link>
               </div>
             </CardHeader>
@@ -339,6 +358,56 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
 
             <Separator className="bg-slate-100" />
 
+            {/* Pre-defined Responses (Workflows) Section */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <GitBranch className="w-4 h-4 text-blue-600" />
+                <h3 className="text-lg font-semibold text-slate-900">Pre-defined Responses (Workflows)</h3>
+              </div>
+
+              <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <GitBranch className="w-5 h-5 text-blue-600" />
+                      <h4 className="text-slate-900 font-medium">Automated Response Workflows</h4>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      {hasWorkflows()
+                        ? "Configure your automated response workflows to guide users through predefined conversation paths."
+                        : "Create automated response workflows to guide users through predefined conversation paths and collect information efficiently."}
+                    </p>
+                    {hasWorkflows() && <p className="text-xs text-blue-600 mt-1 font-medium">Status: Configured ✓</p>}
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Link href={`/workflows/${website._id}`}>
+                      <Button
+                        className={`${
+                          hasWorkflows()
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                            : "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+                        } text-white rounded-xl shadow-sm`}
+                      >
+                        {hasWorkflows() ? (
+                          <>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Configure
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create
+                          </>
+                        )}
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator className="bg-slate-100" />
+
             {/* Chatbot Basic Configuration */}
             <div className="space-y-6">
               <div className="flex items-center space-x-2 mb-4">
@@ -392,9 +461,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-slate-500">
-                    Set the default language for your chatbot.
-                  </p>
+                  <p className="text-xs text-slate-500">Set the default language for your chatbot.</p>
                 </div>
               </div>
             </div>
@@ -483,7 +550,8 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
                   />
                   <p className="text-xs text-slate-500">
-                    Specify paths where the widget *should NOT* appear. Disallowed paths override allowed paths.
+                    Specify paths where the widget <strong>should NOT</strong> appear. Allowed paths override disallowed
+                    paths.
                   </p>
                 </div>
               </div>

@@ -217,27 +217,30 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
             if (message && message.sender === "user") {
                 newNotification = { id: Date.now(), type: "message", title: `New message in ${chatName}`, description: `${websiteName}: ${message.text.substring(0, 50)}...`, timestamp: new Date(), chatId, websiteName, };
 
-                console.log(user)
-                if(user.preferences) {
-                  console.log(user.preferences)
-                  if(user.preferences.sound) {
-                    playNotificationSound()
+                console.log("Message", message)
+                if(!message.silent) {
+                  if(user.preferences) {
+                    console.log(user.preferences)
+                    if(user.preferences.sound) {
+                      playNotificationSound()
+                    }
+                  } else {
+                    // If there is no preferances, than check if the current chta message leading staff is current staff
+                    if(user.id === staffId) { 
+                      playNotificationSound()
+                    }
                   }
-                } else {
-                  // If there is no preferances, than check if the current chta message leading staff is current staff
-                  if(user.id === staffId) { 
-                    playNotificationSound()
+                  if(user.preferences) {
+                    if(user.preferences.toasts) {
+                      toast.info(`💬 New message from ${chatName}`, { description: message.text.substring(0, 100), });
+                    }
+                  } else {
+                    // If there is no preferances, than check if the current chta message leading staff is current staff
+                    if(user.id === staffId) {
+                      toast.info(`💬 New message from ${chatName}`, { description: message.text.substring(0, 100), });
+                    }
                   }
-                }
-                if(user.preferences) {
-                  if(user.preferences.toasts) {
-                    toast.info(`💬 New message from ${chatName}`, { description: message.text.substring(0, 100), });
-                  }
-                } else {
-                  // If there is no preferances, than check if the current chta message leading staff is current staff
-                  if(user.id === staffId) {
-                    toast.info(`💬 New message from ${chatName}`, { description: message.text.substring(0, 100), });
-                  }
+
                 }
             } else if (botResponse && (botResponse.sender === "bot" || botResponse.sender === "ai")) {
                 newNotification = { id: Date.now(), type: "bot_message", title: `New bot response in ${chatName}`, description: `${websiteName}: ${botResponse.text.substring(0, 50)}...`, timestamp: new Date(), chatId, websiteName, };

@@ -16,6 +16,7 @@ interface Website {
   link: string
   description: string
   chatbotCode: string
+  predefinedAnswers: string;
   chats: string[]
   plan: {
     _id: string

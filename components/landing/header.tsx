@@ -35,6 +35,9 @@ export function Header() {
             <a href="#faq" className="text-slate-600 hover:text-slate-900 transition-colors font-medium">
               FAQ
             </a>
+            <a href="/blog" className="text-slate-600 hover:text-slate-900 transition-colors font-medium">
+              Blog
+            </a>
           </nav>
 
           {/* Desktop CTA */}
