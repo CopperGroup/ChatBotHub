@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Calendar, Clock, User, Zap, MessageSquare, Target, CheckCircle, TrendingUp } from "lucide-react"
+import Image from "next/image"
 
 export function BlogArticle() {
   return (
@@ -90,7 +91,7 @@ export function BlogArticle() {
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 mb-8">
             <h3 className="text-xl font-semibold text-slate-900 mb-4">Visual Workflow Builder</h3>
             <img
-              src="/workflow-builder.png"
+              src="/assets/workflow-builder-article.webp"
               alt="Workflow Automation Builder Interface showing drag-and-drop conversation flow creation"
               className="w-full h-auto rounded-xl shadow-sm border border-slate-200 mb-4"
             />
