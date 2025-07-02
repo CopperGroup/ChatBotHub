@@ -142,8 +142,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
   // Check if predefined workflows exist
   const hasWorkflows = () => {
     try {
-      const workflows = JSON.parse(website.predefinedAnswers || "[]")
-      return Array.isArray(workflows) && workflows.length > 0
+      return website.predefinedAnswers.length > 0
     } catch {
       return false
     }
