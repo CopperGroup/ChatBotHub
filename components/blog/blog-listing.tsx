@@ -2,7 +2,19 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, User, ArrowRight, MessageSquare, Zap, Target, TrendingUp, Brain, Users } from "lucide-react"
+import {
+  Calendar,
+  Clock,
+  User,
+  ArrowRight,
+  ArrowLeft,
+  MessageSquare,
+  Zap,
+  Target,
+  TrendingUp,
+  Brain,
+  Users,
+} from "lucide-react"
 import Link from "next/link"
 
 const blogPosts = [
@@ -140,6 +152,17 @@ export function BlogListing() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Back to Home Navigation */}
+          <div className="mb-6">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-emerald-600 transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span className="text-sm font-medium">Home page</span>
+            </Link>
+          </div>
+
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
               Our{" "}
@@ -166,7 +189,6 @@ export function BlogListing() {
                 <span className="ml-2">Featured</span>
               </Badge>
             </div>
-
             <Link href={`/blog/${featuredPost.id}`} className="group block">
               <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden hover:shadow-2xl transition-all duration-300 group-hover:scale-[1.02]">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
@@ -178,7 +200,6 @@ export function BlogListing() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                   </div>
-
                   <div className="p-8 lg:p-12 flex flex-col justify-center">
                     <Badge
                       className={`bg-gradient-to-r ${getCategoryColor(featuredPost.category)} text-white border-0 rounded-full px-3 py-1 w-fit mb-4`}
@@ -186,13 +207,10 @@ export function BlogListing() {
                       {getCategoryIcon(featuredPost.category)}
                       <span className="ml-2">{featuredPost.category}</span>
                     </Badge>
-
                     <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-4 group-hover:text-emerald-600 transition-colors">
                       {featuredPost.title}
                     </h2>
-
                     <p className="text-lg text-slate-600 mb-6 leading-relaxed">{featuredPost.excerpt}</p>
-
                     <div className="flex items-center gap-6 text-sm text-slate-500 mb-6">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
@@ -207,7 +225,6 @@ export function BlogListing() {
                         <span>{featuredPost.author}</span>
                       </div>
                     </div>
-
                     <div className="flex items-center justify-between">
                       <div className="flex flex-wrap gap-2">
                         {featuredPost.tags.map((tag) => (
@@ -216,7 +233,6 @@ export function BlogListing() {
                           </span>
                         ))}
                       </div>
-
                       <Button
                         variant="ghost"
                         className="text-emerald-600 hover:text-emerald-700 group-hover:translate-x-1 transition-transform"
@@ -235,7 +251,6 @@ export function BlogListing() {
         {/* Regular Articles Grid */}
         <section>
           <h2 className="text-2xl font-bold text-slate-900 mb-8">Latest Articles</h2>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {regularPosts.map((post) => (
               <Link key={post.id} href={`/blog/${post.id}`} className="group block">
@@ -255,14 +270,11 @@ export function BlogListing() {
                       </Badge>
                     </div>
                   </div>
-
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-emerald-600 transition-colors line-clamp-2">
                       {post.title}
                     </h3>
-
                     <p className="text-slate-600 mb-4 line-clamp-3">{post.excerpt}</p>
-
                     <div className="flex items-center gap-4 text-sm text-slate-500 mb-4">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
@@ -273,7 +285,6 @@ export function BlogListing() {
                         <span>{post.readTime}</span>
                       </div>
                     </div>
-
                     <div className="flex items-center justify-between">
                       <div className="flex flex-wrap gap-1">
                         {post.tags.slice(0, 2).map((tag) => (
@@ -282,7 +293,6 @@ export function BlogListing() {
                           </span>
                         ))}
                       </div>
-
                       <Button
                         variant="ghost"
                         size="sm"

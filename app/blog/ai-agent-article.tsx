@@ -20,13 +20,13 @@ export function AIAgentArticle() {
         </div>
 
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-          Smart{" "}
+          Advanced{" "}
           <span className="bg-gradient-to-r from-purple-500 to-purple-700 bg-clip-text text-transparent">AI Agent</span>
-          : Credit-Based Intelligent Responses
+          : Credit-Based Responses
         </h1>
 
         <p className="text-xl md:text-2xl text-slate-600 mb-8 leading-relaxed">
-          Deploy an AI agent that pulls information from your website and provides intelligent responses using a
+          Deploy an AI agent that pulls information from your website and provides tailored, high-quality responses using a
           credit-based system for cost control and optimal performance.
         </p>
 
@@ -53,7 +53,7 @@ export function AIAgentArticle() {
         <div className="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-8 mb-12 border border-purple-200">
           <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
             <Brain className="w-6 h-6 text-purple-600 mr-3" />
-            Intelligent AI That Knows Your Business
+            Business-Savvy AI That Knows Your Business
           </h2>
           <p className="text-lg text-slate-700 mb-6">
             Our AI Agent doesn't just provide generic responses - it learns from your website content, product
@@ -215,7 +215,7 @@ export function AIAgentArticle() {
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-8 text-white">
             <h2 className="text-3xl font-bold mb-4">Ready to Deploy Your AI Agent?</h2>
             <p className="text-xl mb-6 text-purple-100">
-              Start with 100 free credits and see how intelligent responses can transform your customer experience.
+              Start with 100 free credits and experience seamless, AI-powered support in action.
             </p>
 
             <Button

@@ -29,19 +29,19 @@ export function StaffManagementArticle() {
             Access Control
           </Badge>
         </div>
-
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
           <span className="bg-gradient-to-r from-slate-500 to-slate-700 bg-clip-text text-transparent">
             Staff Management
           </span>
           : Register Team Members and Control Chat Access
         </h1>
-
         <p className="text-xl md:text-2xl text-slate-600 mb-8 leading-relaxed">
           Learn how to register staff members in website settings and give them controlled access to customer chats
-          through the dedicated staff login portal at /staff/login.
+          through the dedicated staff login portal at{" "}
+          <a href="https://chat-bot-hub.vercel.app/staff/login" target="_blank" rel="noreferrer">
+            chat-bot-hub.vercel.app/staff/login.
+          </a>
         </p>
-
         {/* Article Meta */}
         <div className="flex flex-wrap items-center gap-6 text-sm text-slate-500 pb-8 border-b border-slate-200">
           <div className="flex items-center gap-2">
@@ -91,7 +91,6 @@ export function StaffManagementArticle() {
         {/* How It Works */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-8">How Staff Management Works</h2>
-
           <div className="space-y-8">
             <div className="flex items-start gap-6">
               <div className="w-10 h-10 bg-slate-500 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
@@ -101,11 +100,10 @@ export function StaffManagementArticle() {
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">Register Staff Members</h3>
                 <p className="text-slate-700">
                   Admin users can register new staff members through the website settings page, providing their email
-                  addresses and setting their access permissions.
+                  addresses.
                 </p>
               </div>
             </div>
-
             <div className="flex items-start gap-6">
               <div className="w-10 h-10 bg-slate-500 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
                 2
@@ -118,7 +116,6 @@ export function StaffManagementArticle() {
                 </p>
               </div>
             </div>
-
             <div className="flex items-start gap-6">
               <div className="w-10 h-10 bg-slate-500 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
                 3
@@ -137,7 +134,6 @@ export function StaffManagementArticle() {
         {/* Key Features */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-8">Staff Management Features</h2>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200">
               <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-4">
@@ -148,7 +144,6 @@ export function StaffManagementArticle() {
                 Register new staff members directly from your website settings page with just their email address.
               </p>
             </div>
-
             <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200">
               <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-4">
                 <LogIn className="w-6 h-6 text-slate-600" />
@@ -158,7 +153,6 @@ export function StaffManagementArticle() {
                 Staff members access their dashboard through a secure login portal at /staff/login.
               </p>
             </div>
-
             <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200">
               <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-4">
                 <MessageSquare className="w-6 h-6 text-slate-600" />
@@ -169,14 +163,13 @@ export function StaffManagementArticle() {
                 readiness.
               </p>
             </div>
-
             <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200">
               <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-4">
                 <Shield className="w-6 h-6 text-slate-600" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">Role-Based Permissions</h3>
+              <h3 className="text-xl font-semibold text-slate-900 mb-3">Secure Access Control</h3>
               <p className="text-slate-700">
-                Set different permission levels for staff members based on their role and responsibilities.
+                Advanced security measures ensure only authorized staff members can access customer conversations.
               </p>
             </div>
           </div>
@@ -186,7 +179,6 @@ export function StaffManagementArticle() {
         <section className="mb-12">
           <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-8 border border-slate-200">
             <h2 className="text-3xl font-bold text-slate-900 mb-6">Setting Up Staff Management</h2>
-
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-3">For Administrators:</h3>
@@ -201,15 +193,10 @@ export function StaffManagementArticle() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-slate-500 flex-shrink-0" />
-                    <span className="text-slate-700">Enter staff member's email and set permissions</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-slate-500 flex-shrink-0" />
                     <span className="text-slate-700">Send login credentials to the staff member</span>
                   </div>
                 </div>
               </div>
-
               <div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-3">For Staff Members:</h3>
                 <div className="space-y-2">
@@ -238,13 +225,11 @@ export function StaffManagementArticle() {
         {/* Best Practices */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-6">Best Practices</h2>
-
           <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-6 border border-blue-200 mb-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-3">💡 Pro Tips</h3>
             <ul className="space-y-2 text-slate-700">
               <li>• Train staff members on the "Join Chat" process before their first shift</li>
               <li>• Set clear guidelines on when staff should join chats vs. let the AI handle inquiries</li>
-              <li>• Use role-based permissions to limit access to sensitive customer information</li>
               <li>• Regularly review staff activity and chat participation metrics</li>
               <li>• Provide staff with quick access to common responses and company policies</li>
             </ul>
@@ -259,7 +244,6 @@ export function StaffManagementArticle() {
               Set up staff management today and give your team the tools they need to provide exceptional customer
               support.
             </p>
-
             <Button
               size="lg"
               className="bg-white text-slate-600 hover:bg-slate-50 px-8 py-4 text-lg font-semibold rounded-xl"
