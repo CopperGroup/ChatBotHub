@@ -49,7 +49,7 @@ const blogPosts = [
     title: "Smart AI Agent: Credit-Based Intelligent Responses",
     excerpt:
       "Deploy an AI agent that pulls information from your website and provides intelligent responses using a credit-based system for cost control.",
-    image: "/placeholder.svg?height=300&width=600",
+    image: "/assets/ai-article.webp",
     category: "AI Features",
     date: "December 10, 2024",
     readTime: "8 min read",
@@ -62,7 +62,7 @@ const blogPosts = [
     title: "Staff Management: Register Team Members and Control Chat Access",
     excerpt:
       "Learn how to register staff members in website settings and give them controlled access to customer chats through the dedicated staff login portal.",
-    image: "/placeholder.svg?height=300&width=600",
+    image: "/assets/staff-article.webp",
     category: "Staff Management",
     date: "November 25, 2024",
     readTime: "7 min read",
@@ -75,7 +75,7 @@ const blogPosts = [
     title: "How to Automate 80% of Your Customer Support Without Losing the Human Touch",
     excerpt:
       "Discover the perfect balance between automation and human interaction that keeps customers happy while reducing costs.",
-    image: "/placeholder.svg?height=300&width=600",
+    image: "/assets/automation-article.webp",
     category: "Strategy",
     date: "November 15, 2024",
     readTime: "7 min read",
@@ -87,7 +87,7 @@ const blogPosts = [
     id: "chatbot-integration-guide",
     title: "Seamless Chatbot Integration: A Step-by-Step Technical Guide",
     excerpt: "Technical walkthrough for developers on integrating chatbots with existing systems, APIs, and workflows.",
-    image: "/placeholder.svg?height=300&width=600",
+    image: "/assets/guide-article.webp",
     category: "Technical",
     date: "November 5, 2024",
     readTime: "10 min read",
@@ -310,7 +310,7 @@ export function BlogListing() {
         </section>
 
         {/* Load More */}
-        <div className="text-center mt-12">
+        {/* <div className="text-center mt-12">
           <Button
             size="lg"
             variant="outline"
@@ -318,7 +318,7 @@ export function BlogListing() {
           >
             Load More Articles
           </Button>
-        </div>
+        </div> */}
       </main>
     </div>
   )

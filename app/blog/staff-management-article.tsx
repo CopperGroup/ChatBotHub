@@ -38,7 +38,7 @@ export function StaffManagementArticle() {
         <p className="text-xl md:text-2xl text-slate-600 mb-8 leading-relaxed">
           Learn how to register staff members in website settings and give them controlled access to customer chats
           through the dedicated staff login portal at{" "}
-          <a href="https://chat-bot-hub.vercel.app/staff/login" target="_blank" rel="noreferrer">
+          <a href="https://chat-bot-hub.vercel.app/staff/login" target="_blank" rel="noreferrer" className="text-blue-500">
             chat-bot-hub.vercel.app/staff/login.
           </a>
         </p>
