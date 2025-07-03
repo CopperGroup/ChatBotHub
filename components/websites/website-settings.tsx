@@ -532,7 +532,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
                   />
                   <p className="text-xs text-slate-500">
-                    Specify paths where the widget *should* appear. If left empty, it appears everywhere (unless
+                    Specify paths where the widget <strong>should</strong> appear. If left empty, it appears everywhere (unless
                     disallowed).
                   </p>
                 </div>
