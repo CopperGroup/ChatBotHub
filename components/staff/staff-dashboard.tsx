@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { useRealTime } from "@/hooks/use-real-time"
 import { authFetch } from "@/lib/authFetch"
 
-export function StaffDashboard() {
+export function StaffDashboard({ websiteId, chatId }: { websiteId: string, chatId: string }) {
   const [chats, setChats] = useState<any[]>([])
   const [selectedChat, setSelectedChat] = useState<any>(null)
   const [website, setWebsite] = useState<any>(null)
@@ -214,7 +214,7 @@ export function StaffDashboard() {
         setChats(sortedChats)
         console.log("StaffDashboard: Loaded chats:", sortedChats.length)
         if (!selectedChat && sortedChats.length > 0) {
-          setSelectedChat(sortedChats[0])
+          setSelectedChat(sortedChats.find((c: { _id: { toString: () => string } }) => c._id.toString() === chatId))
         } else if (selectedChat) {
           const reselected = sortedChats.find((c) => c._id === selectedChat._id)
           if (reselected) {
