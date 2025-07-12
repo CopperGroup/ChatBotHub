@@ -4,11 +4,14 @@ import { useState, useEffect, Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Zap, Brain } from "lucide-react"
+import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Zap, Brain, ArrowRight } from "lucide-react"
 import { WebsiteSettings } from "./website-settings"
 import { StaffManagement } from "./staff-management"
+import { AIManagement } from "./ai-management"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 interface Website {
   _id: string
@@ -16,7 +19,7 @@ interface Website {
   link: string
   description: string
   chatbotCode: string
-  predefinedAnswers: string;
+  predefinedAnswers: string
   chats: string[]
   plan: {
     _id: string
@@ -38,6 +41,8 @@ interface Website {
     allowAIResponses: boolean
     allowedPaths?: string[]
     disallowedPaths?: string[]
+    language?: string
+    dailyTokenLimit?: number | null
   }
   createdAt: string
   updatedAt: string
@@ -87,9 +92,7 @@ function WebsiteDetailsSkeleton() {
           </div>
         </div>
       </div>
-
       <Skeleton className="h-32 md:h-40 w-full rounded-xl" />
-
       <div className="mt-6">
         <Skeleton className="h-10 w-full mb-4 rounded-xl" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -125,11 +128,15 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     },
   }
 
+  // Check if plan is Enterprise
+  const isEnterprisePlan = website.plan.name.toLowerCase().includes("enterprise")
+
   useEffect(() => {
     // Simulate loading for demonstration
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 800)
+
     return () => clearTimeout(timer)
   }, [])
 
@@ -231,16 +238,94 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
               </div>
             </div>
           </div>
+
+          {/* Call to Action - Show upgrade if not Enterprise, else show buy tokens if AI enabled */}
+          <div className="mt-6 pt-4 border-t border-slate-200">
+            {!isEnterprisePlan ? (
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden">
+                {/* Background decoration */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
+                </div>
+
+                <div className="relative z-10">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                        <Crown className="w-5 h-5" />
+                        Upgrade Your Plan
+                      </h3>
+                      <p className="text-emerald-100 text-sm mb-4 lg:mb-0">
+                        Unlock more features, increase limits, and get better value with our higher-tier plans.
+                      </p>
+                    </div>
+                    <Link
+                      href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
+                      className="flex-shrink-0"
+                    >
+                      <Button className="bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl shadow-lg font-semibold px-6 py-3 h-auto transition-all transform hover:scale-105">
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade Now
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              planInfo.plan.allowAI && (
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden">
+                  {/* Background decoration */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
+                  </div>
+
+                  <div className="relative z-10">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                          <Zap className="w-5 h-5" />
+                          Need More AI Credits?
+                        </h3>
+                        <p className="text-purple-100 text-sm mb-4 lg:mb-0">
+                          Power up your AI conversations with additional credits. Get instant access to more AI
+                          responses.
+                        </p>
+                      </div>
+                      <Link href={`/token-purchase?websiteId=${website._id.toString()}`} className="flex-shrink-0">
+                        <Button className="bg-white text-purple-600 hover:bg-purple-50 rounded-xl shadow-lg font-semibold px-6 py-3 h-auto transition-all transform hover:scale-105">
+                          <Zap className="w-4 h-4 mr-2" />
+                          Buy Credits
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
         </CardContent>
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-xl h-auto">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-xl h-auto">
           <TabsTrigger
             value="overview"
             className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
           >
             Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="ai"
+            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
+          >
+            <div className="flex items-center space-x-1">
+              <Brain className="h-3 w-3" />
+              <span>AI</span>
+            </div>
           </TabsTrigger>
           <TabsTrigger
             value="staff"
@@ -348,6 +433,21 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
               <span className="truncate">Website ID: {website._id}</span>
             </CardFooter>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="ai" className="mt-4 md:mt-6">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center p-8 md:p-12">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-purple-600" />
+                  <p className="text-slate-600 text-sm md:text-base">Loading AI management...</p>
+                </div>
+              </div>
+            }
+          >
+            <AIManagement website={website} userId={userId} onUpdate={handleWebsiteUpdate} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="staff" className="mt-4 md:mt-6">

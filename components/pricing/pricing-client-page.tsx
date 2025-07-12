@@ -1,7 +1,6 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { useAuth } from "@/hooks/use-auth"
 import { LoginForm } from "@/components/auth/login-form"
 import { Button } from "@/components/ui/button"
@@ -25,8 +24,8 @@ interface Plan {
 
 // Define props for the client component
 interface PricingPageClientProps {
-  websiteId?: string; // Optional, as it might not always be in the URL
-  currentPlanId?: string; // Optional, as it might not always be in the URL
+  websiteId?: string // Optional, as it might not always be in the URL
+  currentPlanId?: string // Optional, as it might not always be in the URL
 }
 
 function PlanLoadingSkeleton() {
@@ -58,19 +57,15 @@ function PlanLoadingSkeleton() {
 export default function PricingPageClient({ websiteId, currentPlanId }: PricingPageClientProps) {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  // Removed: const searchParams = useSearchParams()
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
-  const [upgrading, setUpgrading] = useState<string | null>(null)
-
-  // websiteId and currentPlanId are now received directly from props
 
   // Fetch available plans
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         const response = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/plans`, {
-            method: "GET"
+          method: "GET",
         })
         if (response.ok) {
           const plansData = await response.json()
@@ -89,7 +84,7 @@ export default function PricingPageClient({ websiteId, currentPlanId }: PricingP
     fetchPlans()
   }, [])
 
-  const handleSelectPlan = async (planId: string) => {
+  const handleSelectPlan = (planId: string) => {
     if (!user) {
       toast.error("Please log in to upgrade your plan")
       return
@@ -101,30 +96,8 @@ export default function PricingPageClient({ websiteId, currentPlanId }: PricingP
       return
     }
 
-    setUpgrading(planId)
-    try {
-      // Use the websiteId from the props in the endpoint
-      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${websiteId}/change-plan`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ planId, userId: user._id.toString() }), // Pass userId as required by your backend
-      })
-
-      if (response.ok) {
-        toast.success("Plan upgraded successfully!")
-        router.push("/dashboard")
-      } else {
-        const errorData = await response.json()
-        toast.error(errorData.message || "Failed to upgrade plan")
-      }
-    } catch (error) {
-      console.error("Error upgrading plan:", error)
-      toast.error("Failed to upgrade plan")
-    } finally {
-      setUpgrading(null)
-    }
+    // Navigate to subscription payment page
+    router.push(`/subscription-payment?websiteId=${websiteId}&planId=${planId}&currentPlanId=${currentPlanId || ""}`)
   }
 
   const getPlanGradient = (planName: string) => {
@@ -161,11 +134,9 @@ export default function PricingPageClient({ websiteId, currentPlanId }: PricingP
 
   if (authLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-500"></div>
-        </div>
-      </DashboardLayout>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-500"></div>
+      </div>
     )
   }
 
@@ -178,198 +149,170 @@ export default function PricingPageClient({ websiteId, currentPlanId }: PricingP
   }
 
   return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6 space-y-6 md:space-y-8 overflow-y-auto h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </div>
-
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Simple,
-            <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
-              {" "}
-              transparent pricing
-            </span>
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Choose the plan that fits your needs. Upgrade to unlock advanced features and grow your business.
-          </p>
-        </div>
-
-        {loading && (
-          <div className="flex justify-center items-center py-8 md:py-12">
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
-              <span className="text-sm md:text-base text-slate-700">Loading plans...</span>
-            </div>
-          </div>
-        )}
-
-        {loading && <PlanLoadingSkeleton />}
-
-        {!loading && plans.length === 0 && (
-          <div className="text-center py-8 md:py-12">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Crown className="w-8 h-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No plans available</h3>
-            <p className="text-slate-500">Please try again later or contact support.</p>
-          </div>
-        )}
-
-        {!loading && plans.length > 0 && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
-              {plans.map((plan) => {
-                // Use currentPlanId (from props) to determine if it's the current plan
-                const isCurrentPlan = currentPlanId === plan._id
-
-                const isPopular = isPopularPlan(plan.name)
-                const gradient = getPlanGradient(plan.name)
-                const isUpgrading = upgrading === plan._id
-
-                return (
-                  <Card
-                    key={plan._id}
-                    className={`relative bg-white border-2 transition-all duration-300 hover:shadow-xl ${
-                      isPopular
-                        ? "border-emerald-500 shadow-xl scale-105 ring-4 ring-emerald-100"
-                        : isCurrentPlan
-                          ? "border-emerald-500 shadow-lg"
-                          : "border-slate-200 hover:border-emerald-200 shadow-sm hover:shadow-lg"
-                    }`}
-                  >
-                    {isCurrentPlan && (
-                      <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg rounded-full px-4 py-1">
-                        Current Plan
-                      </Badge>
-                    )}
-
-                    {isPopular && !isCurrentPlan && (
-                      <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg rounded-full px-4 py-1">
-                        <Crown className="w-3 h-3 mr-1" />
-                        Most Popular
-                      </Badge>
-                    )}
-
-                    <CardHeader className="text-center pb-6 px-6 md:px-8 pt-6 md:pt-8">
-                      <div
-                        className={`w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}
-                      >
-                        {getPlanIcon(plan.name)}
-                      </div>
-                      <CardTitle className="text-xl md:text-2xl font-semibold text-slate-900 mb-2">
-                        {plan.name}
-                      </CardTitle>
-                      <div className="mb-4">
-                        <span className="text-3xl md:text-4xl font-bold text-slate-900">
-                          {plan.priceMonthly === 0 ? "Free" : `$${plan.priceMonthly}`}
-                        </span>
-                        <span className="text-slate-600 ml-2 text-sm md:text-base">
-                          {plan.priceMonthly === 0 ? "forever" : "per month"}
-                        </span>
-                      </div>
-                      <p className="text-slate-600 text-sm md:text-base">{plan.description}</p>
-                    </CardHeader>
-
-                    <CardContent className="space-y-6 px-6 md:px-8 pb-6 md:pb-8">
-                      <ul className="space-y-3 md:space-y-4">
-                        <li className="flex items-start space-x-3">
-                          <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-slate-700 text-sm md:text-base leading-relaxed">
-                            {plan.maxStaffMembers} Staff Member{plan.maxStaffMembers !== 1 ? "s" : ""}
-                          </span>
-                        </li>
-                        <li className="flex items-start space-x-3">
-                          <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-slate-700 text-sm md:text-base leading-relaxed">
-                            AI Responses: {plan.allowAI ? "Enabled" : "Disabled"}
-                          </span>
-                        </li>
-                        <li className="flex items-start space-x-3">
-                          <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-slate-700 text-sm md:text-base leading-relaxed">
-                            {plan.creditBoostMonthly} AI Credits/month
-                          </span>
-                        </li>
-                        <li className="flex items-start space-x-3">
-                          <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-slate-700 text-sm md:text-base leading-relaxed">24/7 Support</span>
-                        </li>
-                        <li className="flex items-start space-x-3">
-                          <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-slate-700 text-sm md:text-base leading-relaxed">
-                            Advanced Analytics
-                          </span>
-                        </li>
-                        <li className="flex items-start space-x-3">
-                          <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-slate-700 text-sm md:text-base leading-relaxed">
-                            Widget Customization
-                          </span>
-                        </li>
-                      </ul>
-
-                      <Button
-                        onClick={() => handleSelectPlan(plan._id)}
-                        disabled={isCurrentPlan || isUpgrading}
-                        className={`w-full py-3 md:py-4 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 ${
-                          isPopular && !isCurrentPlan
-                            ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl"
-                            : isCurrentPlan
-                              ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                              : "bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-300 shadow-sm hover:shadow-md"
-                        }`}
-                        variant={isPopular && !isCurrentPlan ? "default" : "outline"}
-                      >
-                        {isUpgrading ? (
-                          <div className="flex items-center justify-center">
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Upgrading...
-                          </div>
-                        ) : isCurrentPlan ? (
-                          <div className="flex items-center justify-center">
-                            <Check className="w-4 h-4 mr-2" />
-                            Current Plan
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <Crown className="w-4 h-4 mr-2" />
-                            Select Plan
-                          </div>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-
-            {/* <div className="text-center mt-8 md:mt-12">
-              <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl p-6 md:p-8 border border-slate-200 max-w-2xl mx-auto">
-                <p className="text-slate-700 mb-4 font-medium">
-                  All plans include a 14-day free trial. No credit card required.
-                </p>
-                <p className="text-sm text-slate-600">
-                  Need a custom solution with advanced integrations?{" "}
-                  <span className="text-emerald-600 hover:text-emerald-700 font-medium underline decoration-emerald-300 cursor-pointer">
-                    Contact our sales team
-                  </span>
-                </p>
-              </div>
-            </div> */}
-          </>
-        )}
+    <div className="p-4 md:p-6 space-y-6 md:space-y-8 overflow-y-auto h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
       </div>
-    </DashboardLayout>
+
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+          Simple,
+          <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+            {" "}
+            transparent pricing
+          </span>
+        </h1>
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Choose the plan that fits your needs. Upgrade to unlock advanced features and grow your business.
+        </p>
+      </div>
+
+      {loading && (
+        <div className="flex justify-center items-center py-8 md:py-12">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
+            <span className="text-sm md:text-base text-slate-700">Loading plans...</span>
+          </div>
+        </div>
+      )}
+
+      {loading && <PlanLoadingSkeleton />}
+
+      {!loading && plans.length === 0 && (
+        <div className="text-center py-8 md:py-12">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Crown className="w-8 h-8 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">No plans available</h3>
+          <p className="text-slate-500">Please try again later or contact support.</p>
+        </div>
+      )}
+
+      {!loading && plans.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
+            {plans.map((plan) => {
+              // Use currentPlanId (from props) to determine if it's the current plan
+              const isCurrentPlan = currentPlanId === plan._id
+              const isPopular = isPopularPlan(plan.name)
+              const gradient = getPlanGradient(plan.name)
+
+              return (
+                <Card
+                  key={plan._id}
+                  className={`relative bg-white border-2 transition-all duration-300 hover:shadow-xl ${
+                    isPopular
+                      ? "border-emerald-500 shadow-xl scale-105 ring-4 ring-emerald-100"
+                      : isCurrentPlan
+                        ? "border-emerald-500 shadow-lg"
+                        : "border-slate-200 hover:border-emerald-200 shadow-sm hover:shadow-lg"
+                  }`}
+                >
+                  {isCurrentPlan && (
+                    <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg rounded-full px-4 py-1">
+                      Current Plan
+                    </Badge>
+                  )}
+                  {isPopular && !isCurrentPlan && (
+                    <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg rounded-full px-4 py-1">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Most Popular
+                    </Badge>
+                  )}
+
+                  <CardHeader className="text-center pb-6 px-6 md:px-8 pt-6 md:pt-8">
+                    <div
+                      className={`w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}
+                    >
+                      {getPlanIcon(plan.name)}
+                    </div>
+                    <CardTitle className="text-xl md:text-2xl font-semibold text-slate-900 mb-2">{plan.name}</CardTitle>
+                    <div className="mb-4">
+                      <span className="text-3xl md:text-4xl font-bold text-slate-900">
+                        {plan.priceMonthly === 0 ? "Free" : `$${plan.priceMonthly}`}
+                      </span>
+                      <span className="text-slate-600 ml-2 text-sm md:text-base">
+                        {plan.priceMonthly === 0 ? "forever" : "per month"}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 text-sm md:text-base">{plan.description}</p>
+                  </CardHeader>
+
+                  <CardContent className="space-y-6 px-6 md:px-8 pb-6 md:pb-8">
+                    <ul className="space-y-3 md:space-y-4">
+                      <li className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm md:text-base leading-relaxed">
+                          {plan.maxStaffMembers} Staff Member{plan.maxStaffMembers !== 1 ? "s" : ""}
+                        </span>
+                      </li>
+                      <li className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm md:text-base leading-relaxed">
+                          AI Responses: {plan.allowAI ? "Enabled" : "Disabled"}
+                        </span>
+                      </li>
+                      <li className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm md:text-base leading-relaxed">
+                          {plan.creditBoostMonthly} AI Credits/month
+                        </span>
+                      </li>
+                      <li className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm md:text-base leading-relaxed">24/7 Support</span>
+                      </li>
+                      <li className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm md:text-base leading-relaxed">Advanced Analytics</span>
+                      </li>
+                      <li className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm md:text-base leading-relaxed">
+                          Widget Customization
+                        </span>
+                      </li>
+                    </ul>
+
+                    <Button
+                      onClick={() => handleSelectPlan(plan._id)}
+                      disabled={isCurrentPlan}
+                      className={`w-full py-3 md:py-4 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 ${
+                        isPopular && !isCurrentPlan
+                          ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl"
+                          : isCurrentPlan
+                            ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                            : "bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-300 shadow-sm hover:shadow-md"
+                      }`}
+                      variant={isPopular && !isCurrentPlan ? "default" : "outline"}
+                    >
+                      {isCurrentPlan ? (
+                        <div className="flex items-center justify-center">
+                          <Check className="w-4 h-4 mr-2" />
+                          Current Plan
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <Crown className="w-4 h-4 mr-2" />
+                          Select Plan
+                        </div>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
   )
 }

@@ -7,31 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import {
-  Settings,
-  Palette,
-  Zap,
-  Brain,
-  Crown,
-  Save,
-  RefreshCw,
-  AlertTriangle,
-  Waypoints,
-  Loader2,
-  GitBranch,
-  Plus,
-  Edit,
-} from "lucide-react"
+import { Settings, Palette, Zap, Crown, Save, RefreshCw, Waypoints, Loader2, GitBranch, Plus, Edit } from "lucide-react"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { authFetch } from "@/lib/authFetch"
 import Link from "next/link"
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
 import { languages } from "@/constants/languages"
 
 interface Website {
@@ -62,6 +44,7 @@ interface Website {
     allowedPaths?: string[]
     disallowedPaths?: string[]
     language?: string
+    dailyTokenLimit?: number | null
   }
   predefinedAnswers: string // JSON string
   createdAt: string
@@ -85,7 +68,6 @@ function SettingsLoadingSkeleton() {
           </div>
         </CardHeader>
       </Card>
-
       <Card className="bg-white border-slate-200 shadow-sm">
         <CardHeader className="px-4 md:px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
@@ -121,7 +103,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
 
   // States for chatbot preferences
   const [header, setHeader] = useState(website?.preferences?.header || "Chat Support")
-  const [allowAIResponses, setAllowAIResponses] = useState(website?.preferences?.allowAIResponses || false)
   const [gradient1, setGradient1] = useState(website?.preferences?.colors?.gradient1 || "#10b981")
   const [gradient2, setGradient2] = useState(website?.preferences?.colors?.gradient2 || "#059669")
   const [selectedLanguage, setSelectedLanguage] = useState(website.preferences?.language || "en")
@@ -154,7 +135,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     setLink(website.link)
     setDescription(website.description)
     setHeader(website.preferences?.header || "Chat Support")
-    setAllowAIResponses(website.preferences?.allowAIResponses || false)
     setGradient1(website.preferences?.colors?.gradient1 || "#10b981")
     setGradient2(website.preferences?.colors?.gradient2 || "#059669")
     setSelectedLanguage(website.preferences?.language || "en")
@@ -181,7 +161,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     try {
       const updatedPreferences = {
         header,
-        allowAIResponses,
         colors: {
           gradient1,
           gradient2,
@@ -212,6 +191,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
       if (onUpdate) {
         onUpdate(responseData.website)
       }
+
       toast.success("Settings saved successfully!")
     } catch (error: any) {
       console.error("Error saving website settings:", error)
@@ -223,7 +203,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
 
   const resetToDefaults = () => {
     setHeader("Chat Support")
-    setAllowAIResponses(false)
     setGradient1("#10b981")
     setGradient2("#059669")
     setSelectedLanguage("en")
@@ -278,7 +257,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                 <Button
                   variant="outline"
                   onClick={resetToDefaults}
-                  className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl w-full sm:w-auto"
+                  className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl w-full sm:w-auto bg-transparent"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Reset Chatbot Settings</span>
@@ -304,6 +283,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
               </div>
             </div>
           </CardHeader>
+
           <CardContent className="space-y-6 md:space-y-8 px-4 md:px-6">
             {/* General Website Information */}
             <div className="space-y-6">
@@ -311,6 +291,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                 <Settings className="w-4 h-4 text-slate-600" />
                 <h3 className="text-lg font-semibold text-slate-900">General Information</h3>
               </div>
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-slate-700 font-medium">
@@ -325,6 +306,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     required
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="link" className="text-slate-700 font-medium">
                     Website URL
@@ -340,6 +322,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-slate-700 font-medium">
                   Description
@@ -352,6 +335,80 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                   rows={3}
                   className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
                 />
+              </div>
+            </div>
+
+            <Separator className="bg-slate-100" />
+
+            {/* Appearance Settings */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Palette className="w-4 h-4 text-pink-600" />
+                <h3 className="text-lg font-semibold text-slate-900">Widget Appearance</h3>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-medium">Primary Color</Label>
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="color"
+                        value={gradient1}
+                        onChange={(e) => setGradient1(e.target.value)}
+                        className="h-12 w-16 sm:w-20 rounded-lg border-2 border-slate-200 p-1 flex-shrink-0"
+                      />
+                      <Input
+                        type="text"
+                        value={gradient1}
+                        onChange={(e) => setGradient1(e.target.value)}
+                        className="flex-1 bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-medium">Secondary Color</Label>
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="color"
+                        value={gradient2}
+                        onChange={(e) => setGradient2(e.target.value)}
+                        className="h-12 w-16 sm:w-20 rounded-lg border-2 border-slate-200 p-1 flex-shrink-0"
+                      />
+                      <Input
+                        type="text"
+                        value={gradient2}
+                        onChange={(e) => setGradient2(e.target.value)}
+                        className="flex-1 bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Color Preview */}
+                <div className="p-4 md:p-6 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200 shadow-sm">
+                  <Label className="text-slate-700 font-medium mb-4 block">Preview</Label>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:gap-4">
+                    <div
+                      className="w-16 h-16 rounded-full shadow-lg mx-auto sm:mx-0 flex-shrink-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
+                      }}
+                    />
+                    <div className="flex-1 text-center sm:text-left">
+                      <div
+                        className="px-4 py-2 rounded-xl text-white text-sm font-medium inline-block shadow-sm"
+                        style={{
+                          background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
+                        }}
+                      >
+                        {header}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-2">This is how your chat widget will appear</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -467,50 +524,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
 
             <Separator className="bg-slate-100" />
 
-            {/* AI Settings */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Brain className="w-4 h-4 text-purple-600" />
-                <h3 className="text-lg font-semibold text-slate-900">AI Configuration</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200 shadow-sm space-y-3 sm:space-y-0">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Brain className="w-5 h-5 text-purple-600" />
-                      <Label htmlFor="allowAIResponses" className="text-slate-900 font-medium">
-                        Default AI Responses
-                      </Label>
-                    </div>
-                    <p className="text-sm text-slate-600">
-                      Enable AI responses by default for new conversations. Individual chats can override this setting.
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <Switch
-                      id="allowAIResponses"
-                      checked={allowAIResponses}
-                      onCheckedChange={setAllowAIResponses}
-                      disabled={!aiEnabledByPlan}
-                      className="data-[state=checked]:bg-purple-600"
-                    />
-                  </div>
-                </div>
-
-                {currentCredits < 50 && aiEnabledByPlan && (
-                  <Alert className="border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl shadow-sm">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-amber-800">
-                      Low AI credits remaining: {currentCredits}. Consider upgrading your plan for more credits.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            </div>
-
-            <Separator className="bg-slate-100" />
-
             {/* Widget Display Paths */}
             <div className="space-y-6">
               <div className="flex items-center space-x-2 mb-4">
@@ -532,10 +545,11 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
                   />
                   <p className="text-xs text-slate-500">
-                    Specify paths where the widget <strong>should</strong> appear. If left empty, it appears everywhere (unless
-                    disallowed).
+                    Specify paths where the widget <strong>should</strong> appear. If left empty, it appears everywhere
+                    (unless disallowed).
                   </p>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="disallowedPaths" className="text-slate-700 font-medium">
                     Disallowed Paths (one per line)
@@ -552,80 +566,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     Specify paths where the widget <strong>should NOT</strong> appear. Allowed paths override disallowed
                     paths.
                   </p>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="bg-slate-100" />
-
-            {/* Appearance Settings */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Palette className="w-4 h-4 text-pink-600" />
-                <h3 className="text-lg font-semibold text-slate-900">Widget Appearance</h3>
-              </div>
-
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Primary Color</Label>
-                    <div className="flex items-center space-x-3">
-                      <Input
-                        type="color"
-                        value={gradient1}
-                        onChange={(e) => setGradient1(e.target.value)}
-                        className="h-12 w-16 sm:w-20 rounded-lg border-2 border-slate-200 p-1 flex-shrink-0"
-                      />
-                      <Input
-                        type="text"
-                        value={gradient1}
-                        onChange={(e) => setGradient1(e.target.value)}
-                        className="flex-1 bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Secondary Color</Label>
-                    <div className="flex items-center space-x-3">
-                      <Input
-                        type="color"
-                        value={gradient2}
-                        onChange={(e) => setGradient2(e.target.value)}
-                        className="h-12 w-16 sm:w-20 rounded-lg border-2 border-slate-200 p-1 flex-shrink-0"
-                      />
-                      <Input
-                        type="text"
-                        value={gradient2}
-                        onChange={(e) => setGradient2(e.target.value)}
-                        className="flex-1 bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Color Preview */}
-                <div className="p-4 md:p-6 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200 shadow-sm">
-                  <Label className="text-slate-700 font-medium mb-4 block">Preview</Label>
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:gap-4">
-                    <div
-                      className="w-16 h-16 rounded-full shadow-lg mx-auto sm:mx-0 flex-shrink-0"
-                      style={{
-                        background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
-                      }}
-                    />
-                    <div className="flex-1 text-center sm:text-left">
-                      <div
-                        className="px-4 py-2 rounded-xl text-white text-sm font-medium inline-block shadow-sm"
-                        style={{
-                          background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
-                        }}
-                      >
-                        {header}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-2">This is how your chat widget will appear</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
