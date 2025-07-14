@@ -21,14 +21,8 @@ export default function NewWebsitePage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Add New Website</h1>
-          <p className="text-gray-600 mt-2">Register a new website to enable AI chatbot integration</p>
-        </div>
 
-        <CreateWebsiteForm userId={user._id} />
-      </div>
+        <CreateWebsiteForm userId={user._id} userWebsitesCount={user.websites.length}/>
     </DashboardLayout>
   )
 }

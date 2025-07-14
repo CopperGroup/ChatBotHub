@@ -51,6 +51,11 @@ export function Header({
     }
   }
 
+  // NEW: Conditional rendering based on pathname
+  if (pathname === "/websites/new") {
+    return null; // Don't render the header at all for this path
+  }
+
   return (
     <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex-shrink-0 shadow-sm">
       <div className="flex items-center justify-between">
