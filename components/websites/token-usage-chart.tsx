@@ -26,7 +26,7 @@ interface ChartData {
 export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
   const [selectedRange, setSelectedRange] = useState<TimeRange>("week")
   const [chartData, setChartData] = useState<ChartData[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null)
   const [totalUsage, setTotalUsage] = useState(0)
 
@@ -77,6 +77,7 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
     try {
       const { startDate, endDate } = getDateRange(range)
 
+      // Ensure NEXT_PUBLIC_TOKEN_API_BASE_URL is correctly set in your environment
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_TOKEN_API_BASE_URL}/tokens/usage/range/${websiteId}/${startDate}/${endDate}`,
       )
@@ -123,24 +124,24 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
 
   if (loading) {
     return (
-      <Card className="bg-white border-slate-200 shadow-sm">
+      <Card className="bg-white border-slate-200 shadow-sm rounded-xl"> {/* Added rounded-xl */}
         <CardHeader className="px-4 md:px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <Skeleton className="h-6 w-48" />
             <div className="flex space-x-2">
-              <Skeleton className="h-9 w-16" />
-              <Skeleton className="h-9 w-16" />
-              <Skeleton className="h-9 w-16" />
+              <Skeleton className="h-9 w-16 rounded-full" /> {/* Rounded skeleton buttons */}
+              <Skeleton className="h-9 w-16 rounded-full" />
+              <Skeleton className="h-9 w-16 rounded-full" />
             </div>
           </div>
         </CardHeader>
         <CardContent className="px-4 md:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-24 w-full rounded-xl" /> {/* Adjusted height, added rounded-xl */}
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
           </div>
-          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-80 w-full rounded-xl" /> {/* Added rounded-xl */}
         </CardContent>
       </Card>
     )
@@ -148,15 +149,15 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
 
   if (error) {
     return (
-      <Card className="bg-white border-slate-200 shadow-sm">
+      <Card className="bg-white border-slate-200 shadow-sm rounded-xl"> {/* Added rounded-xl */}
         <CardContent className="px-4 md:px-6 py-6">
-          <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-red-100">
+          <Alert className="border-red-200 bg-red-50 rounded-xl text-red-800"> {/* Simplified background, added rounded-xl */}
             <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <AlertDescription className="text-red-800 font-light">{error}</AlertDescription> {/* Added font-light */}
           </Alert>
           <Button
             onClick={() => fetchTokenUsage(selectedRange)}
-            className="mt-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl"
+            className="mt-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full font-normal" /* Added rounded-full, font-normal */
           >
             Retry
           </Button>
@@ -166,10 +167,10 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
   }
 
   return (
-    <Card className="bg-white border-slate-200 shadow-sm">
+    <Card className="bg-white border-slate-200 shadow-sm rounded-xl"> {/* Added rounded-xl */}
       <CardHeader className="px-4 md:px-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-          <CardTitle className="text-lg text-slate-900 flex items-center space-x-2">
+          <CardTitle className="text-lg text-[#121211] flex items-center space-x-2 font-normal"> {/* Adjusted text color, font-normal */}
             <Zap className="w-5 h-5 text-purple-600" />
             <span>Token Usage Analytics</span>
           </CardTitle>
@@ -182,8 +183,8 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
                 onClick={() => setSelectedRange(range)}
                 className={
                   selectedRange === range
-                    ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl"
-                    : "border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl bg-transparent"
+                    ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-full font-normal" /* Added rounded-full, font-normal */
+                    : "border-slate-200 text-[#121211] hover:bg-slate-50 rounded-full bg-transparent font-normal" /* Adjusted text color, added rounded-full, font-normal */
                 }
               >
                 {range === "day" && "7 Days"}
@@ -198,35 +199,35 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
       <CardContent className="px-4 md:px-6">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+          <div className="p-4 bg-purple-50 rounded-xl border border-purple-200"> {/* Simplified background */}
             <div className="flex items-center space-x-2 mb-2">
               <Zap className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium text-purple-800">Total Usage</span>
+              <span className="text-sm font-normal text-purple-800">Total Usage</span> {/* Adjusted font-normal */}
             </div>
-            <div className="text-2xl font-bold text-purple-900">{totalUsage.toLocaleString()}</div>
-            <div className="text-xs text-purple-700">
+            <div className="text-2xl font-normal text-[#121211]">{totalUsage.toLocaleString()}</div> {/* Adjusted font-normal, text color */}
+            <div className="text-xs text-purple-700 font-light"> {/* Added font-light */}
               {selectedRange === "day" && "Last 7 days"}
               {selectedRange === "week" && "Last 4 weeks"}
               {selectedRange === "month" && "Last 3 months"}
             </div>
           </div>
 
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+          <div className="p-4 bg-blue-50 rounded-xl border border-blue-200"> {/* Simplified background */}
             <div className="flex items-center space-x-2 mb-2">
               <Calendar className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">Daily Average</span>
+              <span className="text-sm font-normal text-blue-800">Daily Average</span> {/* Adjusted font-normal */}
             </div>
-            <div className="text-2xl font-bold text-blue-900">{averageUsage.toLocaleString()}</div>
-            <div className="text-xs text-blue-700">Tokens per day</div>
+            <div className="text-2xl font-normal text-[#121211]">{averageUsage.toLocaleString()}</div> {/* Adjusted font-normal, text color */}
+            <div className="text-xs text-blue-700 font-light">Tokens per day</div> {/* Added font-light */}
           </div>
 
-          <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200">
+          <div className="p-4 bg-green-50 rounded-xl border border-green-200"> {/* Simplified background */}
             <div className="flex items-center space-x-2 mb-2">
               <TrendingUp className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-medium text-green-800">Peak Usage</span>
+              <span className="text-sm font-normal text-green-800">Peak Usage</span> {/* Adjusted font-normal */}
             </div>
-            <div className="text-2xl font-bold text-green-900">{peakUsage.toLocaleString()}</div>
-            <div className="text-xs text-green-700">Highest single day</div>
+            <div className="text-2xl font-normal text-[#121211]">{peakUsage.toLocaleString()}</div> {/* Adjusted font-normal, text color */}
+            <div className="text-xs text-green-700 font-light">Highest single day</div> {/* Added font-light */}
           </div>
         </div>
 
@@ -257,8 +258,8 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
                 <Bar dataKey="usage" fill="url(#colorGradient)" radius={[4, 4, 0, 0]} />
                 <defs>
                   <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.8} />
+                    <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} /> {/* Purple gradient stop 1 */}
+                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.8} /> {/* Purple gradient stop 2 */}
                   </linearGradient>
                 </defs>
               </BarChart>
@@ -286,7 +287,7 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
                 <Line
                   type="monotone"
                   dataKey="usage"
-                  stroke="#a855f7"
+                  stroke="#a855f7" // Purple line color
                   strokeWidth={3}
                   dot={{ fill: "#a855f7", strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, stroke: "#a855f7", strokeWidth: 2, fill: "white" }}
@@ -298,8 +299,8 @@ export function TokenUsageChart({ websiteId }: TokenUsageChartProps) {
 
         {chartData.length === 0 && (
           <div className="text-center py-8">
-            <Zap className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600">No token usage data available for the selected period.</p>
+            <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" /> {/* Adjusted text color */}
+            <p className="text-gray-600 font-light">No token usage data available for the selected period.</p> {/* Adjusted text color, font-light */}
           </div>
         )}
       </CardContent>

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { WebsiteDetails } from "@/components/websites/website-details"
-import { WebsiteSettings } from "@/components/websites/website-settings"
+import { WebsiteDetails } from "@/components/websites/website-details" // Make sure this path is correct
+import { WebsiteSettings } from "@/components/websites/website-settings" // Make sure this path is correct
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading"
 
@@ -28,7 +28,7 @@ export default function WebsitePage() {
 
     // If user is authenticated and website ID is available
     if (user && id) {
-      const foundWebsite = user.websites.find((w) => w._id === id) as Website | undefined;
+      const foundWebsite = user.websites.find((w) => w._id === id);
       if (foundWebsite) {
         setWebsite(foundWebsite);
         setWebsiteLoading(false); // Website data found and set
@@ -37,25 +37,28 @@ export default function WebsitePage() {
         router.push("/websites");
       }
     } else if (user && !id) {
-        // User is logged in but no ID in params, maybe redirect to websites list if this is not the root of website details
-        router.push("/websites");
+      // User is logged in but no ID in params, maybe redirect to websites list if this is not the root of website details
+      router.push("/websites");
     } else {
-        // User is null (not authenticated), and authLoading is false, so redirect to login handled above
-        setWebsiteLoading(false); // No website to load
+      // User is null (not authenticated), and authLoading is false, so redirect to login handled above
+      setWebsiteLoading(false); // No website to load
     }
   }, [user, id, router, authLoading])
 
   useEffect(() => {
     if (!websiteLoading && website) { // Only run this check once website data is loaded
       // Redirect condition: trial ended AND no active Stripe subscription
-      if(website.freeTrialPlanId) {
+      // Check for freeTrialPlanId, if it exists, use its logic. Otherwise, use the standard subscription check.
+      if (website.freeTrialPlanId) {
         if (website.freeTrialEnded && !website.stripeSubscriptionId) {
           console.log(`[WebsitePage] Website ${website._id}: Free trial ended and no active subscription. Redirecting to pricing.`);
           router.push(`/pricing?websiteId=${website._id}`);
         }
       } else {
+        // This condition implies a plan other than trial, or no trial was ever active.
+        // It needs a subscription OR to be an exclusive customer.
         if (!website.stripeSubscriptionId && !website.exlusiveCustomer) {
-          console.log(`[WebsitePage] Website ${website._id}: Free trial ended and no active subscription. Redirecting to pricing.`);
+          console.log(`[WebsitePage] Website ${website._id}: No active subscription and not an exclusive customer. Redirecting to pricing.`);
           router.push(`/pricing?websiteId=${website._id}`);
         }
       }
@@ -64,7 +67,7 @@ export default function WebsitePage() {
 
 
   if (authLoading || websiteLoading) {
-    return <LoadingSpinner/>
+    return <LoadingSpinner />
   }
 
   // This condition is technically handled by the first useEffect
@@ -80,10 +83,9 @@ export default function WebsitePage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6 overflow-y-auto h-full max-[560px]:px-3 max-[420px]:px-1">
-        <WebsiteDetails _website={website} userId={user._id}/>
-        {/* You might also render WebsiteSettings here or on a sub-route */}
-        {/* <WebsiteSettings website={website} onUpdate={setWebsite} userId={user._id} /> */}
+      <div className="p-4 md:p-6 space-y-6 overflow-y-auto h-full max-[560px]:px-3 max-[420px]:px-1"> {/* Adjusted padding */}
+        <WebsiteDetails _website={website} userId={user._id} />
+        {/* WebsiteSettings, StaffManagement, AIManagement are rendered within WebsiteDetails's Tabs */}
       </div>
     </DashboardLayout>
   )

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Zap, Brain, ArrowRight } from "lucide-react"
+import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Zap, Brain, ArrowRight, Link as LinkIcon } from "lucide-react"
 import { WebsiteSettings } from "./website-settings"
 import { StaffManagement } from "./staff-management"
 import { AIManagement } from "./ai-management"
@@ -46,6 +46,10 @@ interface Website {
   }
   createdAt: string
   updatedAt: string
+  freeTrialPlanId?: string
+  freeTrialEnded?: boolean
+  stripeSubscriptionId?: string
+  exlusiveCustomer?: boolean
 }
 
 interface PlanInfo {
@@ -78,29 +82,16 @@ interface WebsiteDetailsProps {
 
 function WebsiteDetailsSkeleton() {
   return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-6">
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-          <div className="min-w-0 flex-1">
-            <Skeleton className="h-6 md:h-8 w-48 md:w-64 mb-2" />
-            <Skeleton className="h-4 w-full max-w-96 mb-2" />
-            <Skeleton className="h-4 w-32 md:w-48" />
-          </div>
-          <div className="flex items-center gap-2 self-start">
-            <Skeleton className="h-6 w-20 md:w-24" />
-            <Skeleton className="h-6 w-16 md:w-20" />
-          </div>
-        </div>
-      </div>
-      <Skeleton className="h-32 md:h-40 w-full rounded-xl" />
-      <div className="mt-6">
-        <Skeleton className="h-10 w-full mb-4 rounded-xl" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 md:h-32 w-full rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-48 md:h-64 w-full mt-4 rounded-xl" />
+    <div className="space-y-4 md:space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <Skeleton className="h-40 md:h-48 col-span-1 md:col-span-2 lg:col-span-3 rounded-xl" />
+        <Skeleton className="h-64 md:h-80 col-span-1 md:col-span-1 lg:col-span-2 rounded-xl" /> {/* For actions/tabs column */}
+        <Skeleton className="h-24 col-span-1 rounded-xl" />
+        <Skeleton className="h-24 col-span-1 rounded-xl" />
+        <Skeleton className="h-24 col-span-1 rounded-xl" />
+        <Skeleton className="h-24 col-span-1 rounded-xl" />
+        <Skeleton className="h-40 md:h-48 col-span-1 md:col-span-2 lg:col-span-3 rounded-xl" />
+        <Skeleton className="h-40 md:h-48 col-span-1 md:col-span-1 lg:col-span-2 rounded-xl" />
       </div>
     </div>
   )
@@ -111,7 +102,6 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
   const [activeTab, setActiveTab] = useState("overview")
   const [isLoading, setIsLoading] = useState(true)
 
-  // Derive planInfo directly from the website prop
   const planInfo: PlanInfo = {
     plan: website.plan,
     usage: {
@@ -128,11 +118,9 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     },
   }
 
-  // Check if plan is Enterprise
   const isEnterprisePlan = website.plan.name.toLowerCase().includes("enterprise")
 
   useEffect(() => {
-    // Simulate loading for demonstration
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 800)
@@ -150,336 +138,321 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
-      <div className="mb-4 md:mb-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 break-words">{website.name}</h1>
-            <p className="text-slate-600 mt-1 text-sm md:text-base">{website.description}</p>
-            <div className="flex flex-col sm:flex-row sm:items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
-              <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 font-mono text-xs w-fit">
-                {website.chatbotCode}
-              </Badge>
-              <span className="text-xs text-slate-500">Chatbot Code</span>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start">
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200 px-3 py-1.5 rounded-xl shadow-sm text-xs"
-            >
-              <Crown className="h-3 w-3" />
-              <span className="truncate">{planInfo.plan.name} Plan</span>
-            </Badge>
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 border-amber-200 px-3 py-1.5 rounded-xl shadow-sm text-xs"
-            >
-              <Zap className="h-3 w-3" />
-              {website.creditCount} Credits
-            </Badge>
-          </div>
-        </div>
-      </div>
+    <div className="container mx-auto">
+      {/* Main Tabs Component - This will handle the layout using its children's classes */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6"> {/* Parent grid for the entire layout */}
 
-      {/* Current Plan Info Card */}
-      <Card className="mb-4 md:mb-6 bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200 shadow-sm">
-        <CardHeader className="pb-2 px-4 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-slate-900 text-lg">
-            <Crown className="h-5 w-5 text-emerald-600" />
-            <span className="truncate">Current Plan: {planInfo.plan.name}</span>
-          </CardTitle>
-          <CardDescription className="text-slate-600 text-sm">{planInfo.plan.description}</CardDescription>
-        </CardHeader>
-        <CardContent className="px-4 md:px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="text-lg md:text-2xl font-bold text-slate-900">
-                {planInfo.usage.staff.current}/{planInfo.plan.maxStaffMembers}
-              </div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1">
-                <Users className="h-3 w-3" />
-                <span className="hidden sm:inline">Staff Members</span>
-                <span className="sm:hidden">Staff</span>
-              </div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="text-lg md:text-2xl font-bold text-slate-900">{website.creditCount}</div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1">
-                <Zap className="h-3 w-3" />
-                <span className="hidden sm:inline">AI Credits</span>
-                <span className="sm:hidden">Credits</span>
-              </div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="text-lg md:text-2xl font-bold text-slate-900">${website.plan.priceMonthly}</div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1">
-                <Crown className="h-3 w-3" />
-                <span className="hidden sm:inline">Per Month</span>
-                <span className="sm:hidden">Monthly</span>
-              </div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
-              <div className="flex justify-center">
-                <Badge
-                  variant="outline"
-                  className={`text-xs ${
-                    planInfo.plan.allowAI
-                      ? "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200"
-                      : "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200"
-                  } rounded-lg px-2 py-1`}
+          {/* Left Column for Vertical TabsList and Call to Action */}
+          <div className="lg:col-span-2 flex flex-col gap-4 md:gap-6"> {/* Spans 2 columns on large screens */}
+
+            {/* Vertical Tabs Navigation (TabsList) */}
+            <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-2 flex-grow-0">
+              <TabsList className="flex flex-col w-full bg-[#f6f6f6] p-1 rounded-xl h-auto gap-1">
+                {/* Styled TabsTrigger buttons */}
+                <TabsTrigger
+                  value="overview"
+                  className="w-full justify-start px-4 py-3 text-sm font-normal rounded-full transition-colors
+                             data-[state=active]:bg-[#303030] data-[state=active]:text-[#f6f6f6] data-[state=active]:shadow-sm
+                             hover:bg-[#303030]/10 hover:text-[#303030]"
                 >
-                  {planInfo.plan.allowAI ? "AI Available" : "Human Only"}
-                </Badge>
-              </div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1 mt-1">
-                <Brain className="h-3 w-3" />
-                AI Status
-              </div>
-            </div>
-          </div>
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="ai"
+                  className="w-full justify-start px-4 py-3 text-sm font-normal rounded-full transition-colors
+                             data-[state=active]:bg-[#303030] data-[state=active]:text-[#f6f6f6] data-[state=active]:shadow-sm
+                             hover:bg-[#303030]/10 hover:text-[#303030]"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Brain className="h-4 w-4" />
+                    <span>AI</span>
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="staff"
+                  className="w-full justify-start px-4 py-3 text-sm font-normal rounded-full transition-colors
+                             data-[state=active]:bg-[#303030] data-[state=active]:text-[#f6f6f6] data-[state=active]:shadow-sm
+                             hover:bg-[#303030]/10 hover:text-[#303030]"
+                >
+                  Staff
+                </TabsTrigger>
+                <TabsTrigger
+                  value="settings"
+                  className="w-full justify-start px-4 py-3 text-sm font-normal rounded-full transition-colors
+                             data-[state=active]:bg-[#303030] data-[state=active]:text-[#f6f6f6] data-[state=active]:shadow-sm
+                             hover:bg-[#303030]/10 hover:text-[#303030]"
+                >
+                  Settings
+                </TabsTrigger>
+              </TabsList>
+            </Card> {/* End of Card wrapper for TabsList */}
 
-          {/* Call to Action - Show upgrade if not Enterprise, else show buy tokens if AI enabled */}
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            {!isEnterprisePlan ? (
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden">
-                {/* Background decoration */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
-                </div>
+            {/* Upgrade / Buy Credits Call to Action Card */}
+            <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white relative overflow-hidden flex-1 max-h-48"> {/* Added h-48 */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
+              </div>
 
-                <div className="relative z-10">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+              <div className="relative z-10 flex flex-col gap-4">
+                <div className="flex-1">
+                  {!isEnterprisePlan ? (
+                    <>
+                      <h3 className="text-xl font-normal mb-2 flex items-center gap-2">
                         <Crown className="w-5 h-5" />
                         Upgrade Your Plan
                       </h3>
-                      <p className="text-emerald-100 text-sm mb-4 lg:mb-0">
+                      <p className="text-emerald-100 text-sm font-light">
                         Unlock more features, increase limits, and get better value with our higher-tier plans.
                       </p>
-                    </div>
-                    <Link
-                      href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
-                      className="flex-shrink-0"
-                    >
-                      <Button className="bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl shadow-lg font-semibold px-6 py-3 h-auto transition-all transform hover:scale-105">
-                        <Crown className="w-4 h-4 mr-2" />
-                        Upgrade Now
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              planInfo.plan.allowAI && (
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden">
-                  {/* Background decoration */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
-                  </div>
-
-                  <div className="relative z-10">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                    </>
+                  ) : (
+                    planInfo.plan.allowAI && (
+                      <>
+                        <h3 className="text-xl font-normal mb-2 flex items-center gap-2">
                           <Zap className="w-5 h-5" />
                           Need More AI Credits?
                         </h3>
-                        <p className="text-purple-100 text-sm mb-4 lg:mb-0">
-                          Power up your AI conversations with additional credits. Get instant access to more AI
-                          responses.
+                        <p className="text-purple-100 text-sm font-light">
+                          Power up your AI conversations with additional credits.
                         </p>
-                      </div>
-                      <Link href={`/token-purchase?websiteId=${website._id.toString()}`} className="flex-shrink-0">
-                        <Button className="bg-white text-purple-600 hover:bg-purple-50 rounded-xl shadow-lg font-semibold px-6 py-3 h-auto transition-all transform hover:scale-105">
-                          <Zap className="w-4 h-4 mr-2" />
-                          Buy Credits
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
+                      </>
+                    )
+                  )}
+                </div>
+                <Link
+                  href={!isEnterprisePlan ? `/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}` : `/token-purchase?websiteId=${website._id.toString()}`}
+                  className="flex-shrink-0"
+                >
+                  <Button className="bg-white text-emerald-600 hover:bg-emerald-50 rounded-full shadow-lg font-normal px-6 py-3 h-auto transition-all transform hover:scale-105 w-full">
+                    {!isEnterprisePlan ? (
+                      <>
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade Now
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2" />
+                        Buy Credits
+                      </>
+                    )}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+
+          </div> {/* End of Left Column */}
+
+          {/* Right Column for Tabs Content (Main display area) */}
+          <div className="lg:col-span-3 flex flex-col gap-4 md:gap-6"> {/* Spans 3 columns on large screens */}
+            {/* Conditional Rendering for TabsContent - The actual content changes based on the active tab */}
+
+            {/* Overview Tab Content (Bento Grid) */}
+            {activeTab === 'overview' && (
+              <TabsContent value="overview" className="mt-0"> {/* mt-0 to remove default margin, use parent flex gap */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"> {/* Bento Grid for Overview Cards */}
+
+                  {/* Website Header/Summary Card (Larger) */}
+                  <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-6 md:col-span-2 lg:col-span-2 flex flex-col justify-between">
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-normal text-[#121211] break-words mb-2">
+                        {website.name}
+                      </h1>
+                      <p className="text-gray-500 text-sm md:text-base font-light mb-4">{website.description}</p>
                     </div>
-                  </div>
-                </div>
-              )
+                    <div className="flex items-center space-x-2 mt-auto">
+                      <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 font-mono text-xs w-fit rounded-lg px-2 py-1">
+                        {website.chatbotCode}
+                      </Badge>
+                      <span className="text-xs text-gray-500 font-light">Chatbot Code</span>
+                    </div>
+                  </Card>
+
+                  {/* Current Plan Badges Card */}
+                  <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-6 md:col-span-2 lg:col-span-2 flex flex-col justify-between items-start">
+                    <CardTitle className="text-[#121211] text-lg font-normal mb-3">Your Current Plan</CardTitle>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1.5 rounded-full shadow-sm text-xs font-normal"
+                      >
+                        <Crown className="h-3 w-3" />
+                        <span className="truncate">{planInfo.plan.name} Plan</span>
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200 px-3 py-1.5 rounded-full shadow-sm text-xs font-normal"
+                      >
+                        <Zap className="h-3 w-3" />
+                        {website.creditCount} Credits
+                      </Badge>
+                    </div>
+                    <p className="text-gray-500 text-sm font-light mt-4">{planInfo.plan.description}</p>
+                  </Card>
+
+                  {/* Individual Stat Cards */}
+                  <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-4 text-center">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0 pt-0">
+                      <CardTitle className="text-sm font-normal text-[#121211]">Total Chats</CardTitle>
+                      <MessageSquare className="h-4 w-4 text-emerald-600" />
+                    </CardHeader>
+                    <CardContent className="px-0 py-0">
+                      <div className="text-xl md:text-2xl font-normal text-[#121211]">{website.chats.length}</div>
+                      <p className="text-xs text-gray-500 font-light">
+                        conversations
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-4 text-center">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0 pt-0">
+                      <CardTitle className="text-sm font-normal text-[#121211]">Staff Members</CardTitle>
+                      <Users className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent className="px-0 py-0">
+                      <div className="text-xl md:text-2xl font-normal text-[#121211]">{planInfo.usage.staff.current}</div>
+                      <p className="text-xs text-gray-500 font-light">of {planInfo.plan.maxStaffMembers} allowed</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-4 text-center">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0 pt-0">
+                      <CardTitle className="text-sm font-normal text-[#121211]">AI Credits</CardTitle>
+                      <BarChart3 className="h-4 w-4 text-purple-600" />
+                    </CardHeader>
+                    <CardContent className="px-0 py-0">
+                      <div className="text-xl md:text-2xl font-normal text-[#121211]">{website.creditCount}</div>
+                      <p className="text-xs text-gray-500 font-light">+{planInfo.plan.creditBoostMonthly} monthly</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-4 text-center">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0 pt-0">
+                      <CardTitle className="text-sm font-normal text-[#121211]">Price</CardTitle>
+                      <Crown className="h-4 w-4 text-emerald-600" />
+                    </CardHeader>
+                    <CardContent className="px-0 py-0">
+                      <div className="text-xl md:text-2xl font-normal text-[#121211]">${website.plan.priceMonthly}</div>
+                      <p className="text-xs text-gray-500 font-light">per month</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Website Information Card */}
+                  <Card className="bg-white border-slate-200 shadow-sm rounded-xl p-6 md:col-span-2 lg:col-span-4">
+                    <CardHeader className="px-0 pt-0 pb-4">
+                      <CardTitle className="text-[#121211] font-normal">Website Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 px-0 py-0">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-normal text-gray-500 block mb-1">Website URL</label>
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <LinkIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                            <a
+                              href={website.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline truncate min-w-0 font-light"
+                            >
+                              {website.link}
+                            </a>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-normal text-gray-500 block mb-1">Created</label>
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                            <p className="text-sm text-gray-600 font-light">
+                              {new Date(website.createdAt).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <label className="text-sm font-normal text-gray-500 block mb-1">Last Updated</label>
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          <p className="text-sm text-gray-600 font-light">
+                            {new Date(website.updatedAt).toLocaleDateString(undefined, {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="bg-slate-50 border-t border-slate-200 text-xs text-gray-500 px-4 py-3 font-light rounded-b-xl mt-6">
+                      <span className="truncate">Website ID: {website._id}</span>
+                    </CardFooter>
+                  </Card>
+
+                </div> {/* End of Bento Grid for Overview Cards */}
+              </TabsContent>
             )}
-          </div>
-        </CardContent>
-      </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-xl h-auto">
-          <TabsTrigger
-            value="overview"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
-          >
-            Overview
-          </TabsTrigger>
-          <TabsTrigger
-            value="ai"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
-          >
-            <div className="flex items-center space-x-1">
-              <Brain className="h-3 w-3" />
-              <span>AI</span>
-            </div>
-          </TabsTrigger>
-          <TabsTrigger
-            value="staff"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
-          >
-            Staff
-          </TabsTrigger>
-          <TabsTrigger
-            value="settings"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
-          >
-            Settings
-          </TabsTrigger>
-        </TabsList>
+            {activeTab === 'ai' && (
+              <TabsContent value="ai" className="mt-0">
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center p-8 md:p-12">
+                      <div className="flex flex-col items-center space-y-4">
+                        <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-purple-600" />
+                        <p className="text-gray-600 text-sm md:text-base font-light">Loading AI management...</p>
+                      </div>
+                    </div>
+                  }
+                >
+                  <AIManagement website={website} userId={userId} onUpdate={handleWebsiteUpdate} />
+                </Suspense>
+              </TabsContent>
+            )}
 
-        <TabsContent value="overview" className="space-y-4 mt-4 md:mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-                <CardTitle className="text-sm font-medium text-slate-700">Total Conversations</CardTitle>
-                <MessageSquare className="h-4 w-4 text-emerald-600" />
-              </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                <div className="text-xl md:text-2xl font-bold text-slate-900">{website.chats.length}</div>
-                <p className="text-xs text-slate-500">
-                  {website.chats.length === 0 ? "No conversations yet" : `Total conversations`}
-                </p>
-              </CardContent>
-            </Card>
+            {activeTab === 'staff' && (
+              <TabsContent value="staff" className="mt-0">
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center p-8 md:p-12">
+                      <div className="flex flex-col items-center space-y-4">
+                        <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
+                        <p className="text-gray-600 text-sm md:text-base font-light">Loading staff management...</p>
+                      </div>
+                    </div>
+                  }
+                >
+                  <StaffManagement websiteId={website._id} userId={userId} />
+                </Suspense>
+              </TabsContent>
+            )}
 
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-                <CardTitle className="text-sm font-medium text-slate-700">Staff Members</CardTitle>
-                <Users className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                <div className="text-xl md:text-2xl font-bold text-slate-900">{planInfo.usage.staff.current}</div>
-                <p className="text-xs text-slate-500">of {planInfo.plan.maxStaffMembers} allowed</p>
-              </CardContent>
-            </Card>
+            {activeTab === 'settings' && (
+              <TabsContent value="settings" className="mt-0">
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center p-8 md:p-12">
+                      <div className="flex flex-col items-center space-y-4">
+                        <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
+                        <p className="text-gray-600 text-sm md:text-base font-light">Loading website settings...</p>
+                      </div>
+                    </div>
+                  }
+                >
+                  <WebsiteSettings website={website} userId={userId} onUpdate={handleWebsiteUpdate} />
+                </Suspense>
+              </TabsContent>
+            )}
+          </div> {/* End of Main Content Column (Right) */}
 
-            <Card className="bg-white border-slate-200 shadow-sm sm:col-span-2 lg:col-span-1">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-                <CardTitle className="text-sm font-medium text-slate-700">AI Credits</CardTitle>
-                <BarChart3 className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                <div className="text-xl md:text-2xl font-bold text-slate-900">{website.creditCount}</div>
-                <p className="text-xs text-slate-500">+{planInfo.plan.creditBoostMonthly} monthly</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader className="px-4 md:px-6">
-              <CardTitle className="text-slate-900">Website Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 px-4 md:px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div>
-                  <label className="text-sm font-medium text-slate-700 block mb-1">Website URL</label>
-                  <div className="flex items-center space-x-2 min-w-0">
-                    <Globe className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                    <a
-                      href={website.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline truncate min-w-0"
-                    >
-                      {website.link}
-                    </a>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 block mb-1">Created</label>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                    <p className="text-sm text-slate-600">
-                      {new Date(website.createdAt).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Last Updated</label>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                  <p className="text-sm text-slate-600">
-                    {new Date(website.updatedAt).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200 text-xs text-slate-500 px-4 md:px-6">
-              <span className="truncate">Website ID: {website._id}</span>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ai" className="mt-4 md:mt-6">
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center p-8 md:p-12">
-                <div className="flex flex-col items-center space-y-4">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-purple-600" />
-                  <p className="text-slate-600 text-sm md:text-base">Loading AI management...</p>
-                </div>
-              </div>
-            }
-          >
-            <AIManagement website={website} userId={userId} onUpdate={handleWebsiteUpdate} />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="staff" className="mt-4 md:mt-6">
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center p-8 md:p-12">
-                <div className="flex flex-col items-center space-y-4">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
-                  <p className="text-slate-600 text-sm md:text-base">Loading staff management...</p>
-                </div>
-              </div>
-            }
-          >
-            <StaffManagement websiteId={website._id} userId={userId} />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="settings" className="mt-4 md:mt-6">
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center p-8 md:p-12">
-                <div className="flex flex-col items-center space-y-4">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
-                  <p className="text-slate-600 text-sm md:text-base">Loading website settings...</p>
-                </div>
-              </div>
-            }
-          >
-            <WebsiteSettings website={website} userId={userId} onUpdate={handleWebsiteUpdate} />
-          </Suspense>
-        </TabsContent>
-      </Tabs>
+        </div> {/* End of Parent grid for the entire layout */}
+      </Tabs> {/* End of Main Tabs Component */}
     </div>
   )
 }
