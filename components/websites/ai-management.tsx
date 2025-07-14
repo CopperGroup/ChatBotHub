@@ -5,11 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Brain, Zap, Clock, Save, RefreshCw, AlertTriangle, Loader2, ArrowRight } from "lucide-react"
+import {
+  Brain,
+  Zap,
+  Clock,
+  Save,
+  RefreshCw,
+  AlertTriangle,
+  Loader2,
+  ArrowRight,
+  TrendingUp,
+  BarChart3,
+  Activity,
+  Sparkles,
+  Target,
+} from "lucide-react"
 import { toast } from "sonner"
 import { authFetch } from "@/lib/authFetch"
 import { TokenUsageChart } from "./token-usage-chart"
@@ -58,21 +71,36 @@ interface AIManagementProps {
 
 function AIManagementSkeleton() {
   return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-0">
-      <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 shadow-sm">
-        <CardHeader className="pb-4 px-4 md:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-10 w-32" />
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Skeleton */}
+        <div className="mb-8">
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+
+        {/* CTA Card Skeleton */}
+        <div className="mb-8">
+          <Skeleton className="h-32 w-full rounded-2xl" />
+        </div>
+
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+          ))}
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-96 w-full rounded-2xl" />
           </div>
-        </CardHeader>
-      </Card>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-xl" />
-        ))}
+          <div>
+            <Skeleton className="h-64 w-full rounded-2xl" />
+          </div>
+        </div>
       </div>
-      <Skeleton className="h-96 w-full rounded-xl" />
     </div>
   )
 }
@@ -130,7 +158,6 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
       if (onUpdate) {
         onUpdate(responseData.website)
       }
-
       toast.success("AI settings saved successfully!")
     } catch (error: any) {
       console.error("Error saving AI settings:", error)
@@ -151,214 +178,284 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-0">
-      {/* Call to Action Card - Only show buy tokens if not Enterprise and AI is enabled */}
-      {!isEnterprisePlan && aiEnabledByPlan && (
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Management</h1>
+          <p className="text-gray-600">Configure AI responses, manage credits, and monitor usage analytics</p>
+        </div>
+
+        {/* Call to Action Card - Only show buy tokens if not Enterprise and AI is enabled */}
+        {!isEnterprisePlan && aiEnabledByPlan && (
+          <Card className="mb-8 border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white overflow-hidden">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
+            </div>
+            <CardContent className="relative z-10 p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold">Power Up Your AI</h3>
+                  </div>
+                  <p className="text-purple-100 text-lg mb-4 lg:mb-0">
+                    Get more AI credits to handle increased conversation volume and provide instant responses 24/7.
+                  </p>
+                  <div className="flex items-center space-x-6 text-sm text-purple-100">
+                    <div className="flex items-center space-x-2">
+                      <Activity className="w-4 h-4" />
+                      <span>24/7 Availability</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="w-4 h-4" />
+                      <span>Instant Responses</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <Link href={`/token-purchase?websiteId=${website._id.toString()}`}>
+                    <Button className="bg-white text-purple-600 hover:bg-gray-50 rounded-xl shadow-lg font-semibold px-8 py-4 h-auto transition-all transform hover:scale-105">
+                      <Zap className="w-5 h-5 mr-2" />
+                      Buy Credits
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Available Credits */}
+          <Card className="border-0 shadow-lg rounded-2xl overflow-hidden p-0">
+            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-emerald-100 text-sm font-medium">Available Credits</p>
+                  <p className="text-3xl font-bold">{currentCredits.toLocaleString()}</p>
+                  <p className="text-emerald-100 text-xs mt-1">+{website.plan.creditBoostMonthly} monthly</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* AI Status */}
+          <Card className="border-0 shadow-lg rounded-2xl overflow-hidden p-0">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">AI Status</p>
+                  <p className="text-2xl font-bold">{allowAIResponses && aiEnabledByPlan ? "Active" : "Inactive"}</p>
+                  <p className="text-blue-100 text-xs mt-1">
+                    {aiEnabledByPlan ? "Ready to respond" : "Plan upgrade required"}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Daily Limit */}
+          <Card className="border-0 shadow-lg rounded-2xl overflow-hidden p-0">
+            <div className="h-full bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Daily Limit</p>
+                  <p className="text-2xl font-bold">
+                    {dailyTokenLimit ? Number.parseInt(dailyTokenLimit).toLocaleString() : "Unlimited"}
+                  </p>
+                  <p className="text-purple-100 text-xs mt-1">Tokens per day</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - AI Configuration */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* AI Configuration Card */}
+            <Card className="border-0 shadow-lg rounded-2xl">
+              <CardHeader className="pb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                      <Brain className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-gray-900">AI Configuration</CardTitle>
+                      <p className="text-gray-500 text-sm">Configure AI behavior and response settings</p>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-8">
+                {/* Default AI Responses */}
+                <div className="p-6 bg-purple-50 rounded-2xl border border-purple-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <Brain className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <Label htmlFor="allowAIResponses" className="text-gray-900 font-semibold text-lg">
+                          Default AI Responses
+                        </Label>
+                      </div>
+                      <p className="text-gray-600 mb-4">
+                        Enable AI responses by default for new conversations. Individual chats can override this
+                        setting.
+                      </p>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-1">
+                          <Activity className="w-3 h-3" />
+                          <span>Instant responses</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="w-3 h-3" />
+                          <span>24/7 availability</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 ml-6">
+                      <Switch
+                        id="allowAIResponses"
+                        checked={allowAIResponses}
+                        onCheckedChange={setAllowAIResponses}
+                        disabled={!aiEnabledByPlan}
+                        className="data-[state=checked]:bg-purple-600 scale-125"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Daily Token Limit */}
+                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Target className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <Label htmlFor="dailyTokenLimit" className="text-gray-900 font-semibold text-lg">
+                      Daily Token Limit
+                    </Label>
+                  </div>
+                  <div className="space-y-4">
+                    <Input
+                      id="dailyTokenLimit"
+                      type="number"
+                      value={dailyTokenLimit}
+                      onChange={(e) => setDailyTokenLimit(e.target.value)}
+                      placeholder="e.g., 1000 (leave empty for no limit)"
+                      min="0"
+                      className="h-12 bg-white border-gray-200 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                      disabled={!aiEnabledByPlan}
+                    />
+                    <p className="text-gray-600 text-sm">
+                      Set a daily limit for AI token usage. When reached, AI responses will be disabled for the day.
+                      Leave empty for no limit.
+                    </p>
+                    {dailyTokenLimit && (
+                      <div className="flex items-center space-x-2 text-purple-700 bg-purple-100 px-4 py-3 rounded-xl">
+                        <Target className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          Daily limit: {Number.parseInt(dailyTokenLimit).toLocaleString()} tokens
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Alerts */}
+                {!aiEnabledByPlan && (
+                  <Alert className="border-amber-200 bg-amber-50 rounded-xl">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      AI features are not available on your current plan. Upgrade to access AI responses and token
+                      management.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {currentCredits < 50 && aiEnabledByPlan && (
+                  <Alert className="border-red-200 bg-red-50 rounded-xl">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      Low AI credits remaining: {currentCredits}. Consider purchasing more credits to continue using AI
+                      features.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Token Usage Analytics */}
+            {aiEnabledByPlan && <TokenUsageChart websiteId={website._id} />}
           </div>
 
-          <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  Power Up Your AI
-                </h3>
-                <p className="text-purple-100 text-sm mb-4 lg:mb-0">
-                  Get more AI credits to handle increased conversation volume and provide instant responses 24/7.
-                </p>
-              </div>
-              <Link href={`/token-purchase?websiteId=${website._id.toString()}`} className="flex-shrink-0">
-                <Button className="bg-white text-purple-600 hover:bg-purple-50 rounded-xl shadow-lg font-semibold px-6 py-3 h-auto transition-all transform hover:scale-105">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Buy Credits
-                  <ArrowRight className="w-4 h-4 ml-2" />
+          {/* Right Column - Quick Actions & Info */}
+          <div className="space-y-8">
+            {/* Quick Actions */}
+            <Card className="border-0 shadow-lg rounded-2xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg text-gray-900">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={handleSave}
+                  disabled={loading || !aiEnabledByPlan}
+                  className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-lg font-semibold disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving Changes...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save AI Settings
+                    </>
+                  )}
                 </Button>
-              </Link>
-            </div>
+                <Button
+                  variant="outline"
+                  onClick={resetToDefaults}
+                  className="w-full h-12 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl bg-transparent"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reset to Defaults
+                </Button>
+                {!isEnterprisePlan && aiEnabledByPlan && (
+                  <Link href={`/token-purchase?websiteId=${website._id.toString()}`}>
+                    <Button className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg font-semibold">
+                      <Zap className="w-4 h-4 mr-2" />
+                      Buy More Credits
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+
+
           </div>
         </div>
-      )}
-
-      {/* AI Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-            <CardTitle className="text-sm font-medium text-slate-700">Available Credits</CardTitle>
-            <Zap className="h-4 w-4 text-amber-600" />
-          </CardHeader>
-          <CardContent className="px-4 md:px-6">
-            <div className="text-2xl font-bold text-slate-900">{currentCredits.toLocaleString()}</div>
-            <p className="text-xs text-slate-500">+{website.plan.creditBoostMonthly} monthly boost</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-            <CardTitle className="text-sm font-medium text-slate-700">AI Status</CardTitle>
-            <Brain className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent className="px-4 md:px-6">
-            <div className="text-2xl font-bold text-slate-900">
-              {allowAIResponses && aiEnabledByPlan ? "Active" : "Inactive"}
-            </div>
-            <p className="text-xs text-slate-500">
-              {aiEnabledByPlan ? "Default AI responses" : "Plan upgrade required"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-            <CardTitle className="text-sm font-medium text-slate-700">Daily Limit</CardTitle>
-            <Clock className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent className="px-4 md:px-6">
-            <div className="text-2xl font-bold text-slate-900">
-              {dailyTokenLimit ? Number.parseInt(dailyTokenLimit).toLocaleString() : "Unlimited"}
-            </div>
-            <p className="text-xs text-slate-500">Tokens per day</p>
-          </CardContent>
-        </Card>
       </div>
-
-      {/* AI Configuration Card */}
-      <Card className="bg-white border-slate-200 shadow-sm">
-        <CardHeader className="px-4 md:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <CardTitle className="text-xl text-slate-900 flex items-center space-x-2">
-              <Brain className="w-5 h-5 text-purple-600" />
-              <span>AI Configuration</span>
-            </CardTitle>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <Button
-                variant="outline"
-                onClick={resetToDefaults}
-                className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl w-full sm:w-auto bg-transparent"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Reset to Defaults</span>
-                <span className="sm:hidden">Reset</span>
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={loading || !aiEnabledByPlan}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl shadow-sm w-full sm:w-auto"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6 md:space-y-8 px-4 md:px-6">
-          {/* Default AI Responses */}
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200 shadow-sm space-y-3 sm:space-y-0">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Brain className="w-5 h-5 text-purple-600" />
-                  <Label htmlFor="allowAIResponses" className="text-slate-900 font-medium">
-                    Default AI Responses
-                  </Label>
-                </div>
-                <p className="text-sm text-slate-600">
-                  Enable AI responses by default for new conversations. Individual chats can override this setting.
-                </p>
-              </div>
-              <div className="flex-shrink-0">
-                <Switch
-                  id="allowAIResponses"
-                  checked={allowAIResponses}
-                  onCheckedChange={setAllowAIResponses}
-                  disabled={!aiEnabledByPlan}
-                  className="data-[state=checked]:bg-purple-600"
-                />
-              </div>
-            </div>
-          </div>
-
-          <Separator className="bg-slate-100" />
-
-          {/* Daily Token Limit */}
-          <div className="space-y-4">
-            <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200 shadow-sm">
-              <div className="flex items-center space-x-2 mb-3">
-                <Clock className="w-5 h-5 text-purple-600" />
-                <Label htmlFor="dailyTokenLimit" className="text-slate-900 font-medium">
-                  Daily Token Limit
-                </Label>
-              </div>
-              <div className="space-y-3">
-                <Input
-                  id="dailyTokenLimit"
-                  type="number"
-                  value={dailyTokenLimit}
-                  onChange={(e) => setDailyTokenLimit(e.target.value)}
-                  placeholder="e.g., 1000 (leave empty for no limit)"
-                  min="0"
-                  className="bg-white border-purple-200 text-slate-900 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
-                  disabled={!aiEnabledByPlan}
-                />
-                <p className="text-sm text-slate-600">
-                  Set a daily limit for AI token usage. When reached, AI responses will be disabled for the day. Leave
-                  empty for no limit.
-                </p>
-                {dailyTokenLimit && (
-                  <div className="flex items-center space-x-2 text-purple-700 bg-purple-100 px-3 py-2 rounded-lg">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      Daily limit: {Number.parseInt(dailyTokenLimit).toLocaleString()} tokens
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Alerts */}
-          {!aiEnabledByPlan && (
-            <Alert className="border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl shadow-sm">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">
-                AI features are not available on your current plan. Upgrade to access AI responses and token management.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {currentCredits < 50 && aiEnabledByPlan && (
-            <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-red-100 rounded-xl shadow-sm">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                Low AI credits remaining: {currentCredits}. Consider purchasing more credits to continue using AI
-                features.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Token Usage Analytics */}
-      {aiEnabledByPlan && (
-        <>
-          <Separator className="bg-slate-100" />
-          <TokenUsageChart websiteId={website._id} />
-        </>
-      )}
     </div>
   )
 }

@@ -6,8 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Settings, Palette, Zap, Crown, Save, RefreshCw, Waypoints, Loader2, GitBranch, Plus, Edit } from "lucide-react"
+import {
+  Palette,
+  Zap,
+  Crown,
+  Save,
+  RefreshCw,
+  Waypoints,
+  Loader2,
+  GitBranch,
+  Plus,
+  Edit,
+  XCircle,
+  Globe,
+  MessageSquare,
+  Shield,
+  BarChart3,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -46,9 +61,10 @@ interface Website {
     language?: string
     dailyTokenLimit?: number | null
   }
-  predefinedAnswers: string // JSON string
+  predefinedAnswers: string
   createdAt: string
   updatedAt: string
+  stripeSubscriptionId?: string
 }
 
 interface WebsiteSettingsProps {
@@ -59,43 +75,40 @@ interface WebsiteSettingsProps {
 
 function SettingsLoadingSkeleton() {
   return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-0">
-      <Card className="bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200 shadow-sm">
-        <CardHeader className="pb-4 px-4 md:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-10 w-32" />
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Skeleton */}
+        <div className="mb-8">
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+
+        {/* Plan Card Skeleton */}
+        <div className="mb-8">
+          <Skeleton className="h-32 w-full rounded-2xl" />
+        </div>
+
+        {/* Settings Cards Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-96 w-full rounded-2xl" />
+            ))}
           </div>
-        </CardHeader>
-      </Card>
-      <Card className="bg-white border-slate-200 shadow-sm">
-        <CardHeader className="px-4 md:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <Skeleton className="h-6 w-40" />
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <Skeleton className="h-10 w-full sm:w-40" />
-              <Skeleton className="h-10 w-full sm:w-32" />
-            </div>
+          <div className="space-y-8">
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-64 w-full rounded-2xl" />
+            ))}
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6 md:space-y-8 px-4 md:px-6">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="space-y-4">
-              <Skeleton className="h-6 w-40" />
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
 
 export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsProps) {
   const router = useRouter()
+
   // States for general website info
   const [name, setName] = useState(website.name)
   const [link, setLink] = useState(website.link)
@@ -113,6 +126,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
 
   const [loading, setLoading] = useState(false)
   const [isDataReady, setIsDataReady] = useState(false)
+  const [cancellingSubscription, setCancellingSubscription] = useState(false)
 
   // Derived values for current plan usage
   const currentStaffMembers = website.staffMembers.length
@@ -141,7 +155,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     setAllowedPathsText(website.preferences?.allowedPaths?.join("\n") || "")
     setDisallowedPathsText(website.preferences?.disallowedPaths?.join("\n") || "")
 
-    // Simulate data loading for Suspense demonstration
+    // Simulate data loading
     setTimeout(() => {
       setIsDataReady(true)
     }, 500)
@@ -191,7 +205,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
       if (onUpdate) {
         onUpdate(responseData.website)
       }
-
       toast.success("Settings saved successfully!")
     } catch (error: any) {
       console.error("Error saving website settings:", error)
@@ -211,367 +224,470 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
     toast.info("Chatbot settings reset to defaults")
   }
 
+  const handleCancelSubscription = async () => {
+    if (!website.stripeSubscriptionId) {
+      toast.info("No active subscription to cancel.")
+      return
+    }
+
+    if (
+      !window.confirm(
+        "Are you sure you want to cancel your subscription?",
+      )
+    ) {
+      return
+    }
+
+    setCancellingSubscription(true)
+    try {
+      const res = await authFetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}/cancel-subscription`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: userId,
+          }),
+        },
+      )
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.message || "Failed to cancel subscription.")
+      }
+
+      toast.success("Subscription cancellation initiated! Your plan will revert to Free.")
+
+      const updatedWebsiteRes = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`)
+      if (updatedWebsiteRes.ok) {
+        const updatedWebsiteData = await updatedWebsiteRes.json()
+        onUpdate(updatedWebsiteData)
+      } else {
+        console.error("Failed to refetch website after cancellation:", await updatedWebsiteRes.json())
+      }
+    } catch (error: any) {
+      console.error("Error canceling subscription:", error)
+      toast.error(error.message || "Failed to cancel subscription. Please try again.")
+    } finally {
+      setCancellingSubscription(false)
+    }
+  }
+
   if (!isDataReady) {
     return <SettingsLoadingSkeleton />
   }
 
   return (
-    <>
-      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Website Settings</h1>
+          <p className="text-gray-600">Manage your website configuration and chatbot preferences</p>
+        </div>
+
         {/* Plan Status Card */}
         {website.plan && (
-          <Card className="bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200 shadow-sm">
-            <CardHeader className="pb-4 px-4 md:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
-                    <Crown className="w-5 h-5 text-white" />
+          <Card className="mb-8 border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white overflow-hidden">
+            <CardHeader className="pb-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                    <Crown className="w-8 h-8 text-white" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-lg text-slate-900 truncate">{website.plan.name} Plan</CardTitle>
-                    <p className="text-sm text-slate-600 line-clamp-2">{website.plan.description}</p>
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-white mb-1">{website.plan.name} Plan</CardTitle>
+                    <p className="text-emerald-100 text-lg">{website.plan.description}</p>
+                    <div className="flex items-center space-x-6 mt-3 text-sm text-emerald-100">
+                      <div className="flex items-center space-x-2">
+                        <BarChart3 className="w-4 h-4" />
+                        <span>{currentCredits} Credits Available</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Shield className="w-4 h-4" />
+                        <span>
+                          {currentStaffMembers}/{maxStaffMembers} Staff Members
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <Link
-                  href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
-                >
-                  <Button className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl shadow-sm w-full sm:w-auto">
-                    <Crown className="w-4 h-4 mr-2" />
-                    Change Plan
-                  </Button>
-                </Link>
+                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                  <Link
+                    href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
+                  >
+                    <Button className="bg-white text-emerald-600 hover:bg-gray-50 font-semibold px-6 py-3 rounded-xl shadow-lg w-full sm:w-auto">
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade Plan
+                    </Button>
+                  </Link>
+                  {website.stripeSubscriptionId && website.plan.name !== "Free" && (
+                    <Button
+                      variant="ghost"
+                      onClick={handleCancelSubscription}
+                      disabled={cancellingSubscription}
+                      className="text-white hover:bg-white/10 border border-white/20 rounded-xl px-4 py-3 w-full sm:w-auto"
+                    >
+                      {cancellingSubscription ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Cancelling...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Cancel
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
           </Card>
         )}
 
-        {/* Main Settings Card */}
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <CardHeader className="px-4 md:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-              <CardTitle className="text-xl text-slate-900 flex items-center space-x-2">
-                <Settings className="w-5 h-5 text-emerald-600" />
-                <span>Website Settings</span>
-              </CardTitle>
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={resetToDefaults}
-                  className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl w-full sm:w-auto bg-transparent"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Reset Chatbot Settings</span>
-                  <span className="sm:hidden">Reset</span>
-                </Button>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Main Settings */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* General Information */}
+            <Card className="border-0 shadow-lg rounded-2xl">
+              <CardHeader className="pb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-gray-900">General Information</CardTitle>
+                      <p className="text-gray-500 text-sm">Basic website details and configuration</p>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-gray-700 font-medium text-sm">
+                      Website Name
+                    </Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter website name"
+                      className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="link" className="text-gray-700 font-medium text-sm">
+                      Website URL
+                    </Label>
+                    <Input
+                      id="link"
+                      type="url"
+                      value={link}
+                      onChange={(e) => setLink(e.target.value)}
+                      placeholder="https://yourwebsite.com"
+                      className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-gray-700 font-medium text-sm">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="A brief description of your website"
+                    rows={4}
+                    className="bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl resize-none"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chatbot Configuration */}
+            <Card className="border-0 shadow-lg rounded-2xl">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-gray-900">Chatbot Configuration</CardTitle>
+                    <p className="text-gray-500 text-sm">Customize your chatbot behavior and appearance</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                {/* Basic Settings */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-medium text-sm">Chat Header Title</Label>
+                    <Input
+                      value={header}
+                      onChange={(e) => setHeader(e.target.value)}
+                      placeholder="e.g., Chat Support, Help Center"
+                      className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="language" className="text-gray-700 font-medium text-sm">
+                      Chatbot Language
+                    </Label>
+                    <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
+                      <SelectTrigger className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl">
+                        <SelectValue placeholder="Select a language" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 rounded-xl shadow-lg">
+                        {Object.entries(languages).map(([name, code]) => (
+                          <SelectItem key={code} value={code}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Color Customization */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <Palette className="w-4 h-4 text-purple-600" />
+                    <h4 className="text-lg font-semibold text-gray-900">Color Customization</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-gray-700 font-medium text-sm">Primary Color</Label>
+                      <div className="flex items-center space-x-3">
+                        <Input
+                          type="color"
+                          value={gradient1}
+                          onChange={(e) => setGradient1(e.target.value)}
+                          className="h-12 w-16 rounded-xl border-2 border-gray-200 p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={gradient1}
+                          onChange={(e) => setGradient1(e.target.value)}
+                          className="flex-1 h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-gray-700 font-medium text-sm">Secondary Color</Label>
+                      <div className="flex items-center space-x-3">
+                        <Input
+                          type="color"
+                          value={gradient2}
+                          onChange={(e) => setGradient2(e.target.value)}
+                          className="h-12 w-16 rounded-xl border-2 border-gray-200 p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={gradient2}
+                          onChange={(e) => setGradient2(e.target.value)}
+                          className="flex-1 h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Color Preview */}
+                  <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200">
+                    <Label className="text-gray-700 font-medium text-sm mb-4 block">Live Preview</Label>
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className="w-16 h-16 rounded-2xl shadow-lg"
+                        style={{
+                          background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
+                        }}
+                      />
+                      <div className="flex-1">
+                        <div
+                          className="px-6 py-3 rounded-xl text-white text-sm font-semibold inline-block shadow-lg"
+                          style={{
+                            background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
+                          }}
+                        >
+                          {header}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Chat widget preview</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Widget Display Paths */}
+            <Card className="border-0 shadow-lg rounded-2xl">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                    <Waypoints className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-gray-900">Widget Display Paths</CardTitle>
+                    <p className="text-gray-500 text-sm">Control where your chat widget appears</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="allowedPaths" className="text-gray-700 font-medium text-sm">
+                      Allowed Paths
+                    </Label>
+                    <Textarea
+                      id="allowedPaths"
+                      value={allowedPathsText}
+                      onChange={(e) => setAllowedPathsText(e.target.value)}
+                      placeholder={`/\n/contact\n/products\n/support`}
+                      rows={6}
+                      className="bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm resize-none"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Paths where the widget <strong>should</strong> appear (one per line)
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="disallowedPaths" className="text-gray-700 font-medium text-sm">
+                      Disallowed Paths
+                    </Label>
+                    <Textarea
+                      id="disallowedPaths"
+                      value={disallowedPathsText}
+                      onChange={(e) => setDisallowedPathsText(e.target.value)}
+                      placeholder={`/admin\n/checkout\n/login\n/dashboard`}
+                      rows={6}
+                      className="bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm resize-none"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Paths where the widget <strong>should NOT</strong> appear (one per line)
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Quick Actions & Stats */}
+          <div className="space-y-8">
+            {/* Quick Actions */}
+            <Card className="border-0 shadow-lg rounded-2xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg text-gray-900">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <Button
                   onClick={handleSave}
                   disabled={loading}
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl shadow-sm w-full sm:w-auto"
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg font-semibold"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
+                      Saving Changes...
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Save Changes
+                      Save All Changes
                     </>
                   )}
                 </Button>
-              </div>
-            </div>
-          </CardHeader>
+                <Button
+                  variant="outline"
+                  onClick={resetToDefaults}
+                  className="w-full h-12 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl bg-transparent"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reset to Defaults
+                </Button>
+              </CardContent>
+            </Card>
 
-          <CardContent className="space-y-6 md:space-y-8 px-4 md:px-6">
-            {/* General Website Information */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Settings className="w-4 h-4 text-slate-600" />
-                <h3 className="text-lg font-semibold text-slate-900">General Information</h3>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-slate-700 font-medium">
-                    Website Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter website name"
-                    className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                    required
-                  />
+            {/* Workflows Card */}
+            <Card className="border-0 shadow-lg rounded-2xl overflow-hidden p-0">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                <div className="flex items-center space-x-3 mb-3">
+                  <GitBranch className="w-6 h-6" />
+                  <h3 className="text-lg font-semibold">Automated Workflows</h3>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="link" className="text-slate-700 font-medium">
-                    Website URL
-                  </Label>
-                  <Input
-                    id="link"
-                    type="url"
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
-                    placeholder="e.g., https://yourwebsite.com"
-                    className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                    required
-                  />
-                </div>
+                <p className="text-blue-100 text-sm mb-4">
+                  {hasWorkflows()
+                    ? "Your automated response workflows are configured and ready."
+                    : "Create automated workflows to guide user conversations."}
+                </p>
+                <Link href={`/workflows/${website._id}`}>
+                  <Button className="bg-white text-blue-600 hover:bg-gray-50 font-semibold rounded-xl w-full">
+                    {hasWorkflows() ? (
+                      <>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Manage Workflows
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Workflow
+                      </>
+                    )}
+                  </Button>
+                </Link>
               </div>
+            </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-slate-700 font-medium">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="A brief description of your website"
-                  rows={3}
-                  className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                />
-              </div>
-            </div>
-
-            <Separator className="bg-slate-100" />
-
-            {/* Appearance Settings */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Palette className="w-4 h-4 text-pink-600" />
-                <h3 className="text-lg font-semibold text-slate-900">Widget Appearance</h3>
-              </div>
-
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Primary Color</Label>
+            {/* Usage Stats */}
+            <Card className="border-0 shadow-lg rounded-2xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg text-gray-900">Usage Statistics</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl">
                     <div className="flex items-center space-x-3">
-                      <Input
-                        type="color"
-                        value={gradient1}
-                        onChange={(e) => setGradient1(e.target.value)}
-                        className="h-12 w-16 sm:w-20 rounded-lg border-2 border-slate-200 p-1 flex-shrink-0"
-                      />
-                      <Input
-                        type="text"
-                        value={gradient1}
-                        onChange={(e) => setGradient1(e.target.value)}
-                        className="flex-1 bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Secondary Color</Label>
-                    <div className="flex items-center space-x-3">
-                      <Input
-                        type="color"
-                        value={gradient2}
-                        onChange={(e) => setGradient2(e.target.value)}
-                        className="h-12 w-16 sm:w-20 rounded-lg border-2 border-slate-200 p-1 flex-shrink-0"
-                      />
-                      <Input
-                        type="text"
-                        value={gradient2}
-                        onChange={(e) => setGradient2(e.target.value)}
-                        className="flex-1 bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Color Preview */}
-                <div className="p-4 md:p-6 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200 shadow-sm">
-                  <Label className="text-slate-700 font-medium mb-4 block">Preview</Label>
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:gap-4">
-                    <div
-                      className="w-16 h-16 rounded-full shadow-lg mx-auto sm:mx-0 flex-shrink-0"
-                      style={{
-                        background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
-                      }}
-                    />
-                    <div className="flex-1 text-center sm:text-left">
-                      <div
-                        className="px-4 py-2 rounded-xl text-white text-sm font-medium inline-block shadow-sm"
-                        style={{
-                          background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
-                        }}
-                      >
-                        {header}
+                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <Zap className="w-4 h-4 text-emerald-600" />
                       </div>
-                      <p className="text-xs text-slate-500 mt-2">This is how your chat widget will appear</p>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Available Credits</p>
+                        <p className="text-xs text-gray-500">AI responses remaining</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-emerald-600">{currentCredits}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Shield className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Staff Members</p>
+                        <p className="text-xs text-gray-500">Team access</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-blue-600">
+                        {currentStaffMembers}/{maxStaffMembers}
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <Separator className="bg-slate-100" />
-
-            {/* Pre-defined Responses (Workflows) Section */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <GitBranch className="w-4 h-4 text-blue-600" />
-                <h3 className="text-lg font-semibold text-slate-900">Pre-defined Responses (Workflows)</h3>
-              </div>
-
-              <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <GitBranch className="w-5 h-5 text-blue-600" />
-                      <h4 className="text-slate-900 font-medium">Automated Response Workflows</h4>
-                    </div>
-                    <p className="text-sm text-slate-600">
-                      {hasWorkflows()
-                        ? "Configure your automated response workflows to guide users through predefined conversation paths."
-                        : "Create automated response workflows to guide users through predefined conversation paths and collect information efficiently."}
-                    </p>
-                    {hasWorkflows() && <p className="text-xs text-blue-600 mt-1 font-medium">Status: Configured ✓</p>}
-                  </div>
-                  <div className="flex-shrink-0">
-                    <Link href={`/workflows/${website._id}`}>
-                      <Button
-                        className={`${
-                          hasWorkflows()
-                            ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                            : "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-                        } text-white rounded-xl shadow-sm`}
-                      >
-                        {hasWorkflows() ? (
-                          <>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Configure
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Create
-                          </>
-                        )}
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="bg-slate-100" />
-
-            {/* Chatbot Basic Configuration */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Settings className="w-4 h-4 text-slate-600" />
-                <h3 className="text-lg font-semibold text-slate-900">Chatbot Basic Configuration</h3>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                <div className="space-y-2">
-                  <Label className="text-slate-700 font-medium">Chat Header Title</Label>
-                  <Input
-                    value={header}
-                    onChange={(e) => setHeader(e.target.value)}
-                    placeholder="e.g., Chat Support, Help Center"
-                    className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                  />
-                  <p className="text-xs text-slate-500">This appears at the top of your chat widget</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-700 font-medium">Available Credits</Label>
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="number"
-                      value={currentCredits}
-                      className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                      readOnly={true}
-                    />
-                    <div className="flex items-center space-x-1 text-amber-600">
-                      <Zap className="w-4 h-4" />
-                      <span className="text-sm font-medium">Credits</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500">Credits are used for AI responses</p>
-                </div>
-
-                {/* Language Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="language" className="text-slate-700 font-medium">
-                    Chatbot Language
-                  </Label>
-                  <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
-                    <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl">
-                      <SelectValue placeholder="Select a language" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 rounded-xl shadow-lg">
-                      {Object.entries(languages).map(([name, code]) => (
-                        <SelectItem key={code} value={code}>
-                          {name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-slate-500">Set the default language for your chatbot.</p>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="bg-slate-100" />
-
-            {/* Widget Display Paths */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Waypoints className="w-4 h-4 text-indigo-600" />
-                <h3 className="text-lg font-semibold text-slate-900">Widget Display Paths</h3>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="allowedPaths" className="text-slate-700 font-medium">
-                    Allowed Paths (one per line)
-                  </Label>
-                  <Textarea
-                    id="allowedPaths"
-                    value={allowedPathsText}
-                    onChange={(e) => setAllowedPathsText(e.target.value)}
-                    placeholder={`e.g.,\n/\n/contact\n/products`}
-                    rows={6}
-                    className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Specify paths where the widget <strong>should</strong> appear. If left empty, it appears everywhere
-                    (unless disallowed).
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="disallowedPaths" className="text-slate-700 font-medium">
-                    Disallowed Paths (one per line)
-                  </Label>
-                  <Textarea
-                    id="disallowedPaths"
-                    value={disallowedPathsText}
-                    onChange={(e) => setDisallowedPathsText(e.target.value)}
-                    placeholder={`e.g.,\n/admin\n/checkout\n/login`}
-                    rows={6}
-                    className="bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Specify paths where the widget <strong>should NOT</strong> appear. Allowed paths override disallowed
-                    paths.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   )
 }
