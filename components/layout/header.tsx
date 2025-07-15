@@ -2,38 +2,32 @@
 
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Bell, Settings, Wifi, WifiOff, Loader2, Menu } from "lucide-react"
-import { useState } from "react"
+import { Wifi, WifiOff, Loader2, Menu, Zap, LogOut } from "lucide-react"
 import Link from "next/link"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 interface HeaderProps {
   onToggleSidebar: () => void
   isConnected: boolean
   isLoading: boolean
-  liveNotifications: any[]
-  unreadCount: number
-  onClearNotifications: () => void
+  user: any
+  onLogout: () => void
 }
 
-export function Header({
-  onToggleSidebar,
-  isConnected,
-  isLoading,
-  liveNotifications,
-  unreadCount,
-  onClearNotifications,
-}: HeaderProps) {
+export function Header({ onToggleSidebar, isConnected, isLoading, user, onLogout }: HeaderProps) {
   const pathname = usePathname()
-  const [showNotifications, setShowNotifications] = useState(false)
 
-  const getPageTitle = () => {
-    if (pathname === "/dashboard") return "Dashboard"
-    if (pathname === "/websites") return "Websites"
-    if (pathname === "/websites/new") return "Add New Website"
-    if (pathname.includes("/conversations")) return "Conversations"
-    if (pathname.includes("/websites/")) return "Website Details"
-    return "Dashboard"
+  const getInitials = (email: string) => {
+    return email
+      .split("@")[0]
+      .split(".")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
   }
+
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path)
 
   const getPageDescription = () => {
     if (pathname === "/dashboard") return "Overview of your chatbot performance"
@@ -44,145 +38,126 @@ export function Header({
     return "Chatbot management dashboard"
   }
 
-  const handleNotificationClick = () => {
-    setShowNotifications(!showNotifications)
-    if (!showNotifications && unreadCount > 0) {
-      onClearNotifications()
-    }
-  }
-
-  // NEW: Conditional rendering based on pathname
   if (pathname === "/websites/new") {
-    return null; // Don't render the header at all for this path
+    return null
   }
 
   return (
-    <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex-shrink-0 shadow-sm">
+    <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-4 md:px-6 py-4 flex-shrink-0 shadow-sm">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          {/* Mobile menu button */}
+        {/* Mobile menu button and page title/description */}
+        <div className="flex items-center space-x-4 lg:hidden">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleSidebar}
-            className="lg:hidden text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full"
+            className="lg:hidden text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
           >
             <Menu className="w-5 h-5" />
           </Button>
-
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900">{getPageTitle()}</h1>
-            <p className="text-slate-600 text-xs md:text-sm mt-1 hidden sm:block">{getPageDescription()}</p>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900">{getPageDescription()}</h1>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 md:space-x-4">
-          {/* Connection Status */}
-          <div className="hidden sm:flex items-center space-x-2">
-            {isLoading ? (
-              <div className="flex items-center space-x-1 text-blue-600">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm font-medium">Connecting...</span>
+        {/* Desktop Header Layout */}
+        <div className="hidden lg:flex items-center justify-between w-full">
+          {/* Logo and Page Description */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Zap className="w-6 h-6 text-white" />
               </div>
-            ) : isConnected ? (
-              <div className="flex items-center space-x-1 text-emerald-600">
-                <Wifi className="w-4 h-4" />
-                <span className="text-sm font-medium">Live</span>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">ChatBot Hub</h2>
+                <p className="text-sm text-slate-600 font-medium">{getPageDescription()}</p>
               </div>
-            ) : (
-              <div className="flex items-center space-x-1 text-red-600">
-                <WifiOff className="w-4 h-4" />
-                <span className="text-sm font-medium">Offline</span>
-              </div>
-            )}
+            </div>
           </div>
 
-          {/* Mobile connection indicator */}
-          <div className="sm:hidden">
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-            ) : isConnected ? (
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            ) : (
-              <div className="w-2 h-2 bg-red-500 rounded-full" />
-            )}
-          </div>
+          {/* Navigation Tabs, Connection Indicator, and User Actions */}
+          <div className="flex items-center space-x-6">
+            {/* Navigation Tabs with Emerald Style */}
+            <nav className="flex space-x-1">
+              <Link href="/dashboard">
+                <Button
+                  variant={isActive("/dashboard") ? "default" : "ghost"}
+                  size="sm"
+                  className={`rounded-xl transition-all font-semibold ${
+                    isActive("/dashboard")
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md hover:from-emerald-600 hover:to-emerald-700"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`}
+                >
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/websites">
+                <Button
+                  variant={isActive("/websites") ? "default" : "ghost"}
+                  size="sm"
+                  className={`rounded-xl transition-all font-semibold ${
+                    isActive("/websites")
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md hover:from-emerald-600 hover:to-emerald-700"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`}
+                >
+                  Websites
+                </Button>
+              </Link>
+              <Link href="/settings">
+                <Button
+                  variant={isActive("/settings") ? "default" : "ghost"}
+                  size="sm"
+                  className={`rounded-xl transition-all font-semibold ${
+                    isActive("/settings")
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md hover:from-emerald-600 hover:to-emerald-700"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`}
+                >
+                  Settings
+                </Button>
+              </Link>
+            </nav>
 
-          {/* Live Notifications */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 relative rounded-full"
-              onClick={handleNotificationClick}
-            >
-              <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium shadow-sm">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
+            {/* Connection Status */}
+            <div className="flex items-center space-x-2 bg-white/60 rounded-full px-3 py-2 border border-slate-200/60">
+              {isLoading ? (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm font-medium">Connecting...</span>
+                </div>
+              ) : isConnected ? (
+                <div className="flex items-center space-x-2 text-emerald-600">
+                  <Wifi className="w-4 h-4" />
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2 text-red-600">
+                  <WifiOff className="w-4 h-4" />
+                </div>
               )}
-            </Button>
+            </div>
 
-            {showNotifications && liveNotifications.length > 0 && (
-              <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-96 overflow-hidden">
-                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-slate-900">Live Updates</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        onClearNotifications()
-                        setShowNotifications(false)
-                      }}
-                      className="text-slate-500 hover:text-slate-700 rounded-lg"
-                    >
-                      Clear all
-                    </Button>
-                  </div>
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {liveNotifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div
-                          className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                            notification.type === "message" ? "bg-blue-500" : "bg-emerald-500"
-                          }`}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">{notification.title}</p>
-                          <p className="text-xs text-slate-600 mt-1 line-clamp-2">{notification.description}</p>
-                          <p className="text-xs text-slate-500 mt-2 font-medium">
-                            {new Date(notification.timestamp).toLocaleTimeString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* User Avatar and Logout */}
+            <div className="flex items-center space-x-3 bg-white/60 rounded-full px-3 py-2 border border-slate-200/60">
+              <Avatar className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 ring-2 ring-white shadow-sm">
+                <AvatarFallback className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold">
+                  {user && getInitials(user.email)}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onLogout}
+                className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-
-          <Link href="/settings">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full"
-            >
-              <Settings className="w-4 h-4" />
-            </Button>          
-          </Link>
         </div>
       </div>
-
-      {/* Click outside to close notifications */}
-      {showNotifications && <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />}
     </header>
   )
 }

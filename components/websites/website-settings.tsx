@@ -12,7 +12,6 @@ import {
   Crown,
   Save,
   RefreshCw,
-  Waypoints,
   Loader2,
   GitBranch,
   Plus,
@@ -22,6 +21,9 @@ import {
   MessageSquare,
   Shield,
   BarChart3,
+  Sparkles,
+  Languages,
+  HelpCircle,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
@@ -30,6 +32,14 @@ import { authFetch } from "@/lib/authFetch"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { languages } from "@/constants/languages"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog" // Import Dialog components
 
 interface Website {
   _id: string
@@ -75,30 +85,34 @@ interface WebsiteSettingsProps {
 
 function SettingsLoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Skeleton */}
+    <div className="bg-gradient-to-br from-slate-50/50 via-white to-slate-100/50">
+      {" "}
+      {/* Removed min-h-screen */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-8 w-64 mb-3" />
           <Skeleton className="h-4 w-96" />
         </div>
-
-        {/* Plan Card Skeleton */}
         <div className="mb-8">
-          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-3xl" />
         </div>
-
-        {/* Settings Cards Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-96 w-full rounded-2xl" />
-            ))}
+            {[1, 2, 3, 4].map(
+              (
+                i, // Added one more skeleton for the new language card
+              ) => (
+                <Skeleton key={i} className="h-96 w-full rounded-3xl" />
+              ),
+            )}
           </div>
           <div className="space-y-8">
-            {[1, 2].map((i) => (
-              <Skeleton key={i} className="h-64 w-full rounded-2xl" />
-            ))}
+            {/* Sticky container for right column */}
+            <div className="sticky top-4 space-y-8">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-64 w-full rounded-3xl" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -230,11 +244,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
       return
     }
 
-    if (
-      !window.confirm(
-        "Are you sure you want to cancel your subscription?",
-      )
-    ) {
+    if (!window.confirm("Are you sure you want to cancel your subscription?")) {
       return
     }
 
@@ -278,45 +288,59 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="bg-gradient-to-br from-slate-50/50 via-white to-slate-100/50">
+      {" "}
+      {/* Removed min-h-screen */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Website Settings</h1>
-          <p className="text-gray-600">Manage your website configuration and chatbot preferences</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-3">Website Settings</h1>
+          <p className="text-slate-600 text-base font-medium">
+            Manage your website configuration and chatbot preferences
+          </p>
         </div>
 
         {/* Plan Status Card */}
         {website.plan && (
-          <Card className="mb-8 border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white overflow-hidden">
-            <CardHeader className="pb-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+          <Card className="mb-8 border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 text-white overflow-hidden rounded-3xl relative">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+
+            <CardHeader className="pb-6 relative z-10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+                <div className="flex items-start space-x-6">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-lg flex-shrink-0">
                     <Crown className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl font-bold text-white mb-1">{website.plan.name} Plan</CardTitle>
-                    <p className="text-emerald-100 text-lg">{website.plan.description}</p>
-                    <div className="flex items-center space-x-6 mt-3 text-sm text-emerald-100">
-                      <div className="flex items-center space-x-2">
-                        <BarChart3 className="w-4 h-4" />
-                        <span>{currentCredits} Credits Available</span>
+                    <CardTitle className="text-2xl font-bold text-white mb-2">{website.plan.name} Plan</CardTitle>
+                    <p className="text-emerald-100 text-base leading-relaxed mb-4">{website.plan.description}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center space-x-3 bg-white/10 rounded-2xl px-4 py-3">
+                        <BarChart3 className="w-5 h-5 text-emerald-100" />
+                        <div>
+                          <p className="text-white font-semibold">{currentCredits}</p>
+                          <p className="text-emerald-100 text-xs">Credits Available</p>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Shield className="w-4 h-4" />
-                        <span>
-                          {currentStaffMembers}/{maxStaffMembers} Staff Members
-                        </span>
+                      <div className="flex items-center space-x-3 bg-white/10 rounded-2xl px-4 py-3">
+                        <Shield className="w-5 h-5 text-emerald-100" />
+                        <div>
+                          <p className="text-white font-semibold">
+                            {currentStaffMembers}/{maxStaffMembers}
+                          </p>
+                          <p className="text-emerald-100 text-xs">Staff Members</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
                 <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                   <Link
                     href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
                   >
-                    <Button className="bg-white text-emerald-600 hover:bg-gray-50 font-semibold px-6 py-3 rounded-xl shadow-lg w-full sm:w-auto">
+                    <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
                       <Crown className="w-4 h-4 mr-2" />
                       Upgrade Plan
                     </Button>
@@ -326,7 +350,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                       variant="ghost"
                       onClick={handleCancelSubscription}
                       disabled={cancellingSubscription}
-                      className="text-white hover:bg-white/10 border border-white/20 rounded-xl px-4 py-3 w-full sm:w-auto"
+                      className="text-white hover:bg-white/10 border border-white/20 rounded-2xl px-4 py-3 w-full sm:w-auto transition-all duration-300"
                     >
                       {cancellingSubscription ? (
                         <>
@@ -336,7 +360,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                       ) : (
                         <>
                           <XCircle className="w-4 h-4 mr-2" />
-                          Cancel
+                          Cancel Plan
                         </>
                       )}
                     </Button>
@@ -352,24 +376,25 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
           {/* Left Column - Main Settings */}
           <div className="lg:col-span-2 space-y-8">
             {/* General Information */}
-            <Card className="border-0 shadow-lg rounded-2xl">
-              <CardHeader className="pb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl text-gray-900">General Information</CardTitle>
-                      <p className="text-gray-500 text-sm">Basic website details and configuration</p>
-                    </div>
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-2xl" />
+
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center shadow-md">
+                    <Globe className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-slate-900">General Information</CardTitle>
+                    <p className="text-slate-600 text-sm font-medium">Basic website details and configuration</p>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+
+              <CardContent className="space-y-6 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-700 font-medium text-sm">
+                  <div className="space-y-3">
+                    <Label htmlFor="name" className="text-slate-700 font-semibold text-sm">
                       Website Name
                     </Label>
                     <Input
@@ -377,12 +402,12 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Enter website name"
-                      className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
+                      className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-medium"
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="link" className="text-gray-700 font-medium text-sm">
+                  <div className="space-y-3">
+                    <Label htmlFor="link" className="text-slate-700 font-semibold text-sm">
                       Website URL
                     </Label>
                     <Input
@@ -391,13 +416,13 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                       value={link}
                       onChange={(e) => setLink(e.target.value)}
                       placeholder="https://yourwebsite.com"
-                      className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
+                      className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-medium"
                       required
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-gray-700 font-medium text-sm">
+                <div className="space-y-3">
+                  <Label htmlFor="description" className="text-slate-700 font-semibold text-sm">
                     Description
                   </Label>
                   <Textarea
@@ -406,119 +431,112 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="A brief description of your website"
                     rows={4}
-                    className="bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl resize-none"
+                    className="bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl resize-none font-medium"
                   />
                 </div>
               </CardContent>
             </Card>
 
             {/* Chatbot Configuration */}
-            <Card className="border-0 shadow-lg rounded-2xl">
-              <CardHeader className="pb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-blue-600" />
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-2xl" />
+
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center shadow-md">
+                    <MessageSquare className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl text-gray-900">Chatbot Configuration</CardTitle>
-                    <p className="text-gray-500 text-sm">Customize your chatbot behavior and appearance</p>
+                    <CardTitle className="text-xl font-bold text-slate-900">Chatbot Configuration</CardTitle>
+                    <p className="text-slate-600 text-sm font-medium">Customize your chatbot behavior and appearance</p>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-8">
-                {/* Basic Settings */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-gray-700 font-medium text-sm">Chat Header Title</Label>
-                    <Input
-                      value={header}
-                      onChange={(e) => setHeader(e.target.value)}
-                      placeholder="e.g., Chat Support, Help Center"
-                      className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="language" className="text-gray-700 font-medium text-sm">
-                      Chatbot Language
-                    </Label>
-                    <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
-                      <SelectTrigger className="h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl">
-                        <SelectValue placeholder="Select a language" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200 rounded-xl shadow-lg">
-                        {Object.entries(languages).map(([name, code]) => (
-                          <SelectItem key={code} value={code}>
-                            {name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+
+              <CardContent className="space-y-8 relative z-10">
+                {/* Basic Settings (excluding language) */}
+                <div className="space-y-3">
+                  <Label className="text-slate-700 font-semibold text-sm">Chat Header Title</Label>
+                  <Input
+                    value={header}
+                    onChange={(e) => setHeader(e.target.value)}
+                    placeholder="e.g., Chat Support, Help Center"
+                    className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-medium"
+                  />
                 </div>
 
                 {/* Color Customization */}
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-2">
-                    <Palette className="w-4 h-4 text-purple-600" />
-                    <h4 className="text-lg font-semibold text-gray-900">Color Customization</h4>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+                      <Palette className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <h4 className="text-lg font-bold text-slate-900">Color Customization</h4>
                   </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label className="text-gray-700 font-medium text-sm">Primary Color</Label>
+                      <Label className="text-slate-700 font-semibold text-sm">Primary Color</Label>
                       <div className="flex items-center space-x-3">
                         <Input
                           type="color"
                           value={gradient1}
                           onChange={(e) => setGradient1(e.target.value)}
-                          className="h-12 w-16 rounded-xl border-2 border-gray-200 p-1"
+                          className="h-12 w-16 rounded-2xl border-2 border-slate-200/60 p-1 shadow-sm"
                         />
                         <Input
                           type="text"
                           value={gradient1}
                           onChange={(e) => setGradient1(e.target.value)}
-                          className="flex-1 h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
+                          className="flex-1 h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-mono text-sm"
                         />
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-gray-700 font-medium text-sm">Secondary Color</Label>
+                      <Label className="text-slate-700 font-semibold text-sm">Secondary Color</Label>
                       <div className="flex items-center space-x-3">
                         <Input
                           type="color"
                           value={gradient2}
                           onChange={(e) => setGradient2(e.target.value)}
-                          className="h-12 w-16 rounded-xl border-2 border-gray-200 p-1"
+                          className="h-12 w-16 rounded-2xl border-2 border-slate-200/60 p-1 shadow-sm"
                         />
                         <Input
                           type="text"
                           value={gradient2}
                           onChange={(e) => setGradient2(e.target.value)}
-                          className="flex-1 h-12 bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm"
+                          className="flex-1 h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-mono text-sm"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Color Preview */}
-                  <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200">
-                    <Label className="text-gray-700 font-medium text-sm mb-4 block">Live Preview</Label>
-                    <div className="flex items-center space-x-4">
+                  <div className="p-6 bg-gradient-to-r from-slate-50/80 to-white/80 rounded-3xl border border-slate-200/60">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Label className="text-slate-700 font-semibold text-sm">Live Preview</Label>
+                      <div className="flex items-center space-x-1 text-emerald-600">
+                        <Sparkles className="w-3 h-3" />
+                        <span className="text-xs font-medium">Real-time</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-6">
                       <div
-                        className="w-16 h-16 rounded-2xl shadow-lg"
+                        className="w-16 h-16 rounded-3xl shadow-lg"
                         style={{
                           background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
                         }}
                       />
                       <div className="flex-1">
                         <div
-                          className="px-6 py-3 rounded-xl text-white text-sm font-semibold inline-block shadow-lg"
+                          className="px-6 py-3 rounded-2xl text-white text-sm font-semibold inline-block shadow-lg"
                           style={{
                             background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
                           }}
                         >
                           {header}
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">Chat widget preview</p>
+                        <p className="text-xs text-slate-500 mt-2 font-medium">Chat widget preview</p>
                       </div>
                     </div>
                   </div>
@@ -526,23 +544,106 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
               </CardContent>
             </Card>
 
-            {/* Widget Display Paths */}
-            <Card className="border-0 shadow-lg rounded-2xl">
-              <CardHeader className="pb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                    <Waypoints className="w-5 h-5 text-indigo-600" />
+            {/* Chatbot Language Card (New) */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-purple-400/10 to-violet-500/10 rounded-full blur-2xl" />
+
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center shadow-md">
+                    <Languages className="w-6 h-6 text-purple-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl text-gray-900">Widget Display Paths</CardTitle>
-                    <p className="text-gray-500 text-sm">Control where your chat widget appears</p>
+                    <CardTitle className="text-xl font-bold text-slate-900">
+                      Chatbot Language
+                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        New
+                      </span>
+                    </CardTitle>
+                    <p className="text-slate-600 text-sm font-medium">Select the primary language for your chatbot</p>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="relative z-10">
+                <div className="space-y-3">
+                  <Label htmlFor="language" className="text-slate-700 font-semibold text-sm">
+                    Select Language
+                  </Label>
+                  <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
+                    <SelectTrigger className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-medium">
+                      <SelectValue placeholder="Select a language" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200/60 rounded-2xl shadow-xl">
+                      {Object.entries(languages).map(([name, code]) => (
+                        <SelectItem key={code} value={code} className="rounded-xl">
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Widget Display Paths */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-indigo-400/10 to-purple-500/10 rounded-full blur-2xl" />
+
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-2xl flex items-center justify-center shadow-md">
+                    <MessageSquare className="w-6 h-6 text-indigo-600" /> {/* Changed icon to Globe */}
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-slate-900 flex items-center">
+                      Widget Display Paths
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-2 h-6 w-6 p-0 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
+                            aria-label="Help with widget display paths"
+                          >
+                            <HelpCircle className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px] bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border-slate-200/60">
+                          <DialogHeader>
+                            <DialogTitle className="text-slate-900">Understanding Widget Paths</DialogTitle>
+                            <DialogDescription className="text-slate-600">
+                              Control exactly where your chatbot widget appears on your website.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 text-slate-700 text-sm">
+                            <p>
+                              <strong>Allowed Paths</strong> specify where the widget <strong>should</strong> appear.
+                              <br />
+                              <strong>Disallowed Paths</strong> specify where the widget <strong>should NOT</strong> appear.
+                            </p>
+                            <p>
+                              <strong>Allowed paths will always override disallowed paths.</strong> For example, if <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog</code> is
+                              allowed and <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog/private</code> is disallowed, the widget will still appear on <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog/private</code>
+                              because the allowed rule takes precedence.
+                            </p>
+                            <p>The path <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/</code> corresponds to your website's home page.</p>
+                            <p>
+                              If you want the widget to be displayed on <strong>every page</strong> of your website, simply leave the
+                              <strong>Allowed Paths</strong> field empty.
+                            </p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </CardTitle>
+                    <p className="text-slate-600 text-sm font-medium">Control where your chat widget appears</p>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-6 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <Label htmlFor="allowedPaths" className="text-gray-700 font-medium text-sm">
+                    <Label htmlFor="allowedPaths" className="text-slate-700 font-semibold text-sm">
                       Allowed Paths
                     </Label>
                     <Textarea
@@ -551,14 +652,14 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                       onChange={(e) => setAllowedPathsText(e.target.value)}
                       placeholder={`/\n/contact\n/products\n/support`}
                       rows={6}
-                      className="bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm resize-none"
+                      className="bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-mono text-sm resize-none"
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500 font-medium">
                       Paths where the widget <strong>should</strong> appear (one per line)
                     </p>
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="disallowedPaths" className="text-gray-700 font-medium text-sm">
+                    <Label htmlFor="disallowedPaths" className="text-slate-700 font-semibold text-sm">
                       Disallowed Paths
                     </Label>
                     <Textarea
@@ -567,9 +668,9 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                       onChange={(e) => setDisallowedPathsText(e.target.value)}
                       placeholder={`/admin\n/checkout\n/login\n/dashboard`}
                       rows={6}
-                      className="bg-gray-50 border-gray-200 text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl font-mono text-sm resize-none"
+                      className="bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-mono text-sm resize-none"
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500 font-medium">
                       Paths where the widget <strong>should NOT</strong> appear (one per line)
                     </p>
                   </div>
@@ -578,113 +679,124 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
             </Card>
           </div>
 
-          {/* Right Column - Quick Actions & Stats */}
+          {/* Right Column - Quick Actions & Workflows & Usage Stats (Sticky) */}
           <div className="space-y-8">
-            {/* Quick Actions */}
-            <Card className="border-0 shadow-lg rounded-2xl">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg text-gray-900">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg font-semibold"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving Changes...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save All Changes
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={resetToDefaults}
-                  className="w-full h-12 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl bg-transparent"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Reset to Defaults
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="sticky top-4 z-10 space-y-8">
+              {/* Quick Actions */}
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-xl" />
 
-            {/* Workflows Card */}
-            <Card className="border-0 shadow-lg rounded-2xl overflow-hidden p-0">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
-                <div className="flex items-center space-x-3 mb-3">
-                  <GitBranch className="w-6 h-6" />
-                  <h3 className="text-lg font-semibold">Automated Workflows</h3>
-                </div>
-                <p className="text-blue-100 text-sm mb-4">
-                  {hasWorkflows()
-                    ? "Your automated response workflows are configured and ready."
-                    : "Create automated workflows to guide user conversations."}
-                </p>
-                <Link href={`/workflows/${website._id}`}>
-                  <Button className="bg-white text-blue-600 hover:bg-gray-50 font-semibold rounded-xl w-full">
-                    {hasWorkflows() ? (
+                <CardHeader className="pb-4 relative z-10">
+                  <CardTitle className="text-lg font-bold text-slate-900">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 relative z-10">
+                  <Button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-2xl shadow-lg hover:shadow-xl font-semibold transition-all duration-300"
+                  >
+                    {loading ? (
                       <>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Manage Workflows
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving Changes...
                       </>
                     ) : (
                       <>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Workflow
+                        <Save className="w-4 h-4 mr-2" />
+                        Save All Changes
                       </>
                     )}
                   </Button>
-                </Link>
-              </div>
-            </Card>
+                  <Button
+                    variant="outline"
+                    onClick={resetToDefaults}
+                    className="w-full h-12 border-slate-200/60 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-2xl bg-white/60 shadow-sm hover:shadow-md transition-all duration-300"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reset to Defaults
+                  </Button>
+                </CardContent>
+              </Card>
 
-            {/* Usage Stats */}
-            <Card className="border-0 shadow-lg rounded-2xl">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg text-gray-900">Usage Statistics</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <Zap className="w-4 h-4 text-emerald-600" />
+              {/* Workflows Card */}
+              <Card className="border-0 shadow-lg rounded-3xl overflow-hidden p-0 relative">
+                <div className="h-full bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 p-6 text-white relative">
+                  <div className="absolute -top-8 -right-8 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
+                  <div className="relative z-10">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
+                        <GitBranch className="w-5 h-5 text-white" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Available Credits</p>
-                        <p className="text-xs text-gray-500">AI responses remaining</p>
-                      </div>
+                      <h3 className="text-lg font-bold">Automated Workflows</h3>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-emerald-600">{currentCredits}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Shield className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Staff Members</p>
-                        <p className="text-xs text-gray-500">Team access</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-blue-600">
-                        {currentStaffMembers}/{maxStaffMembers}
-                      </p>
-                    </div>
+                    <p className="text-blue-100 text-sm mb-6 leading-relaxed">
+                      {hasWorkflows()
+                        ? "Your automated response workflows are configured and ready."
+                        : "Create automated workflows to guide user conversations."}
+                    </p>
+                    <Link href={`/workflows/${website._id}`}>
+                      <Button className="bg-white text-blue-600 hover:bg-blue-50 font-semibold rounded-2xl w-full shadow-lg hover:shadow-xl transition-all duration-300">
+                        {hasWorkflows() ? (
+                          <>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Manage Workflows
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Workflow
+                          </>
+                        )}
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </Card>
+
+              {/* Usage Stats */}
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-purple-400/10 to-violet-500/10 rounded-full blur-xl" />
+
+                <CardHeader className="pb-4 relative z-10">
+                  <CardTitle className="text-lg font-bold text-slate-900">Usage Statistics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 relative z-10">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50/80 to-green-50/60 rounded-2xl border border-emerald-200/40">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <Zap className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Available Credits</p>
+                          <p className="text-xs text-slate-600 font-medium">AI responses remaining</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-emerald-600">{currentCredits}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 rounded-2xl border border-blue-200/40">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <Shield className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Staff Members</p>
+                          <p className="text-xs text-slate-600 font-medium">Team access</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-blue-600">
+                          {currentStaffMembers}/{maxStaffMembers}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

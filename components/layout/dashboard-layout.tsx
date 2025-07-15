@@ -12,16 +12,12 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar state
   const { user, logout } = useAuth()
-
-  const { isConnected, isLoading, liveNotifications, unreadCount, clearNotifications } = useRealTime(
-    user ? { user, userType: "owner" } : { user: null, userType: "owner" },
-  )
+  const { isConnected, isLoading } = useRealTime(user ? { user, userType: "owner" } : { user: null, userType: "owner" })
 
   return (
-    <div className="h-screen bg-slate-50 text-slate-900 flex overflow-hidden">
+    <div className="h-screen text-slate-900 flex overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100/50">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -30,10 +26,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
       )}
 
+      {/* Mobile Sidebar */}
       <Sidebar
-        collapsed={sidebarCollapsed}
         open={sidebarOpen}
-        onToggleCollapse={() => { setSidebarCollapsed(!sidebarCollapsed), localStorage.setItem("collapseSidebar", sidebarCollapsed === true ? "false" : "true")}}
         onToggleOpen={() => setSidebarOpen(!sidebarOpen)}
         onClose={() => setSidebarOpen(false)}
         user={user}
@@ -47,12 +42,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           onToggleSidebar={() => setSidebarOpen(true)}
           isConnected={isConnected}
           isLoading={isLoading}
-          liveNotifications={liveNotifications}
-          unreadCount={unreadCount}
-          onClearNotifications={clearNotifications}
+          user={user}
+          onLogout={logout}
         />
-
-        <main className="flex-1 overflow-hidden bg-white">
+        <main className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">{children}</div>
         </main>
       </div>

@@ -30,7 +30,7 @@ export default function WebsitesPage() {
           </div>
           <Button
             onClick={() => router.push("/websites/new")}
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white"
+            className="bg-gradient-to-r rounded-2xl from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Website

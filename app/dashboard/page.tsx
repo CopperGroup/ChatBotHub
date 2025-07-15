@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Progress } from "@/components/ui/progress"
 import {
   Globe,
   MessageSquare,
@@ -19,32 +20,39 @@ import {
   MessageCircle,
   BarChart3,
   ChevronRight,
-  Wifi,
-  WifiOff,
-  Loader2,
   Zap,
   Crown,
   Send,
   ExternalLink,
+  Languages,
+  Clock,
+  Target,
+  Sparkles,
 } from "lucide-react"
 import { LoginForm } from "@/components/auth/login-form"
-import { useEffect, useState } from "react" // Import useEffect and useState
+import { useEffect, useState } from "react"
 import { authFetch } from "@/lib/authFetch"
 import Link from "next/link"
+import { motion } from "framer-motion"
+import BlurText from "@/components/ui/blur-text"
 
 // Dashboard Skeleton component for loading states
 function DashboardSkeleton() {
   return (
-    <div className="p-4 md:p-6 space-y-6 md:space-y-8">
-      <Skeleton className="h-20 w-full rounded-xl" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="p-6 space-y-6">
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          <Skeleton key={i} className="h-28 w-full rounded-2xl" />
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <Skeleton className="h-64 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     </div>
   )
@@ -53,17 +61,16 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-
   const { isConnected, isLoading, liveNotifications, unreadCount, liveRecentActivity } = useRealTime(
     user ? { user, userType: "owner" } : { user: null, userType: "owner" },
   )
 
   // State for chat statistics
   const [openChatsCount, setOpenChatsCount] = useState(0)
-  const [totalChatsCount, setTotalChatsCount] = useState(0) // Added for total chats stat
+  const [totalChatsCount, setTotalChatsCount] = useState(0)
   const [totalMessages, setTotalMessages] = useState(0)
   const [responseRate, setResponseRate] = useState(0)
-  const [isLoadingStats, setIsLoadingStats] = useState(true) // Loading state for statistics
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
 
   // Effect to fetch chat statistics
   useEffect(() => {
@@ -72,87 +79,74 @@ export default function DashboardPage() {
         setIsLoadingStats(false)
         return
       }
-
       setIsLoadingStats(true)
       try {
-        // Collect all chat IDs from all websites owned by the user
-        const allChatIds = user.websites.flatMap(website =>
-          website.chats ? website.chats.map(chat => chat._id || chat) : []
-        );
-
+        const allChatIds = user.websites.flatMap((website) =>
+          website.chats ? website.chats.map((chat) => chat._id || chat) : [],
+        )
         if (allChatIds.length === 0) {
-          setOpenChatsCount(0);
-          setTotalChatsCount(0);
-          setTotalMessages(0);
-          setResponseRate(100); // If no chats, consider response rate as 100%
-          setIsLoadingStats(false);
-          return;
+          setOpenChatsCount(0)
+          setTotalChatsCount(0)
+          setTotalMessages(0)
+          setResponseRate(100)
+          setIsLoadingStats(false)
+          return
         }
 
-        // Fetch chat data using the new endpoint
         const response = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chats/get-by-ids`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ chatIds: allChatIds }),
-        });
+        })
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
 
-        const chats = await response.json();
+        const chats = await response.json()
+        let currentOpenChats = 0
+        let currentTotalMessages = 0
+        let respondedChats = 0
+        const totalChatConversations = chats.length
 
-        let currentOpenChats = 0;
-        let currentTotalMessages = 0;
-        let respondedChats = 0; // Chats that are 'closed' or have messages
-        let totalChatConversations = chats.length; // Total conversations fetched
-
-        chats.forEach(chat => {
-          if (chat.status === 'open') {
-            currentOpenChats++;
+        chats.forEach((chat) => {
+          if (chat.status === "open") {
+            currentOpenChats++
           }
-          // Parse messages and count them
           try {
-            const messages = JSON.parse(chat.messages || '[]');
-            currentTotalMessages += messages.length;
-            if (chat.status === 'closed' || (messages.length > 0 && chat.status !== 'open')) {
-              respondedChats++;
+            const messages = JSON.parse(chat.messages || "[]")
+            currentTotalMessages += messages.length
+            if (chat.status === "closed" || (messages.length > 0 && chat.status !== "open")) {
+              respondedChats++
             }
           } catch (e) {
-            console.error("Error parsing messages for chat:", chat._id, e);
+            console.error("Error parsing messages for chat:", chat._id, e)
           }
-        });
+        })
 
-        setOpenChatsCount(currentOpenChats);
-        setTotalChatsCount(totalChatConversations); // Set total chats based on fetched data
-        setTotalMessages(currentTotalMessages);
-
-        // Calculate response rate: (responded chats / total chats) * 100
-        const calculatedResponseRate = totalChatConversations > 0
-          ? (respondedChats / totalChatConversations) * 100
-          : 100; // If no chats, assume 100% response rate
-        setResponseRate(calculatedResponseRate);
-
+        setOpenChatsCount(currentOpenChats)
+        setTotalChatsCount(totalChatConversations)
+        setTotalMessages(currentTotalMessages)
+        const calculatedResponseRate =
+          totalChatConversations > 0 ? (respondedChats / totalChatConversations) * 100 : 100
+        setResponseRate(calculatedResponseRate)
       } catch (error) {
-        console.error("Failed to fetch chat statistics:", error);
-        // Optionally reset stats or show an error message
-        setOpenChatsCount(0);
-        setTotalChatsCount(0);
-        setTotalMessages(0);
-        setResponseRate(0); // Set to 0 or a specific error state
+        console.error("Failed to fetch chat statistics:", error)
+        setOpenChatsCount(0)
+        setTotalChatsCount(0)
+        setTotalMessages(0)
+        setResponseRate(0)
       } finally {
-        setIsLoadingStats(false);
+        setIsLoadingStats(false)
       }
-    };
-
-    // Only fetch stats if user and websites are loaded
-    if (user && user.websites) {
-      fetchChatStats();
     }
-  }, [user]); // Re-run when user object changes (e.g., after login or initial load)
 
+    if (user && user.websites) {
+      fetchChatStats()
+    }
+  }, [user])
 
   if (loading) {
     return (
@@ -164,331 +158,428 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 md:p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-6">
         <LoginForm />
       </div>
     )
   }
 
+  // Function to extract username from email
+  const getUsernameFromEmail = (email: string) => {
+    return email.split("@")[0]
+  }
+
+  const handleAnimationComplete = () => {
+    console.log("Welcome animation completed!")
+  }
+
   return (
     <DashboardLayout>
-      <div className="p-4 md:p-6 space-y-6 md:space-y-8 overflow-y-auto h-full">
-        {/* Real-time Status Banner */}
-        <Card
-          className={`border-2 shadow-sm ${
-            isLoading
-              ? "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100"
-              : isConnected
-                ? "border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-100"
-                : "border-red-200 bg-gradient-to-r from-red-50 to-red-100"
-          }`}
+      <div className="p-6 overflow-y-auto h-full bg-gradient-to-br from-slate-50/50 via-white to-slate-100/50">
+        {/* Simplified Welcome Message */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-6"
+          >
+            <BlurText
+              text={`Welcome back, ${getUsernameFromEmail(user.email)}`}
+              delay={150}
+              animateBy="words"
+              direction="top"
+              onAnimationComplete={handleAnimationComplete}
+              className="text-3xl font-bold text-slate-900"
+            />
+            <p className="text-slate-600 text-base font-medium mt-2">
+              Here's what's happening with your chat platform today
+            </p>
+          </motion.div>
+        )}
+
+        {/* Enhanced Main Grid Layout */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          <CardContent className="p-4 md:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-              <div className="flex items-center space-x-3">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-                    <div>
-                      <p className="font-semibold text-blue-800 text-sm md:text-base">Connecting to Live Updates...</p>
-                      <p className="text-xs md:text-sm text-blue-600">Please wait, we're establishing connection.</p>
+          {/* Enhanced Telegram Bot Integration Card */}
+          <motion.div
+            whileHover={{ scale: 1.005 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="xl:col-span-2"
+          >
+            <Card className="bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-100 border-0 shadow-lg rounded-2xl h-full relative overflow-hidden group">
+              {/* Enhanced background elements */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/10" />
+              <div className="absolute -top-20 -right-20 w-60 h-60 bg-gradient-to-br from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl group-hover:scale-105 transition-transform duration-500" />
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-br from-indigo-400/15 to-blue-500/15 rounded-full blur-2xl" />
+
+              <CardContent className="p-6 flex flex-col justify-between h-full min-h-[180px] relative z-10">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-start space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <Send className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-bold text-slate-900 text-xl leading-tight">Telegram Bot Integration</h3>
+                    <p className="text-slate-700 text-sm leading-relaxed max-w-md">
+                      Get instant notifications for new conversations and messages directly in Telegram.
+                    </p>
+                    <div className="flex items-center space-x-2 text-xs text-blue-700">
+                      <Sparkles className="w-3 h-3" />
+                      <span className="font-medium">Real-time notifications</span>
                     </div>
-                  </>
-                ) : isConnected ? (
-                  <>
-                    <Wifi className="w-5 h-5 text-emerald-600" />
-                    <div>
-                      <p className="font-semibold text-emerald-800 text-sm md:text-base">Real-time Updates Active</p>
-                      <p className="text-xs md:text-sm text-emerald-600">
-                        You'll receive live notifications for new messages and conversations
-                      </p>
+                  </div>
+                </div>
+                <div className="flex justify-end mt-auto">
+                  <Button
+                    onClick={() => window.open("https://t.me/chat_bot_hub_bot", "_blank")}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-md hover:shadow-lg px-6 py-2 text-sm font-semibold transition-all duration-300"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Open Bot
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Enhanced Stats Cards */}
+          <motion.div whileHover={{ scale: 1.005 }} transition={{ duration: 0.2 }}>
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl h-full relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-green-50/30" />
+              <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-2xl group-hover:scale-105 transition-transform duration-400" />
+
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Total Websites</p>
+                    <p className="text-3xl font-bold text-slate-900">{user.websites.length}</p>
+                    <div className="flex items-center space-x-1 text-emerald-600 text-xs font-medium">
+                      <TrendingUp className="w-3 h-3" />
+                      <span>Active and ready</span>
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="w-5 h-5 text-red-600" />
-                    <div>
-                      <p className="font-semibold text-red-800 text-sm md:text-base">Real-time Updates Disconnected</p>
-                      <p className="text-xs md:text-sm text-red-600">Please refresh the page to try reconnecting.</p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+                    <Globe className="w-6 h-6 text-emerald-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div whileHover={{ scale: 1.005 }} transition={{ duration: 0.2 }}>
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl h-full relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/30" />
+              <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-2xl group-hover:scale-105 transition-transform duration-400" />
+
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Open Chats</p>
+                    {isLoadingStats ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <p className="text-3xl font-bold text-slate-900">{openChatsCount}</p>
+                    )}
+                    <div className="flex items-center space-x-1 text-blue-600 text-xs font-medium">
+                      <Activity className="w-3 h-3" />
+                      <span>Currently active</span>
                     </div>
-                  </>
-                )}
-              </div>
-              {unreadCount > 0 && (
-                <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg px-3 py-1">
-                  {unreadCount} new updates
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+                    <MessageSquare className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Telegram Bot Integration Card */}
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 shadow-sm">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Send className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-blue-900 text-lg">Telegram Bot Integration</h3>
-                  <p className="text-blue-700 text-sm">
-                    Get instant notifications for new conversations and messages directly in Telegram
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={() => window.open("https://t.me/chat_bot_hub_bot", "_blank")}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-sm w-full sm:w-auto"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Open Telegram Bot
-                <ExternalLink className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          <motion.div whileHover={{ scale: 1.005 }} transition={{ duration: 0.2 }}>
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl h-full relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-violet-50/30" />
+              <div className="absolute -top-8 -left-8 w-24 h-24 bg-gradient-to-br from-purple-400/10 to-violet-500/10 rounded-full blur-2xl group-hover:scale-105 transition-transform duration-400" />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <Card className="bg-white border-slate-200 hover:border-slate-300 transition-all duration-200 shadow-sm hover:shadow-md">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-slate-600 text-sm font-medium">Total Websites</p>
-                  <p className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">{user.websites.length}</p>
-                  <p className="text-emerald-600 text-xs md:text-sm mt-1 flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Active and ready
-                  </p>
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Total Messages</p>
+                    {isLoadingStats ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <p className="text-3xl font-bold text-slate-900">{totalMessages.toLocaleString()}</p>
+                    )}
+                    <div className="flex items-center space-x-1 text-purple-600 text-xs font-medium">
+                      <TrendingUp className="w-3 h-3" />
+                      <span>Overall interactions</span>
+                    </div>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+                    <MessageCircle className="w-6 h-6 text-purple-600" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center shadow-sm">
-                  <Globe className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white border-slate-200 hover:border-slate-300 transition-all duration-200 shadow-sm hover:shadow-md">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-slate-600 text-sm font-medium">Open Chats</p>
-                  {isLoadingStats ? (
-                    <Skeleton className="h-8 w-20 mt-2" />
-                  ) : (
-                    <p className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">{openChatsCount}</p>
-                  )}
-                  <p className="text-blue-600 text-xs md:text-sm mt-1 flex items-center">
-                    <Activity className="w-3 h-3 mr-1" />
-                    Currently active
-                  </p>
-                </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
-                  <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div whileHover={{ scale: 1.005 }} transition={{ duration: 0.2 }}>
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl h-full relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 to-yellow-50/30" />
+              <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-gradient-to-br from-amber-400/10 to-yellow-500/10 rounded-full blur-2xl group-hover:scale-105 transition-transform duration-400" />
 
-          <Card className="bg-white border-slate-200 hover:border-slate-300 transition-all duration-200 shadow-sm hover:shadow-md">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-slate-600 text-sm font-medium">Total Messages</p>
-                  {isLoadingStats ? (
-                    <Skeleton className="h-8 w-20 mt-2" />
-                  ) : (
-                    <p className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">{totalMessages}</p>
-                  )}
-                  <p className="text-purple-600 text-xs md:text-sm mt-1 flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Overall interactions
-                  </p>
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Response Rate</p>
+                    {isLoadingStats ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-3xl font-bold text-slate-900">{responseRate.toFixed(1)}%</p>
+                        <Progress value={responseRate} className="h-1.5 bg-amber-100" />
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-1 text-amber-600 text-xs font-medium">
+                      <Target className="w-3 h-3" />
+                      <span>Performance efficiency</span>
+                    </div>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+                    <BarChart3 className="w-6 h-6 text-amber-600" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center shadow-sm">
-                  <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white border-slate-200 hover:border-slate-300 transition-all duration-200 shadow-sm hover:shadow-md">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-slate-600 text-sm font-medium">Response Rate</p>
-                  {isLoadingStats ? (
-                    <Skeleton className="h-8 w-20 mt-2" />
-                  ) : (
-                    <p className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">{responseRate.toFixed(1)}%</p>
-                  )}
-                  <p className="text-amber-600 text-xs md:text-sm mt-1 flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Performance efficiency
-                  </p>
-                </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center shadow-sm">
-                  <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-amber-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          {/* Enhanced Quick Actions */}
+          <motion.div whileHover={{ scale: 1.002 }} transition={{ duration: 0.2 }} className="xl:col-span-2">
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl h-full relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/30 to-green-50/20" />
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-2xl" />
 
-        {/* Quick Actions & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-          <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader className="px-4 md:px-6">
-              <CardTitle className="text-slate-900 flex items-center space-x-2 text-lg">
-                <Zap className="w-5 h-5 text-emerald-600" />
-                <span>Quick Actions</span>
-              </CardTitle>
-              <CardDescription className="text-slate-600">Common tasks and shortcuts</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 md:space-y-4 px-4 md:px-6">
-              <Button
-                onClick={() => router.push("/websites/new")}
-                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white justify-start rounded-xl shadow-sm"
-              >
-                <Plus className="w-4 h-4 mr-3" />
-                Add New Website
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 justify-start rounded-xl"
-                onClick={() => router.push("/websites")}
-              >
-                <Eye className="w-4 h-4 mr-3" />
-                View All Websites
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-900 justify-start rounded-xl"
-                onClick={() => window.open("https://t.me/chat_bot_hub_bot", "_blank")}
-              >
-                <Send className="w-4 h-4 mr-3" />
-                Setup Telegram Bot
-              </Button>
-              <Link href="/settings">
+              <CardHeader className="px-6 pb-4 relative z-10">
+                <CardTitle className="text-slate-900 flex items-center space-x-3 text-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-md">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <span>Quick Actions</span>
+                </CardTitle>
+                <CardDescription className="text-slate-600 text-sm mt-1">Common tasks and shortcuts</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 px-6 pb-6 relative z-10">
                 <Button
-                  variant="outline"
-                  className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 justify-start rounded-xl"
+                  onClick={() => router.push("/websites/new")}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white justify-start rounded-xl shadow-md hover:shadow-lg py-3 text-sm font-semibold transition-all duration-300"
                 >
-                  <Settings className="w-4 h-4 mr-3" />
-                  Dashboard Settings
+                  <Plus className="w-4 h-4 mr-3" />
+                  Add New Website
                 </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader className="px-4 md:px-6">
-              <CardTitle className="text-slate-900 flex items-center space-x-2 text-lg">
-                <Activity className="w-5 h-5 text-blue-600" />
-                <span>Recent Activity</span>
-              </CardTitle>
-              <CardDescription className="text-slate-600">Latest updates and notifications</CardDescription>
-            </CardHeader>
-            <CardContent className="px-4 md:px-6">
-              <div className="space-y-4">
-                {liveRecentActivity.slice(0, 3).map((notification) => (
-                  <div key={notification.id} className="flex items-start space-x-3">
-                    <div
-                      className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                        notification.type === "message" || notification.type === "bot_message"
-                          ? "bg-blue-500"
-                          : notification.type === "chat"
-                            ? "bg-emerald-500"
-                            : "bg-slate-400"
-                      }`}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-slate-900 line-clamp-2">{notification.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {new Date(notification.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {liveRecentActivity.length === 0 && (
-                  <div className="text-center py-6 md:py-8">
-                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Activity className="w-6 h-6 text-slate-400" />
-                    </div>
-                    <p className="text-sm text-slate-500">No recent activity</p>
-                    <p className="text-xs text-slate-400 mt-1">Activity will appear here when you start chatting</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Websites Overview */}
-        {user?.websites.length > 0 && (
-          <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader className="px-4 md:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                <div>
-                  <CardTitle className="text-slate-900 flex items-center space-x-2 text-lg">
-                    <Globe className="w-5 h-5 text-emerald-600" />
-                    <span>Your Websites</span>
-                  </CardTitle>
-                  <CardDescription className="text-slate-600">Overview of your registered websites</CardDescription>
-                </div>
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl w-full sm:w-auto"
+                  className="w-full border-slate-200 bg-white/50 text-slate-700 hover:bg-white hover:text-slate-900 justify-start rounded-xl py-3 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-300"
                   onClick={() => router.push("/websites")}
                 >
-                  View All
-                  <ChevronRight className="w-4 h-4 ml-2" />
+                  <Eye className="w-4 h-4 mr-3" />
+                  View All Websites
                 </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="px-4 md:px-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {user.websites.slice(0, 3).map((website) => (
-                  <Card
-                    key={website._id}
-                    className="bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200 hover:border-slate-300 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
+                <Link href="/settings">
+                  <Button
+                    variant="outline"
+                    className="w-full border-slate-200 bg-white/50 text-slate-700 hover:bg-white hover:text-slate-900 justify-start rounded-xl py-3 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-300"
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-slate-900 truncate flex-1">{website.name}</h3>
-                        <div className="flex items-center space-x-1 ml-2">
-                          <Crown className="w-3 h-3 text-amber-500" />
-                          <span className="text-xs text-slate-600">{website.plan?.name || "Free"}</span>
+                    <Settings className="w-4 h-4 mr-3" />
+                    Dashboard Settings
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Enhanced Recent Activity */}
+          <motion.div whileHover={{ scale: 1.002 }} transition={{ duration: 0.2 }} className="xl:col-span-2">
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl h-full relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-indigo-50/20" />
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-2xl" />
+
+              <CardHeader className="px-6 pb-4 relative z-10">
+                <CardTitle className="text-slate-900 flex items-center space-x-3 text-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                  <span>Recent Activity</span>
+                </CardTitle>
+                <CardDescription className="text-slate-600 text-sm mt-1">
+                  Latest updates and notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-6 pb-6 relative z-10">
+                <div className="space-y-4">
+                  {liveRecentActivity.slice(0, 4).map((notification, index) => (
+                    <motion.div
+                      key={notification.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-start space-x-3 p-3 bg-white/60 rounded-xl border border-slate-100 hover:bg-white/80 transition-all duration-200"
+                    >
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 shadow-sm ${
+                          notification.type === "message" || notification.type === "bot_message"
+                            ? "bg-blue-500"
+                            : notification.type === "chat"
+                              ? "bg-emerald-500"
+                              : "bg-slate-400"
+                        }`}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-slate-900 font-semibold line-clamp-2 leading-relaxed">
+                          {notification.title}
+                        </p>
+                        <div className="flex items-center space-x-1 mt-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          <p className="text-xs text-slate-500 font-medium">
+                            {new Date(notification.timestamp).toLocaleTimeString()}
+                          </p>
                         </div>
                       </div>
-                      <p className="text-sm text-slate-600 mb-3 line-clamp-2 leading-relaxed">{website.description}</p>
-                      <div className="flex items-center justify-between">
-                        <Badge
-                          variant="outline"
-                          className="bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200 rounded-lg"
-                        >
-                          Active
-                        </Badge>
-                        <Link href={`/websites/${website._id}/conversations`}>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg"
-                          >
-                            View Chats
-                          </Button>
-                        </Link>
+                    </motion.div>
+                  ))}
+                  {liveRecentActivity.length === 0 && (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Activity className="w-8 h-8 text-slate-400" />
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                      <p className="text-sm text-slate-500 font-semibold">No recent activity</p>
+                      <p className="text-xs text-slate-400 mt-1">Activity will appear here when you start chatting</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Enhanced Version Banner */}
+          <motion.div whileHover={{ scale: 1.005 }} transition={{ duration: 0.2 }} className="xl:col-span-2">
+            <Card className="bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100 border-0 shadow-lg relative overflow-hidden rounded-2xl h-full group">
+              <div className="absolute -top-20 -left-20 w-48 h-48 bg-gradient-to-br from-purple-400/20 to-violet-500/20 rounded-full blur-3xl group-hover:scale-105 transition-transform duration-500" />
+              <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-gradient-to-br from-indigo-400/15 to-purple-500/15 rounded-full blur-2xl" />
+
+              <CardContent className="p-6 flex flex-col justify-between h-full min-h-[180px] relative z-10">
+                <div className="flex items-start space-x-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <Languages className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-bold text-slate-900 text-xl leading-tight">New v1.2 Version Available!</h3>
+                    <p className="text-slate-700 text-sm leading-relaxed max-w-md">
+                      Widget interface now supports 9+ languages for a global reach.
+                    </p>
+                    <div className="flex items-center space-x-2 text-xs text-purple-700">
+                      <Sparkles className="w-3 h-3" />
+                      <span className="font-medium">Multi-language support</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end mt-auto">
+                  <Button
+                    variant="outline"
+                    className="border-purple-200 bg-white/60 text-purple-700 hover:bg-white hover:text-purple-900 rounded-xl shadow-md hover:shadow-lg px-6 py-2 text-sm font-semibold transition-all duration-300"
+                  >
+                    Learn More
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Enhanced Websites Overview */}
+          {user?.websites.length > 0 && (
+            <motion.div whileHover={{ scale: 1.001 }} transition={{ duration: 0.2 }} className="xl:col-span-4">
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl h-full">
+                <CardHeader className="px-6 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                    <div className="space-y-1">
+                      <CardTitle className="text-slate-900 flex items-center space-x-3 text-lg">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-md">
+                          <Globe className="w-5 h-5 text-white" />
+                        </div>
+                        <span>Your Websites</span>
+                      </CardTitle>
+                      <CardDescription className="text-slate-600 text-sm">
+                        Overview of your registered websites
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="border-slate-200 bg-white/60 text-slate-700 hover:bg-white hover:text-slate-900 rounded-xl shadow-sm hover:shadow-md px-4 py-2 font-semibold transition-all duration-300"
+                      onClick={() => router.push("/websites")}
+                    >
+                      View All
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {user.websites.slice(0, 3).map((website, index) => (
+                      <motion.div
+                        key={website._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.01 }}
+                      >
+                        <Card className="bg-gradient-to-br from-white to-slate-50/50 border border-slate-200/60 hover:border-slate-300/60 transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg rounded-2xl h-full relative overflow-hidden group">
+                          <div className="absolute inset-0 bg-gradient-to-br from-slate-50/30 to-white/50" />
+                          <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-xl group-hover:scale-105 transition-transform duration-400" />
+
+                          <CardContent className="p-5 relative z-10">
+                            <div className="flex items-start justify-between mb-4">
+                              <h3 className="font-bold text-slate-900 truncate flex-1 text-base leading-tight">
+                                {website.name}
+                              </h3>
+                              <div className="flex items-center space-x-1 ml-2">
+                                <Crown className="w-3 h-3 text-amber-500" />
+                                <span className="text-xs text-slate-600 font-medium">
+                                  {website.plan?.name || "Free"}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-xs text-slate-600 mb-4 line-clamp-2 leading-relaxed">
+                              {website.description}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <Badge
+                                variant="outline"
+                                className="bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-200/60 rounded-lg px-3 py-1 text-xs font-semibold"
+                              >
+                                Active
+                              </Badge>
+                              <Link href={`/websites/${website._id}/conversations`}>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg px-3 py-1 text-xs font-semibold transition-all duration-200"
+                                >
+                                  View Chats
+                                </Button>
+                              </Link>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </motion.div>
       </div>
     </DashboardLayout>
   )

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Zap, Brain, ArrowRight } from "lucide-react"
+import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Brain, XCircle } from "lucide-react"
 import { WebsiteSettings } from "./website-settings"
 import { StaffManagement } from "./staff-management"
 import { AIManagement } from "./ai-management"
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { authFetch } from "@/lib/authFetch" // Import authFetch
 
 interface Website {
   _id: string
@@ -46,6 +47,10 @@ interface Website {
   }
   createdAt: string
   updatedAt: string
+  stripeSubscriptionId?: string
+  freeTrialPlanId?: string
+  freeTrialEnded?: boolean
+  exlusiveCustomer?: boolean
 }
 
 interface PlanInfo {
@@ -78,29 +83,26 @@ interface WebsiteDetailsProps {
 
 function WebsiteDetailsSkeleton() {
   return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-6">
+    <div className="space-y-6 px-6 py-8">
+      {/* Website Header Section Skeleton */}
       <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-          <div className="min-w-0 flex-1">
-            <Skeleton className="h-6 md:h-8 w-48 md:w-64 mb-2" />
-            <Skeleton className="h-4 w-full max-w-96 mb-2" />
-            <Skeleton className="h-4 w-32 md:w-48" />
-          </div>
-          <div className="flex items-center gap-2 self-start">
-            <Skeleton className="h-6 w-20 md:w-24" />
-            <Skeleton className="h-6 w-16 md:w-20" />
-          </div>
-        </div>
+        <Skeleton className="h-8 w-64 mb-2" />
+        <Skeleton className="h-4 w-96 mb-4" />
+        <Skeleton className="h-6 w-48 rounded-lg" />
       </div>
-      <Skeleton className="h-32 md:h-40 w-full rounded-xl" />
-      <div className="mt-6">
-        <Skeleton className="h-10 w-full mb-4 rounded-xl" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      {/* Tabs List Skeleton */}
+      <Skeleton className="h-12 w-full rounded-2xl mb-6" />
+
+      {/* Overview Tab Content Skeleton */}
+      <div className="space-y-6">
+        <Skeleton className="h-40 w-full rounded-3xl" /> {/* Plan Info Card */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 md:h-32 w-full rounded-xl" />
+            <Skeleton key={i} className="h-28 w-full rounded-3xl" />
           ))}
         </div>
-        <Skeleton className="h-48 md:h-64 w-full mt-4 rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-3xl" /> {/* Website Information Card */}
       </div>
     </div>
   )
@@ -110,6 +112,7 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
   const [website, setWebsite] = useState<Website>(_website)
   const [activeTab, setActiveTab] = useState("overview")
   const [isLoading, setIsLoading] = useState(true)
+  const [cancellingSubscription, setCancellingSubscription] = useState(false) // State for cancellation loading
 
   // Derive planInfo directly from the website prop
   const planInfo: PlanInfo = {
@@ -136,7 +139,6 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 800)
-
     return () => clearTimeout(timer)
   }, [])
 
@@ -145,265 +147,255 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     toast.success("Website updated successfully")
   }
 
+  const handleCancelSubscription = async () => {
+    if (!website.stripeSubscriptionId) {
+      toast.info("No active subscription to cancel.")
+      return
+    }
+
+    if (!window.confirm("Are you sure you want to cancel your subscription? This action cannot be undone.")) {
+      return
+    }
+
+    setCancellingSubscription(true)
+    try {
+      const res = await authFetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}/cancel-subscription`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: userId,
+          }),
+        },
+      )
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.message || "Failed to cancel subscription.")
+      }
+
+      toast.success(
+        "Subscription cancellation initiated! Your plan will revert to Free at the end of the current billing period.",
+      )
+
+      // Refetch website data to reflect the updated plan status
+      const updatedWebsiteRes = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`)
+      if (updatedWebsiteRes.ok) {
+        const updatedWebsiteData = await updatedWebsiteRes.json()
+        setWebsite(updatedWebsiteData)
+      } else {
+        console.error("Failed to refetch website after cancellation:", await updatedWebsiteRes.json())
+      }
+    } catch (error: any) {
+      console.error("Error canceling subscription:", error)
+      toast.error(error.message || "Failed to cancel subscription. Please try again.")
+    } finally {
+      setCancellingSubscription(false)
+    }
+  }
+
   if (isLoading) {
     return <WebsiteDetailsSkeleton />
   }
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-7xl">
-      <div className="mb-4 md:mb-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 break-words">{website.name}</h1>
-            <p className="text-slate-600 mt-1 text-sm md:text-base">{website.description}</p>
-            <div className="flex flex-col sm:flex-row sm:items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
-              <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 font-mono text-xs w-fit">
-                {website.chatbotCode}
-              </Badge>
-              <span className="text-xs text-slate-500">Chatbot Code</span>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start">
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200 px-3 py-1.5 rounded-xl shadow-sm text-xs"
-            >
-              <Crown className="h-3 w-3" />
-              <span className="truncate">{planInfo.plan.name} Plan</span>
-            </Badge>
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 border-amber-200 px-3 py-1.5 rounded-xl shadow-sm text-xs"
-            >
-              <Zap className="h-3 w-3" />
-              {website.creditCount} Credits
-            </Badge>
-          </div>
+      {/* Website Header Section (Concise) */}
+      <div className="mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 break-words">{website.name}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
+          <Badge
+            variant="outline"
+            className="bg-slate-50 text-slate-700 border-slate-200 font-mono text-xs w-fit rounded-lg"
+          >
+            {website.chatbotCode}
+          </Badge>
+          <span className="text-xs text-slate-500 font-medium">Chatbot Code</span>
         </div>
       </div>
 
-      {/* Current Plan Info Card */}
-      <Card className="mb-4 md:mb-6 bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200 shadow-sm">
-        <CardHeader className="pb-2 px-4 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-slate-900 text-lg">
-            <Crown className="h-5 w-5 text-emerald-600" />
-            <span className="truncate">Current Plan: {planInfo.plan.name}</span>
-          </CardTitle>
-          <CardDescription className="text-slate-600 text-sm">{planInfo.plan.description}</CardDescription>
-        </CardHeader>
-        <CardContent className="px-4 md:px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="text-lg md:text-2xl font-bold text-slate-900">
-                {planInfo.usage.staff.current}/{planInfo.plan.maxStaffMembers}
-              </div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1">
-                <Users className="h-3 w-3" />
-                <span className="hidden sm:inline">Staff Members</span>
-                <span className="sm:hidden">Staff</span>
-              </div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="text-lg md:text-2xl font-bold text-slate-900">{website.creditCount}</div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1">
-                <Zap className="h-3 w-3" />
-                <span className="hidden sm:inline">AI Credits</span>
-                <span className="sm:hidden">Credits</span>
-              </div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="text-lg md:text-2xl font-bold text-slate-900">${website.plan.priceMonthly}</div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1">
-                <Crown className="h-3 w-3" />
-                <span className="hidden sm:inline">Per Month</span>
-                <span className="sm:hidden">Monthly</span>
-              </div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-xl border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
-              <div className="flex justify-center">
-                <Badge
-                  variant="outline"
-                  className={`text-xs ${
-                    planInfo.plan.allowAI
-                      ? "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200"
-                      : "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200"
-                  } rounded-lg px-2 py-1`}
-                >
-                  {planInfo.plan.allowAI ? "AI Available" : "Human Only"}
-                </Badge>
-              </div>
-              <div className="text-xs md:text-sm text-slate-600 flex items-center justify-center gap-1 mt-1">
-                <Brain className="h-3 w-3" />
-                AI Status
-              </div>
-            </div>
-          </div>
-
-          {/* Call to Action - Show upgrade if not Enterprise, else show buy tokens if AI enabled */}
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            {!isEnterprisePlan ? (
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden">
-                {/* Background decoration */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
-                </div>
-
-                <div className="relative z-10">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                        <Crown className="w-5 h-5" />
-                        Upgrade Your Plan
-                      </h3>
-                      <p className="text-emerald-100 text-sm mb-4 lg:mb-0">
-                        Unlock more features, increase limits, and get better value with our higher-tier plans.
-                      </p>
-                    </div>
-                    <Link
-                      href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
-                      className="flex-shrink-0"
-                    >
-                      <Button className="bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl shadow-lg font-semibold px-6 py-3 h-auto transition-all transform hover:scale-105">
-                        <Crown className="w-4 h-4 mr-2" />
-                        Upgrade Now
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              planInfo.plan.allowAI && (
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden">
-                  {/* Background decoration */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
-                  </div>
-
-                  <div className="relative z-10">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                          <Zap className="w-5 h-5" />
-                          Need More AI Credits?
-                        </h3>
-                        <p className="text-purple-100 text-sm mb-4 lg:mb-0">
-                          Power up your AI conversations with additional credits. Get instant access to more AI
-                          responses.
-                        </p>
-                      </div>
-                      <Link href={`/token-purchase?websiteId=${website._id.toString()}`} className="flex-shrink-0">
-                        <Button className="bg-white text-purple-600 hover:bg-purple-50 rounded-xl shadow-lg font-semibold px-6 py-3 h-auto transition-all transform hover:scale-105">
-                          <Zap className="w-4 h-4 mr-2" />
-                          Buy Credits
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
+      {/* Tabs Section (Immediately visible) */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-xl h-auto">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm">
           <TabsTrigger
             value="overview"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
+            className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
           >
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="ai"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
+            className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
           >
-            <div className="flex items-center space-x-1">
-              <Brain className="h-3 w-3" />
+            <div className="flex items-center space-x-2">
+              <Brain className="h-4 w-4" />
               <span>AI</span>
             </div>
           </TabsTrigger>
           <TabsTrigger
             value="staff"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
+            className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
           >
-            Staff
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4" />
+              <span>Staff</span>
+            </div>
           </TabsTrigger>
           <TabsTrigger
             value="settings"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm py-2 px-3 text-sm"
+            className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
           >
             Settings
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4 mt-4 md:mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-                <CardTitle className="text-sm font-medium text-slate-700">Total Conversations</CardTitle>
-                <MessageSquare className="h-4 w-4 text-emerald-600" />
+        {/* Tab Content for Overview */}
+        <TabsContent value="overview" className="space-y-6 mt-6">
+          {/* Current Plan Info Card (moved here) */}
+          {website.plan && (
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 text-white overflow-hidden rounded-3xl relative">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+                  <div className="flex items-start space-x-6">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-lg flex-shrink-0">
+                      <Crown className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-white mb-2">{website.plan.name} Plan</CardTitle>
+                      <p className="text-emerald-100 text-base leading-relaxed mb-4">{website.plan.description}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center space-x-3 bg-white/10 rounded-2xl px-4 py-3">
+                          <BarChart3 className="w-5 h-5 text-emerald-100" />
+                          <div>
+                            <p className="text-white font-semibold">{website.creditCount}</p>
+                            <p className="text-emerald-100 text-xs">Credits Available</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 bg-white/10 rounded-2xl px-4 py-3">
+                          <Users className="w-5 h-5 text-emerald-100" />
+                          <div>
+                            <p className="text-white font-semibold">
+                              {planInfo.usage.staff.current}/{planInfo.plan.maxStaffMembers}
+                            </p>
+                            <p className="text-emerald-100 text-xs">Staff Members</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <Link
+                      href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
+                    >
+                      <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade Plan
+                      </Button>
+                    </Link>
+                    {website.stripeSubscriptionId && website.plan.name !== "Free" && (
+                      <Button
+                        variant="ghost"
+                        onClick={handleCancelSubscription}
+                        disabled={cancellingSubscription}
+                        className="text-white hover:bg-white/10 border border-white/20 rounded-2xl px-4 py-3 w-full sm:w-auto transition-all duration-300"
+                      >
+                        {cancellingSubscription ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Cancelling...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Cancel Plan
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                <div className="text-xl md:text-2xl font-bold text-slate-900">{website.chats.length}</div>
-                <p className="text-xs text-slate-500">
+            </Card>
+          )}
+
+          {/* Usage Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-xl" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 relative z-10">
+                <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  Total Conversations
+                </CardTitle>
+                <MessageSquare className="h-5 w-5 text-emerald-600" />
+              </CardHeader>
+              <CardContent className="px-6 relative z-10">
+                <div className="text-2xl font-bold text-slate-900">{website.chats.length}</div>
+                <p className="text-xs text-slate-500 font-medium mt-1">
                   {website.chats.length === 0 ? "No conversations yet" : `Total conversations`}
                 </p>
               </CardContent>
             </Card>
-
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-                <CardTitle className="text-sm font-medium text-slate-700">Staff Members</CardTitle>
-                <Users className="h-4 w-4 text-blue-600" />
+            <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-xl" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 relative z-10">
+                <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  Staff Members
+                </CardTitle>
+                <Users className="h-5 w-5 text-blue-600" />
               </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                <div className="text-xl md:text-2xl font-bold text-slate-900">{planInfo.usage.staff.current}</div>
-                <p className="text-xs text-slate-500">of {planInfo.plan.maxStaffMembers} allowed</p>
+              <CardContent className="px-6 relative z-10">
+                <div className="text-2xl font-bold text-slate-900">{planInfo.usage.staff.current}</div>
+                <p className="text-xs text-slate-500 font-medium mt-1">of {planInfo.plan.maxStaffMembers} allowed</p>
               </CardContent>
             </Card>
-
-            <Card className="bg-white border-slate-200 shadow-sm sm:col-span-2 lg:col-span-1">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 md:px-6">
-                <CardTitle className="text-sm font-medium text-slate-700">AI Credits</CardTitle>
-                <BarChart3 className="h-4 w-4 text-purple-600" />
+            <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-3xl relative overflow-hidden sm:col-span-2 lg:col-span-1">
+              <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-purple-400/10 to-violet-500/10 rounded-full blur-xl" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 relative z-10">
+                <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider">AI Credits</CardTitle>
+                <BarChart3 className="h-5 w-5 text-purple-600" />
               </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                <div className="text-xl md:text-2xl font-bold text-slate-900">{website.creditCount}</div>
-                <p className="text-xs text-slate-500">+{planInfo.plan.creditBoostMonthly} monthly</p>
+              <CardContent className="px-6 relative z-10">
+                <div className="text-2xl font-bold text-slate-900">{website.creditCount}</div>
+                <p className="text-xs text-slate-500 font-medium mt-1">+{planInfo.plan.creditBoostMonthly} monthly</p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader className="px-4 md:px-6">
-              <CardTitle className="text-slate-900">Website Information</CardTitle>
+          {/* Website Information Card */}
+          <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-3xl relative overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-32 h-32 bg-slate-200/30 rounded-full blur-2xl" />
+            <CardHeader className="px-6 relative z-10">
+              <CardTitle className="text-xl font-bold text-slate-900">Website Information</CardTitle>
+              <CardDescription className="text-slate-600 text-sm font-medium">
+                General details about your website
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 px-4 md:px-6">
+            <CardContent className="space-y-4 px-6 relative z-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
-                  <label className="text-sm font-medium text-slate-700 block mb-1">Website URL</label>
+                  <label className="text-sm font-semibold text-slate-700 block mb-1">Website URL</label>
                   <div className="flex items-center space-x-2 min-w-0">
                     <Globe className="h-4 w-4 text-slate-500 flex-shrink-0" />
                     <a
                       href={website.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline truncate min-w-0"
+                      className="text-sm text-blue-600 hover:underline truncate min-w-0 font-medium"
                     >
                       {website.link}
                     </a>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-700 block mb-1">Created</label>
+                  <label className="text-sm font-semibold text-slate-700 block mb-1">Created</label>
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 font-medium">
                       {new Date(website.createdAt).toLocaleDateString(undefined, {
                         year: "numeric",
                         month: "long",
@@ -414,10 +406,10 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Last Updated</label>
+                <label className="text-sm font-semibold text-slate-700 block mb-1">Last Updated</label>
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-slate-600 font-medium">
                     {new Date(website.updatedAt).toLocaleDateString(undefined, {
                       year: "numeric",
                       month: "long",
@@ -429,19 +421,20 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200 text-xs text-slate-500 px-4 md:px-6">
-              <span className="truncate">Website ID: {website._id}</span>
+            <CardFooter className="bg-gradient-to-r from-slate-50/80 to-slate-100/80 border-t border-slate-200/60 text-xs text-slate-500 px-6 py-3 rounded-b-3xl relative z-10">
+              <span className="truncate font-medium">Website ID: {website._id}</span>
             </CardFooter>
           </Card>
         </TabsContent>
 
-        <TabsContent value="ai" className="mt-4 md:mt-6">
+        {/* Tab Content for AI Management */}
+        <TabsContent value="ai" className="mt-6">
           <Suspense
             fallback={
-              <div className="flex items-center justify-center p-8 md:p-12">
+              <div className="flex items-center justify-center p-8 md:p-12 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-3xl shadow-lg">
                 <div className="flex flex-col items-center space-y-4">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-purple-600" />
-                  <p className="text-slate-600 text-sm md:text-base">Loading AI management...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  <p className="text-slate-600 text-base font-medium">Loading AI management...</p>
                 </div>
               </div>
             }
@@ -450,13 +443,14 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
           </Suspense>
         </TabsContent>
 
-        <TabsContent value="staff" className="mt-4 md:mt-6">
+        {/* Tab Content for Staff Management */}
+        <TabsContent value="staff" className="mt-6">
           <Suspense
             fallback={
-              <div className="flex items-center justify-center p-8 md:p-12">
+              <div className="flex items-center justify-center p-8 md:p-12 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-3xl shadow-lg">
                 <div className="flex flex-col items-center space-y-4">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
-                  <p className="text-slate-600 text-sm md:text-base">Loading staff management...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                  <p className="text-slate-600 text-base font-medium">Loading staff management...</p>
                 </div>
               </div>
             }
@@ -465,13 +459,14 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
           </Suspense>
         </TabsContent>
 
-        <TabsContent value="settings" className="mt-4 md:mt-6">
+        {/* Tab Content for Website Settings */}
+        <TabsContent value="settings" className="mt-6">
           <Suspense
             fallback={
-              <div className="flex items-center justify-center p-8 md:p-12">
+              <div className="flex items-center justify-center p-8 md:p-12 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-3xl shadow-lg">
                 <div className="flex flex-col items-center space-y-4">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-emerald-600" />
-                  <p className="text-slate-600 text-sm md:text-base">Loading website settings...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                  <p className="text-slate-600 text-base font-medium">Loading website settings...</p>
                 </div>
               </div>
             }
