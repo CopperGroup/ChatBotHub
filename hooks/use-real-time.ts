@@ -215,7 +215,7 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
             const { chatId, message, websiteName, chatName, botResponse, staffId } = data;
             let newNotification: NotificationItem | null = null;
             if (message && message.sender === "user") {
-                newNotification = { id: Date.now(), type: "message", title: `New message in ${chatName}`, description: `${websiteName}: ${message.text.substring(0, 50)}...`, timestamp: new Date(), chatId, websiteName, };
+                newNotification = { id: Date.now(), type: "message", title: `New message in ${websiteName}`, description: `${chatName}: ${message.text.substring(0, 50)}...`, timestamp: new Date(), chatId, websiteName, };
 
                 console.log("Message", message)
                 if(!message.silent) {

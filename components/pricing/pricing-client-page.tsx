@@ -150,7 +150,7 @@ export default function PricingPageClient({ websiteId, currentPlanId }: PricingP
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Button
             variant="ghost"
-            onClick={() => router.back()}
+            onClick={() => router.push(`/websites`)}
             className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

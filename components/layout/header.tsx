@@ -125,7 +125,6 @@ export function Header({ onToggleSidebar, isConnected, isLoading, user, onLogout
               {isLoading ? (
                 <div className="flex items-center space-x-2 text-blue-600">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm font-medium">Connecting...</span>
                 </div>
               ) : isConnected ? (
                 <div className="flex items-center space-x-2 text-emerald-600">

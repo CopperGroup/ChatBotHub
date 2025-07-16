@@ -752,50 +752,6 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                   </div>
                 </div>
               </Card>
-
-              {/* Usage Stats */}
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
-                <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-purple-400/10 to-violet-500/10 rounded-full blur-xl" />
-
-                <CardHeader className="pb-4 relative z-10">
-                  <CardTitle className="text-lg font-bold text-slate-900">Usage Statistics</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 relative z-10">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50/80 to-green-50/60 rounded-2xl border border-emerald-200/40">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center shadow-sm">
-                          <Zap className="w-5 h-5 text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">Available Credits</p>
-                          <p className="text-xs text-slate-600 font-medium">AI responses remaining</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-emerald-600">{currentCredits}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 rounded-2xl border border-blue-200/40">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
-                          <Shield className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">Staff Members</p>
-                          <p className="text-xs text-slate-600 font-medium">Team access</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-blue-600">
-                          {currentStaffMembers}/{maxStaffMembers}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

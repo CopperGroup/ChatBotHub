@@ -369,6 +369,25 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
 
           {/* Right Column - Plan Info & Actions */}
           <div className="space-y-8">
+            {/* Upgrade Plan Card */}
+            {planInfo && !planInfo.canAddMore && (
+              <Card className="border-0 shadow-lg rounded-2xl overflow-hidden p-0">
+                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Crown className="w-6 h-6" />
+                    <h3 className="text-lg font-semibold">Need More Team Members?</h3>
+                  </div>
+                  <p className="text-emerald-100 text-sm mb-6">
+                    Upgrade your plan to add more team members and unlock additional features for better team
+                    collaboration.
+                  </p>
+                  <Button className="bg-white text-emerald-600 hover:bg-gray-50 font-semibold rounded-xl w-full shadow-lg">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade Plan
+                  </Button>
+                </div>
+              </Card>
+            )}
             {/* Plan Information */}
             {planInfo && (
               <Card className="border-0 shadow-lg rounded-2xl">
@@ -436,25 +455,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
               </Card>
             )}
 
-            {/* Upgrade Plan Card */}
-            {planInfo && !planInfo.canAddMore && (
-              <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <Crown className="w-6 h-6" />
-                    <h3 className="text-lg font-semibold">Need More Team Members?</h3>
-                  </div>
-                  <p className="text-emerald-100 text-sm mb-6">
-                    Upgrade your plan to add more team members and unlock additional features for better team
-                    collaboration.
-                  </p>
-                  <Button className="bg-white text-emerald-600 hover:bg-gray-50 font-semibold rounded-xl w-full shadow-lg">
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade Plan
-                  </Button>
-                </div>
-              </Card>
-            )}
 
             {/* Quick Actions */}
           </div>

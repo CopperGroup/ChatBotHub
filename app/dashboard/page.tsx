@@ -439,6 +439,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-slate-900 font-semibold line-clamp-2 leading-relaxed">
                           {notification.title}
                         </p>
+                        <p className="text-xs">{notification.description}</p>
                         <div className="flex items-center space-x-1 mt-1">
                           <Clock className="w-3 h-3 text-slate-400" />
                           <p className="text-xs text-slate-500 font-medium">
