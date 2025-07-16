@@ -132,8 +132,8 @@ export function ContextMenu({ x, y, onAddBlock, onClose, onSave }: ContextMenuPr
           }}
           className="w-full justify-start hover:bg-white/60 backdrop-blur-sm rounded-2xl py-3 px-3 transition-all duration-200 hover:scale-[1.01] border border-transparent hover:border-white/40 text-slate-700 hover:text-slate-900"
         >
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-slate-400/20 to-slate-500/10 backdrop-blur-sm flex items-center justify-center mr-3 shadow-lg border border-slate-300/30">
-            <Save className="w-4 h-4 text-slate-600" />
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-400/20 to-emerald-500/10 backdrop-blur-sm flex items-center justify-center mr-3 shadow-lg border border-slate-300/30">
+            <Save className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-left">
             <div className="font-semibold text-sm">Save Workflow</div>

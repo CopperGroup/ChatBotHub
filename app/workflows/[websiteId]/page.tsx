@@ -268,6 +268,7 @@ export default function WorkflowBuilder() {
 
     fetchAndInitializeWorkflow()
   }, [websiteId])
+  
 
   useEffect(() => {
     if (blocks.length > 0 && !isInitialized && containerRef.current) {
@@ -974,6 +975,57 @@ export default function WorkflowBuilder() {
 
   const saveWorkflow = async () => {
     try {
+      // 1. Validate Workflow: Check for paths to end blocks
+      const startBlock = blocks.find(block => block.type === "start");
+      if (!startBlock) {
+        toast.error("Workflow must have a 'Start' block.");
+        return;
+      }
+  
+      const visited = new Set<string>();
+      const pathsToEnd: boolean[] = [];
+  
+      const traverse = (blockId: string, currentPathVisited: Set<string>) => {
+        if (currentPathVisited.has(blockId)) {
+          // Cycle detected, not a valid path to an end block in this context
+          return;
+        }
+  
+        currentPathVisited.add(blockId);
+        visited.add(blockId);
+  
+        const block = blockMap.get(blockId);
+        if (!block) return;
+  
+        if (block.type === "end") {
+          pathsToEnd.push(true);
+          return;
+        }
+  
+        // Determine next blocks based on type and connections
+        const outgoingConnections = connections.filter(conn => conn.from === blockId);
+  
+        if (outgoingConnections.length === 0 && block.type !== "end") {
+          // This path ends without an 'end' block
+          pathsToEnd.push(false);
+          return;
+        }
+  
+        for (const connection of outgoingConnections) {
+          traverse(connection.to, new Set(currentPathVisited)); // Pass a new set for each branch
+        }
+      };
+  
+      // Start traversal from the 'start' block
+      traverse(startBlock.id, new Set<string>());
+  
+      // Check if any path reached an 'end' block
+      if (pathsToEnd.length === 0 || pathsToEnd.some(pathEnded => pathEnded === false)) {
+          toast.error("All paths in the workflow must lead to an 'End' block.");
+          return;
+      }
+  
+  
       const workflowData = {
         blocks,
         connections,
@@ -982,9 +1034,8 @@ export default function WorkflowBuilder() {
           createdAt: new Date().toISOString(),
           version: "1.0",
         },
-      }
-
-      // console.log(workflowData) 
+      };
+  
       const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${websiteId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -992,19 +1043,34 @@ export default function WorkflowBuilder() {
           predefinedAnswers: JSON.stringify(workflowData),
           userId: user._id,
         }),
-      })
-
+      });
+  
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || "Failed to update website settings.")
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to update website settings.");
       }
-
-      toast.success("Workflow saved successfully!")
+  
+      toast.success("Workflow saved successfully!");
     } catch (error) {
-      // console.error("Save error:", error)
-      toast.error("Failed to save workflow")
+      toast.error("Failed to save workflow");
     }
-  }
+  };
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Check for Shift + S
+      if (e.shiftKey && e.key === 'S') {
+        e.preventDefault(); // Prevent default browser save action
+        saveWorkflow();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [saveWorkflow]);
 
   const blockMap = React.useMemo(() => {
     return new Map(blocks.map(block => [block.id, block]));
@@ -1148,7 +1214,7 @@ export default function WorkflowBuilder() {
         </div>
       </div>
 
-      <div className="fixed bottom-6 right-6 z-50 space-y-2">
+<div className="fixed bottom-6 right-6 z-50 space-y-2">
         <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl px-3 py-2 shadow-xl ring-1 ring-black/5">
           <div className="flex items-center space-x-2 text-xs text-slate-600">
             <div className="flex items-center space-x-1">
@@ -1184,6 +1250,22 @@ export default function WorkflowBuilder() {
             </div>
             <span className="text-slate-400">•</span>
             <span>Select</span>
+          </div>
+        </div>
+        {/* New shortcut for Save */}
+        <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl px-3 py-2 shadow-xl ring-1 ring-black/5">
+          <div className="flex items-center space-x-2 text-xs text-slate-600">
+            <div className="flex items-center space-x-1">
+              <kbd className="px-2 py-1 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-300 rounded-md">
+                Shift
+              </kbd>
+              <span>+</span>
+              <kbd className="px-2 py-1 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-300 rounded-md">
+                S
+              </kbd>
+            </div>
+            <span className="text-slate-400">•</span>
+            <span>Save</span>
           </div>
         </div>
       </div>

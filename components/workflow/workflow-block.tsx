@@ -8,8 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, X, Check, Trash2, Zap, ArrowRight, Grip } from "lucide-react"
 import { motion } from "framer-motion"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList } from "@/components/ui/command"
 
 
 interface BlockData {
@@ -82,7 +80,7 @@ export const WorkflowBlock = React.memo(function WorkflowBlock({
   blockColors,
   connections,
   isBeingDragged, // Use this prop
-  setRef,        // Use this prop
+  setRef,         // Use this prop
 }: WorkflowBlockProps) {
   const componentId = useRef(Math.random().toString(36).substring(2, 9)).current;
 
@@ -127,6 +125,12 @@ export const WorkflowBlock = React.memo(function WorkflowBlock({
   useEffect(() => {
     setTempMessage(message);
   }, [message]);
+
+  // Determine if any input field within the block is currently active/being edited
+  const isAnyInputActive = useMemo(() => {
+    return isEditingDescription || isEditingMessage || editingOption !== null;
+  }, [isEditingDescription, isEditingMessage, editingOption]);
+
 
   const getBlockStyle = useCallback(() => {
     const baseStyle = `
@@ -281,8 +285,10 @@ export const WorkflowBlock = React.memo(function WorkflowBlock({
               : ""
         }`}
         onMouseDown={(e) => {
-          e.stopPropagation();
-          onMouseDown(e, id);
+          e.stopPropagation(); // Always stop propagation to prevent canvas pan
+          if (!isAnyInputActive) { // Only allow dragging if no input is active
+            onMouseDown(e, id); // Call the parent's drag handler
+          }
         }}
       >
         <CardHeader className={`pb-3 px-5 pt-6 rounded-t-3xl ${getHeaderStyle()}`}>
