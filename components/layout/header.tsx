@@ -63,17 +63,19 @@ export function Header({ onToggleSidebar, isConnected, isLoading, user, onLogout
         {/* Desktop Header Layout */}
         <div className="hidden lg:flex items-center justify-between w-full">
           {/* Logo and Page Description */}
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">ChatBot Hub</h2>
-                <p className="text-sm text-slate-600 font-medium">{getPageDescription()}</p>
+          <Link href="/">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">ChatBot Hub</h2>
+                  <p className="text-sm text-slate-600 font-medium">{getPageDescription()}</p>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Navigation Tabs, Connection Indicator, and User Actions */}
           <div className="flex items-center space-x-6">

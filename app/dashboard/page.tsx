@@ -475,7 +475,7 @@ export default function DashboardPage() {
                     <Languages className="w-6 h-6 text-white" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="font-bold text-slate-900 text-xl leading-tight">New v1.2 Version Available!</h3>
+                    <h3 className="font-bold text-slate-900 text-xl leading-tight">New v1.3 Version Available!</h3>
                     <p className="text-slate-700 text-sm leading-relaxed max-w-md">
                       Widget interface now supports 9+ languages for a global reach.
                     </p>
@@ -489,6 +489,7 @@ export default function DashboardPage() {
                   <Button
                     variant="outline"
                     className="border-purple-200 bg-white/60 text-purple-700 hover:bg-white hover:text-purple-900 rounded-xl shadow-md hover:shadow-lg px-6 py-2 text-sm font-semibold transition-all duration-300"
+                    onClick={() => router.push(`/blog/multi-language-support`)}
                   >
                     Learn More
                     <ChevronRight className="w-4 h-4 ml-2" />

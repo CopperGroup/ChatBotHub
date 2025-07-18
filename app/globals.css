@@ -119,4 +119,12 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .markdown-content a {
+    color: #10b981 !important;
+    text-decoration: underline;
+  }
+  .markdown-content a:hover {
+    color: #059669; /* A slightly darker emerald for hover state (emerald-600) */
+  }
 }

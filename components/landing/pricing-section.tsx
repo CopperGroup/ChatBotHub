@@ -9,7 +9,7 @@ import { Check, Zap, Crown, Sparkles } from "lucide-react"
 const plans = [
   {
     name: "Basic",
-    price: "$29",
+    price: "$19",
     period: "per month",
     description: "Perfect for growing businesses",
     features: [
@@ -21,13 +21,13 @@ const plans = [
       "Widget Customization",
       "Telegram bot notifications",
     ],
-    cta: "Start The Trial",
+    cta: "Start Free Trial",
     popular: false,
     gradient: "from-blue-500 to-blue-600",
   },
   {
     name: "Pro",
-    price: "$99",
+    price: "$39",
     period: "per month",
     description: "Advanced features for established businesses",
     features: [
@@ -39,13 +39,13 @@ const plans = [
       "Widget Customization",
       "Telegram bot live notifications",
     ],
-    cta: "Start The Trial",
+    cta: "Start Free Trial",
     popular: true,
     gradient: "from-emerald-500 to-emerald-600",
   },
   {
     name: "Enterprise",
-    price: "$299",
+    price: "$99",
     period: "per month",
     description: "Unlimited features for large organizations",
     features: [
@@ -57,7 +57,7 @@ const plans = [
       "Widget Customization",
       "Telegram bot live notifications",
     ],
-    cta: "Contact Sales",
+    cta: "Jump in",
     popular: false,
     gradient: "from-purple-500 to-purple-600",
   },
@@ -133,7 +133,7 @@ export function PricingSection() {
                 </ul>
 
                 <Button
-                  onClick={() => router.push("/dashboard")}
+                  onClick={() => router.push("/websites/new")}
                   className={`w-full py-3 md:py-4 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 ${
                     plan.popular
                       ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl"

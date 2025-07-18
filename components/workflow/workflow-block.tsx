@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, X, Check, Trash2, Zap, ArrowRight, Grip } from "lucide-react"
 import { motion } from "framer-motion"
+import { marked } from "marked" // Import marked library
+import DOMPurify from "dompurify" // Import DOMPurify for sanitization
 
 
 interface BlockData {
@@ -115,13 +116,15 @@ export const WorkflowBlock = React.memo(function WorkflowBlock({
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tempDescription, setTempDescription] = useState(description);
   
-  const [isEditingMessage, setIsEditingMessage] = useState(false);
+  // FIX: Initialize isEditingMessage to false, and control it based on clicks
+  const [isEditingMessage, setIsEditingMessage] = useState(false); 
   const [tempMessage, setTempMessage] = useState(message);
 
   useEffect(() => {
     setTempDescription(description);
   }, [description]);
 
+  // Keep tempMessage in sync with message prop
   useEffect(() => {
     setTempMessage(message);
   }, [message]);
@@ -261,6 +264,13 @@ export const WorkflowBlock = React.memo(function WorkflowBlock({
     return optionBlock?.options || [];
   }, [type, conditionId, allBlocks]);
 
+  // Function to render markdown
+  const renderMarkdown = useCallback((markdownText: string) => {
+    const rawMarkup = marked.parse(markdownText, { breaks: true, gfm: true }) as string;
+    return DOMPurify.sanitize(rawMarkup);
+  }, []);
+
+
   const shouldShowInputButton = type !== "start" && !blockConnections.hasInput;
   const shouldShowOutputButton = type !== "end" && type !== "option" && !blockConnections.hasOutput;
 
@@ -397,10 +407,12 @@ export const WorkflowBlock = React.memo(function WorkflowBlock({
             </div>
           )}
 
-          {(message || type === "message") && type !== "userResponse" && (
+          {/* Conditional rendering for the message input/display area */}
+          {/* Changed condition to check for specific types, allowing direct click to edit */}
+          {(type === "start" || type === "end" || type === "message") && (
             <div className="space-y-3">
               <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Message</label>
-              {isEditingMessage && (type === "start" || type === "end" || type === "message") ? (
+              {isEditingMessage ? (
                 <div className="space-y-3">
                   <textarea
                     value={tempMessage}
@@ -440,21 +452,29 @@ export const WorkflowBlock = React.memo(function WorkflowBlock({
                   </div>
                 </div>
               ) : (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (type === "start" || type === "end" || type === "message") {
-                      setIsEditingMessage(true);
-                    }
-                  }}
-                  className={`text-sm text-slate-900 bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-white/30 shadow-inner min-h-[70px] transition-all duration-200 ${
-                    type === "start" || type === "end" || type === "message"
-                      ? "cursor-pointer hover:bg-white/50 hover:border-white/40 hover:scale-[1.01]"
-                      : ""
-                  } ${!message ? "flex items-center justify-center text-slate-500 italic" : ""}`}
-                >
-                  {message || "Click to add message..."}
-                </div>
+                <>
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Allow editing for start, end, and message types
+                      if (type === "start" || type === "end" || type === "message") {
+                        setIsEditingMessage(true);
+                      }
+                    }}
+                    className={`text-sm text-slate-900 bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-white/30 shadow-inner min-h-[70px] transition-all duration-200 ${
+                      type === "start" || type === "end" || type === "message"
+                        ? "cursor-pointer hover:bg-white/50 hover:border-white/40 hover:scale-[1.01]"
+                        : ""
+                    } ${!message ? "flex items-center justify-center text-slate-500 italic" : ""}`}
+                  >
+                    <div
+                      className="markdown-content" 
+                      style={{ pointerEvents: 'none' }} // Add this style to the inner div
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(message || "Click to add message...") }}
+                    ></div>
+                  </div>
+                </>
+                
               )}
             </div>
           )}

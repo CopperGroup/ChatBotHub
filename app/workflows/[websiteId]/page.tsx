@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2, Zap, X } from "lucide-react"
+import { ZoomIn, ZoomOut, RotateCcw, Maximize2, Zap, X, HelpCircle } from "lucide-react"
 import { toast } from "sonner"
 import { WorkflowBlock } from "@/components/workflow/workflow-block"
 import { ConnectionLine } from "@/components/workflow/connection-line"
@@ -13,6 +13,7 @@ import { Loading } from "./WorkflowLoading"
 import { LoginForm } from "@/components/auth/login-form"
 import Link from "next/link"
 import { authFetch } from "@/lib/authFetch"
+import { WorkflowGuideModal } from "@/components/workflow/workflow-guide-modal"
 
 interface BlockData {
   id: string
@@ -97,6 +98,7 @@ export default function WorkflowBuilder() {
   const [isDraggingSelection, setIsDraggingSelection] = useState(false)
   const selectionDragStart = useRef({ x: 0, y: 0 })
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([])
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false)
 
   const selectionBoxRef = useRef<HTMLDivElement>(null);
 
@@ -1060,9 +1062,18 @@ export default function WorkflowBuilder() {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Check for Shift + S
       if (e.shiftKey && e.key === 'S') {
-        e.preventDefault(); // Prevent default browser save action
-        saveWorkflow();
-      }
+        const activeEl = document.activeElement;
+        const isInputFocused = activeEl && (
+          activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.isContentEditable
+        );
+      
+        if (!isInputFocused) {
+          e.preventDefault(); // Prevent default browser save action
+          saveWorkflow();
+        }
+      }      
     };
 
     window.addEventListener('keydown', handleKeyPress);
@@ -1150,6 +1161,17 @@ export default function WorkflowBuilder() {
           <Link href={`/websites/${websiteId}`} className="text-red-500">
             <X className="w-5 h-5" />
           </Link>
+          {/* New Question Mark Button */}
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsGuideModalOpen(true)} // Open the modal
+            className="w-10 h-10 rounded-full text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-colors duration-200"
+            title="Open Workflow Guide"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </Button>
         </div>
       </div>
       <div className="fixed top-6 right-6 z-50 flex items-center">
@@ -1446,6 +1468,11 @@ export default function WorkflowBuilder() {
           </div>
         </div>
       </div>
+
+      <WorkflowGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+      />
     </div>
   )
 }

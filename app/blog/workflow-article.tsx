@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Calendar, Clock, User, Zap, MessageSquare, Target, CheckCircle, TrendingUp } from "lucide-react"
 import Image from "next/image"
 
-export function BlogArticle() {
+export function WorkflowArticle() {
   return (
     <article className="max-w-4xl mx-auto">
       {/* Article Header */}

@@ -1,24 +1,22 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Share2, Bookmark, Twitter, Linkedin, Facebook } from "lucide-react"
+import { ArrowLeft, Share2, Bookmark, Twitter, Linkedin, Facebook, Heart } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import { BlogArticle } from "../workflow-article"
+import { WorkflowArticle } from "../workflow-article"
 import { TelegramBotArticle } from "../telegram-bot-article"
 import { AIAgentArticle } from "../ai-agent-article"
 import { StaffManagementArticle } from "../staff-management-article"
 import { CustomerSupportAutomationArticle } from "../customer-support-automation-article"
 import { ChatbotIntegrationArticle } from "../chatbot-integration-article"
+import MultiLanguageArticle from "../multi-language-article"
 
-export default function BlogPostPage() {
-  const params = useParams()
-  const slug = params.slug
+export default function BlogPostPage({ params }: { params: { slug : string}}) {
+
+  const slug = params.slug;
 
   const getArticleComponent = () => {
     switch (slug) {
       case "workflow-automation-v12":
-        return <BlogArticle />
+        return <WorkflowArticle/>
       case "telegram-notifications":
         return <TelegramBotArticle />
       case "ai-agent-credits":
@@ -29,8 +27,10 @@ export default function BlogPostPage() {
         return <CustomerSupportAutomationArticle />
       case "chatbot-integration-guide":
         return <ChatbotIntegrationArticle />
+      case "multi-language-support": 
+        return <MultiLanguageArticle />
       default:
-        return <BlogArticle />
+        return <WorkflowArticle />
     }
   }
 
@@ -48,10 +48,6 @@ export default function BlogPostPage() {
             </Link>
 
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
-                <Bookmark className="w-4 h-4 mr-2" />
-                Save
-              </Button>
               <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
@@ -167,13 +163,15 @@ export default function BlogPostPage() {
           <p className="text-xl text-emerald-100 mb-8">
             Join thousands of businesses transforming their customer service with our platform.
           </p>
-          <Button
-            size="lg"
-            className="bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-4 text-lg font-semibold rounded-xl"
-          >
-            Start Your Free Trial Today
-            <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
-          </Button>
+          <Link href="/websites/new">
+            <Button
+              size="lg"
+              className="bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-4 text-lg font-semibold rounded-xl"
+            >
+              Start Your Free Trial Today
+              <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
+            </Button>
+          </Link>
         </div>
       </section>
     </div>

@@ -14,10 +14,25 @@ import {
   TrendingUp,
   Brain,
   Users,
+  Globe, // Added Globe icon for Multi-Language
+  Languages, // Added Languages icon for Multi-Language
 } from "lucide-react"
 import Link from "next/link"
 
 const blogPosts = [
+  {
+    id: "multi-language-support", // New ID for the multi-language post
+    title: "Introducing Multi-Language Support: Expanding Your Global Reach", // New title
+    excerpt:
+      "The Widget interface now supports 9+ languages, empowering you to connect with a global audience and provide seamless experiences.", // New excerpt
+    image: "/assets/multi-language.webp", // Placeholder image for multi-language
+    category: "Product Update", // Category
+    date: "July 16, 2025", // New date
+    readTime: "4 min read", // New read time
+    author: "Product Team", // New author
+    featured: true, // Mark as featured
+    tags: ["Localization", "Global Reach", "Widget"], // New tags
+  },
   {
     id: "workflow-automation-v12",
     title: "Introducing Workflow Automation: The Future of Intelligent Customer Service",
@@ -28,7 +43,7 @@ const blogPosts = [
     date: "December 29, 2024",
     readTime: "5 min read",
     author: "Product Team",
-    featured: true,
+    featured: false, // Set to false so only one is featured
     tags: ["Automation", "AI", "Customer Service"],
   },
   {
@@ -121,7 +136,7 @@ const getCategoryIcon = (category: string) => {
 const getCategoryColor = (category: string) => {
   switch (category) {
     case "Product Update":
-      return "from-emerald-500 to-emerald-600"
+      return "from-purple-500 to-purple-600" // Changed to purple for consistency with the multi-language article
     case "Integration":
       return "from-blue-500 to-blue-600" // Telegram blue
     case "AI Features":
