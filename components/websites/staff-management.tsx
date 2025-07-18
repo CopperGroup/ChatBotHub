@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -160,6 +158,9 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
   if (initialLoading) {
     return <StaffLoadingSkeleton />
   }
+
+  // Determine if the plan is Enterprise and if the staff limit is reached
+  const isEnterpriseAndFull = planInfo?.planName === "Enterprise" && !planInfo?.canAddMore;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -369,8 +370,8 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
 
           {/* Right Column - Plan Info & Actions */}
           <div className="space-y-8">
-            {/* Upgrade Plan Card */}
-            {planInfo && !planInfo.canAddMore && (
+            {/* Upgrade Plan Card - Only show if NOT Enterprise plan OR (if it's Enterprise and not full) */}
+            {planInfo && !isEnterpriseAndFull && (
               <Card className="border-0 shadow-lg rounded-2xl overflow-hidden p-0">
                 <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white">
                   <div className="flex items-center space-x-3 mb-4">

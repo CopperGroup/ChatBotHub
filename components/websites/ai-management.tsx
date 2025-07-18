@@ -399,7 +399,7 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Reset to Defaults
                   </Button>
-                  {!isEnterprisePlan && aiEnabledByPlan && (
+                  {aiEnabledByPlan && (
                     <Link href={`/token-purchase?websiteId=${website._id.toString()}`}>
                       <Button className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-lg hover:shadow-xl font-semibold">
                         <Zap className="w-4 h-4 mr-2" />

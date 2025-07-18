@@ -294,7 +294,7 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
                     >
                       <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
                         <Crown className="w-4 h-4 mr-2" />
-                        Upgrade Plan
+                        {isEnterprisePlan ? "Change Plan" : "Upgrade Plan"} {/* Conditional text */}
                       </Button>
                     </Link>
                     {website.stripeSubscriptionId && website.plan.name !== "Free" && (

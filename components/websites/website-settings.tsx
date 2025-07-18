@@ -152,6 +152,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
   const aiEnabledByPlan = website.plan.allowAI
   const currentCredits = website.creditCount
 
+  const isEnterprisePlan = website.plan.name.toLowerCase().includes("enterprise")
   // Check if predefined workflows exist
   const hasWorkflows = () => {
     try {
@@ -251,6 +252,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
       return
     }
 
+    
     // IMPORTANT: Do NOT use confirm() or window.confirm(). Use a custom modal UI instead.
     // For this example, I'll simulate a confirmation with a direct return.
     // In a real application, you would replace this with a proper modal.
@@ -355,10 +357,10 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                   <Link
                     href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
                   >
-                    <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
-                      <Crown className="w-4 h-4 mr-2" />
-                      Upgrade Plan
-                    </Button>
+                      <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
+                        <Crown className="w-4 h-4 mr-2" />
+                        {isEnterprisePlan ? "Change Plan" : "Upgrade Plan"} {/* Conditional text */}
+                      </Button>
                   </Link>
                   {website.stripeSubscriptionId && website.plan.name !== "Free" && (
                     <Button
