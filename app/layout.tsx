@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         {children}
       <Toaster position="top-right" richColors expand={true} duration={4000} />
-      <script src="http://localhost:3001/widget/chatbot-widget.js?chatbotCode=73ctl78r4st6ccjg4o3e1o"></script>
+      <script src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=4fi4q9wesql48tnutk73p4"></script>
       </body>
     </html>
   );
