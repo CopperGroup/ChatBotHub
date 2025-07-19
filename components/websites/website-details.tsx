@@ -4,10 +4,11 @@ import { useState, useEffect, Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Brain, XCircle } from "lucide-react"
+import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Brain, XCircle, Code } from "lucide-react" // Added Code icon
 import { WebsiteSettings } from "./website-settings"
 import { StaffManagement } from "./staff-management"
 import { AIManagement } from "./ai-management"
+import { WebsiteIntegrationTab } from "./integration-tab"; // Import the new tab component
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -217,7 +218,7 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
 
       {/* Tabs Section (Immediately visible) */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm">
+        <TabsList className="grid w-full grid-cols-5 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm"> {/* Changed grid-cols-4 to grid-cols-5 */}
           <TabsTrigger
             value="overview"
             className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
@@ -240,6 +241,15 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>Staff</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger
+            value="integration" // New tab trigger
+            className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
+          >
+            <div className="flex items-center space-x-2">
+              <Code className="h-4 w-4" /> {/* Integration icon */}
+              <span>Integration</span>
             </div>
           </TabsTrigger>
           <TabsTrigger
@@ -458,6 +468,14 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
             <StaffManagement websiteId={website._id} userId={userId} />
           </Suspense>
         </TabsContent>
+
+        {/* New Tab Content for Integration (using the new component) */}
+        <TabsContent value="integration" className="space-y-6 mt-6">
+          <WebsiteIntegrationTab
+            chatbotCode={website.chatbotCode}
+          />
+        </TabsContent>
+
 
         {/* Tab Content for Website Settings */}
         <TabsContent value="settings" className="mt-6">

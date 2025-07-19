@@ -160,7 +160,7 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
   }
 
   // Determine if the plan is Enterprise and if the staff limit is reached
-  const isEnterpriseAndFull = planInfo?.planName === "Enterprise" && !planInfo?.canAddMore;
+  const isEnterpriseAndFull = planInfo?.planName === "Enterprise"
 
   return (
     <div className="min-h-screen bg-slate-50">
