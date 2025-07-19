@@ -178,7 +178,7 @@ export async function GET(req: NextRequest) {
     // Redirect to your SaaS frontend with success status, user ID, and website ID
     // The frontend can then use the user ID to.warn in the user automatically
     // or prompt them to use the generated password.
-    return NextResponse.redirect(`${process.env.FRONTEND_URL}/shopify/dashboard?userId=${userId}&websiteId=${createdWebsite._id}&shop=${shop}`);
+    return NextResponse.redirect(`https://chat-bot-hub.vercel.app/shopify/dashboard?userId=${userId}&websiteId=${createdWebsite._id}&shop=${shop}`);
 
   } catch (err: any) {
     console.error("Error processing Shopify integration in backend (final catch block):", err.response?.data || err.message);
