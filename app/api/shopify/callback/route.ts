@@ -178,21 +178,21 @@ export async function GET(req: NextRequest) {
     // This prevents creating duplicate website entries if the user re-installs the app.
     let existingWebsite = null;
     try {
-        // *** MODIFIED HERE: Use the new /websites/by-shopify-token route ***
-        const websiteCheckRes = await axios.get(`${expressApiBaseUrl}/websites/by-shopify-token?shopifyAccessToken=${access_token}`, {
+        // *** MODIFIED HERE: Use the new /websites/by-link route ***
+        const websiteCheckRes = await axios.get(`${expressApiBaseUrl}/websites/by-link?link=${encodeURIComponent(websiteLink)}`, {
             headers: {
                 // Use the internal API key for backend-to-backend communication
-                'X-Internal-API-Key': process.env.INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH
+                'x-auth-token': userToken
             }
         });
         existingWebsite = websiteCheckRes.data; // Assuming the new route returns a single website object
-        console.log(`Found existing website for ${shopName} via Shopify token: ${existingWebsite._id}`);
+        console.log(`Found existing website for ${shopName} via link: ${existingWebsite._id}`);
     } catch (checkError: any) {
-        // If 404, it means no existing website was found with that token, which is expected for a new install
+        // If 404, it means no existing website was found with that link, which is expected for a new install
         if (checkError.response && checkError.response.status === 404) {
-            console.log("No existing website found with this Shopify access token. Proceeding to create a new one.");
+            console.log("No existing website found with this link. Proceeding to create a new one.");
         } else {
-            console.error("Error checking for existing website by Shopify token:", checkError.response?.data || checkError.message);
+            console.error("Error checking for existing website by link:", checkError.response?.data || checkError.message);
             // Re-throw or handle as a critical error if the check itself fails for other reasons
             // For now, allow it to proceed to creation if there's an error, but log it.
         }
@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
     // Redirect to your SaaS frontend with success status, user ID, and website ID
     // The frontend can then use the user ID to log in the user automatically
     // or prompt them to use the generated password.
-    return NextResponse.redirect(`${process.env.FRONTEND_URL}/dashboard?host=${host}&shop=${shop}&noRedirect=true`);
+    return NextResponse.redirect(`https://bf716c6650c9.ngrok-free.app/dashboard?host=${host}&shop=${shop}&noRedirect=true`);
 
   } catch (err: any) {
     console.error("Error processing Shopify integration in backend (final catch block):", err.response?.data || err.message);
