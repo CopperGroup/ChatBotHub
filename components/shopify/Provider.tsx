@@ -17,7 +17,6 @@ export const AppBridgeProvider = ({ children }: { children: React.ReactNode }) =
 
   // Build config with host
   const config: AppConfigV2 = useMemo(() => {
-    if (!host) throw new Error('Shopify host is missing from URL params')
     return {
       apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY || '',
       host,
