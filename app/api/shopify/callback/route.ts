@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
     // Redirect to your SaaS frontend with success status, user ID, and website ID
     // The frontend can then use the user ID to log in the user automatically
     // or prompt them to use the generated password.
-    return NextResponse.redirect(`https://bf716c6650c9.ngrok-free.app/dashboard?host=${host}&shop=${shop}&noRedirect=true`);
+    return NextResponse.redirect(`https://bf716c6650c9.ngrok-free.app/?host=${host}&shop=${shop}&noRedirect=true`);
 
   } catch (err: any) {
     console.error("Error processing Shopify integration in backend (final catch block):", err.response?.data || err.message);
