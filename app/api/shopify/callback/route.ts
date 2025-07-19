@@ -80,7 +80,6 @@ export async function GET(req: NextRequest) {
   try {
     const expressApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api'; // Your Express.js backend API base URL
 
-    // 1. Attempt to register/login the user in your service
     // Generate a secure password for new users. This password will be used for their first login.
     // They should be prompted to change it after first login for security.
     const generatedPassword = generateSecurePassword();
@@ -89,38 +88,42 @@ export async function GET(req: NextRequest) {
     let userToken: string;
     // userWebsitesCount is not directly used in this Next.js route's logic for website creation,
     // it's primarily for determining trial status on the Express.js backend.
-    // It's removed here to avoid confusion and keep the Next.js route focused.
 
     try {
-      // Try to log in the user first (in case they already exist from a previous Shopify install or manual signup)
-      const loginRes = await axios.post(`${expressApiBaseUrl}/users/login`, {
+      // FIRST: Attempt to register the user
+      const registerRes = await axios.post(`${expressApiBaseUrl}/users/register`, {
         email: shopOwnerEmail,
-        password: generatedPassword, // Use generated password for initial login attempt
+        password: generatedPassword,
       });
-      userId = loginRes.data.user.id;
-      userToken = loginRes.data.token;
+      userId = registerRes.data.user.id;
+      userToken = registerRes.data.token;
 
-      console.log(`User ${shopOwnerEmail} logged in successfully.`);
+      console.log(`User ${shopOwnerEmail} registered successfully.`);
+      // IMPORTANT: You should send an email to the user with this `generatedPassword`
+      // so they can log in to your service. This is a critical step for user experience and security.
+      // e.g., await sendWelcomeEmailWithGeneratedPassword(shopOwnerEmail, generatedPassword);
 
-    } catch (loginError: any) {
-      // If login fails, assume the user doesn't exist and try to register them
-      if (loginError.response && loginError.response.status === 400 && loginError.response.data.message === 'Invalid credentials') {
-        console.log(`User ${shopOwnerEmail} not found, attempting to register.`);
-        const registerRes = await axios.post(`${expressApiBaseUrl}/users/register`, {
+    } catch (registerError: any) {
+      // If registration fails, check if it's because the user already exists
+      // Assuming your backend returns a 400 status with a specific message for existing users
+      if (registerError.response && registerError.response.status === 400 &&
+          (registerError.response.data.message === 'User with this email already exists' || registerError.response.data.message === 'Email already registered')) {
+        console.log(`User ${shopOwnerEmail} already exists, attempting to log in.`);
+        // If user exists, try to log them in with the generated password (if it's a known default/initial password)
+        // or prompt them to reset their password if this is their first time connecting via Shopify.
+        // For simplicity, we'll try to log in with the generated password.
+        // If your system requires a pre-existing password for login, this step might need adjustment
+        // (e.g., redirecting to a password reset flow).
+        const loginRes = await axios.post(`${expressApiBaseUrl}/users/login`, {
           email: shopOwnerEmail,
           password: generatedPassword,
         });
-        userId = registerRes.data.user.id;
-        userToken = registerRes.data.token;
-
-        console.log(`User ${shopOwnerEmail} registered successfully.`);
-        // You might want to send an email to the user with their generated password here.
-        // This is crucial for them to be able to log in to your service.
-        // e.g., await sendWelcomeEmailWithPassword(shopOwnerEmail, generatedPassword);
-
+        userId = loginRes.data.user.id;
+        userToken = loginRes.data.token;
+        console.log(`User ${shopOwnerEmail} logged in successfully.`);
       } else {
-        console.error("Error during user login/registration:", loginError.response?.data || loginError.message);
-        return NextResponse.json({ error: 'Failed to process user account.' }, { status: 500 });
+        console.error("Error during user registration/login:", registerError.response?.data || registerError.message);
+        return NextResponse.json({ error: `Failed to process user account: ${registerError.response?.data?.message || registerError.message}` }, { status: 500 });
       }
     }
 
@@ -128,18 +131,17 @@ export async function GET(req: NextRequest) {
     // Generate a unique chatbotCode for the website
     const newChatbotCode = crypto.randomBytes(8).toString('hex');
 
-    const websiteLink = `https://${shop}`; // Corrected: use 'shop' variable for the link
+    const websiteLink = `https://${shop}`;
 
     // Make an API call to your Express.js backend to create the website
     // This uses axios, which is suitable for server-side requests.
     const websiteCreationResponse = await axios.post(`${expressApiBaseUrl}/websites`, {
-      name: shopName, // Use Shopify shop name
-      link: websiteLink, // Corrected: use websiteLink variable
+      name: shopName,
+      link: websiteLink,
       description: `Chatbot for Shopify store: ${shopName}`,
       chatbotCode: newChatbotCode,
       userId: userId, // Link to the created/found user
       shopifyAccessToken: access_token, // Store the Shopify access token
-      // Pass default preferences or other data as needed
       preferences: {
         colors: { gradient1: "#10b981", gradient2: "#059669" },
         header: "Chat Support",
