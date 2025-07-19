@@ -120,7 +120,7 @@ export function WebsiteCard({ website }: WebsiteCardProps) {
               onClick={(e) => {
                 e.stopPropagation()
                 copyToClipboard(
-                  `<script src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=${website.chatbotCode}"></script>`,
+                  `<script async src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=${website.chatbotCode}"></script>`,
                 )
               }}
               className="border-slate-200/60 text-slate-600 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 rounded-xl flex-shrink-0 transition-all duration-200 shadow-sm"

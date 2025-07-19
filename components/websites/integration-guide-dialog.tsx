@@ -142,7 +142,7 @@ export function IntegrationGuideDialog({ platformName, chatbotCode, isOpen, onCl
   console.log("Available integration guide keys:", Object.keys(integrationGuides))
 
   const [activeTab] = useState(platformName)
-  const scriptToCopy = `<script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"></script>`
+  const scriptToCopy = `<script async src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"></script>`
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {

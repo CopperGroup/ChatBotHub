@@ -105,9 +105,7 @@ export function ChatbotIntegrationArticle() {
                 </p>
                 <div className="bg-slate-900 rounded-lg p-4 mb-4 relative">
                   <pre className="text-green-400 text-sm overflow-x-auto">
-                    <code>{`<script src="https://chatbot.yoursite.com/widget.js" 
-        data-chatbot-id="your-unique-id">
-</script>`}</code>
+                    <code>{`<script async src="${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=your-quniqe-publishable-code></script>`}</code>
                   </pre>
                   <Button size="sm" className="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600">
                     <Copy className="w-4 h-4 mr-1" />
@@ -143,8 +141,7 @@ export function ChatbotIntegrationArticle() {
   <!-- Your website content -->
   
   <!-- Chatbot Script - Add before closing body tag -->
-  <script src="https://chatbot.yoursite.com/widget.js" 
-          data-chatbot-id="your-unique-id">
+  <script async src="${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=your-quniqe-publishable-code></script>
   </script>
 </body>
 </html>`}</code>

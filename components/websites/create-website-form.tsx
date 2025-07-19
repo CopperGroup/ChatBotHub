@@ -105,7 +105,7 @@ export function CreateWebsiteForm({ userId, userWebsitesCount }: CreateWebsiteFo
             router.push("/websites")
           }, 3000)
         } else {
-          const snippet = `<script src="${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${generatedChatbotCode}"></script>`
+          const snippet = `<script async src="${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${generatedChatbotCode}"></script>`
           setChatbotCodeSnippet(snippet)
           toast.success("Website created successfully! Please select a plan.")
           setTimeout(() => {
