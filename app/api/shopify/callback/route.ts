@@ -173,6 +173,7 @@ export async function GET(req: NextRequest) {
 
     console.log(`Attempting to create/update website for ${shopName} (Link: ${websiteLink})`);
 
+    console.log(userToken)
     // Before creating a new website, check if a website for this shop already exists for this user.
     // This prevents creating duplicate website entries if the user re-installs the app.
     let existingWebsite = null;
