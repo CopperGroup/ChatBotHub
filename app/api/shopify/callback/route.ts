@@ -178,21 +178,24 @@ export async function GET(req: NextRequest) {
     // This prevents creating duplicate website entries if the user re-installs the app.
     let existingWebsite = null;
     try {
-        // Assuming you have an endpoint to check for existing websites by link and owner
-        // This is a GET request, so it should be secured by userToken
-        const websiteCheckRes = await axios.get(`${expressApiBaseUrl}/websites?link=${encodeURIComponent(websiteLink)}&owner=${userId}`, {
+        // *** MODIFIED HERE: Use the new /websites/by-shopify-token route ***
+        const websiteCheckRes = await axios.get(`${expressApiBaseUrl}/websites/by-shopify-token?shopifyAccessToken=${access_token}`, {
             headers: {
-                'x-auth-token': userToken
+                // Use the internal API key for backend-to-backend communication
+                'X-Internal-API-Key': process.env.INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH
             }
         });
-        // Assuming the response is an array of websites, take the first one if found
-        if (websiteCheckRes.data && websiteCheckRes.data.length > 0) {
-            existingWebsite = websiteCheckRes.data[0];
-            console.log(`Found existing website for ${shopName}: ${existingWebsite._id}`);
-        }
+        existingWebsite = websiteCheckRes.data; // Assuming the new route returns a single website object
+        console.log(`Found existing website for ${shopName} via Shopify token: ${existingWebsite._id}`);
     } catch (checkError: any) {
-        // Log error but don't block flow, proceed to create if check fails
-        console.error("Error checking for existing website:", checkError.response?.data || checkError.message);
+        // If 404, it means no existing website was found with that token, which is expected for a new install
+        if (checkError.response && checkError.response.status === 404) {
+            console.log("No existing website found with this Shopify access token. Proceeding to create a new one.");
+        } else {
+            console.error("Error checking for existing website by Shopify token:", checkError.response?.data || checkError.message);
+            // Re-throw or handle as a critical error if the check itself fails for other reasons
+            // For now, allow it to proceed to creation if there's an error, but log it.
+        }
     }
 
 
@@ -204,7 +207,6 @@ export async function GET(req: NextRequest) {
             shopifyAccessToken: access_token, // Update website-specific access token
             // You might want to update other fields like name, description if they can change
             name: shopName,
-            description: `Chatbot for Shopify store: ${shopName}`,
             link: websiteLink, // Ensure link is consistent
             // Do NOT update chatbotCode here unless explicitly intended for re-generation
             userId: userId, // Ensure owner is still correct
