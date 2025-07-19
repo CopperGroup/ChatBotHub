@@ -7,7 +7,18 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  devIndicators: false
+  devIndicators: false,
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: [
+        {
+          key: 'Content-Security-Policy',
+          value: "frame-ancestors https://*.myshopify.com https://admin.shopify.com;",
+        },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;
