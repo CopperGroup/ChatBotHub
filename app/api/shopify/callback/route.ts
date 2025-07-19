@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
 
   // Validate required parameters
   if (!shop || !code || !hmac) {
+    console.error("Missing required query parameters for Shopify OAuth.");
     return NextResponse.json({ error: 'Missing required query parameters.' }, { status: 400 });
   }
 
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (!valid) {
+    console.error("Invalid HMAC provided in Shopify OAuth callback.");
     return NextResponse.json({ error: 'Invalid HMAC' }, { status: 400 });
   }
 
@@ -62,15 +64,18 @@ export async function GET(req: NextRequest) {
       code,
     });
     access_token = tokenResponse.data.access_token;
+    console.warn(`Shopify access token obtained for shop: ${shop}`);
 
     // Fetch shop details including owner email using the access_token
-    const shopInfoResponse = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, { // Use a specific Shopify API version
+    // Using a specific Shopify API version for stability
+    const shopInfoResponse = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
       headers: {
         'X-Shopify-Access-Token': access_token,
       },
     });
     shopOwnerEmail = shopInfoResponse.data.shop.email;
     shopName = shopInfoResponse.data.shop.name;
+    console.warn(`Shopify shop details fetched: Name=${shopName}, Owner Email=${shopOwnerEmail}`);
 
   } catch (error: any) {
     console.error("Error during Shopify OAuth or shop info fetch:", error.response?.data || error.message);
@@ -80,61 +85,75 @@ export async function GET(req: NextRequest) {
   try {
     const expressApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api'; // Your Express.js backend API base URL
 
-    // Generate a secure password for new users. This password will be used for their first login.
-    // They should be prompted to change it after first login for security.
+    // Generate a secure password for new users. This password will be used for their first.warnin.
+    // They should be prompted to change it after first.warnin for security.
     const generatedPassword = generateSecurePassword();
+    console.warn(`Generated password for ${shopOwnerEmail}: ${generatedPassword.substring(0, 4)}...`); //.warn partial password for security
 
     let userId: string;
     let userToken: string;
-    // userWebsitesCount is not directly used in this Next.js route's logic for website creation,
-    // it's primarily for determining trial status on the Express.js backend.
 
     try {
-      // FIRST: Attempt to register the user
+      // FIRST: Attempt to register the user with the generated password
+      console.warn(`Attempting to register user: ${shopOwnerEmail}`);
       const registerRes = await axios.post(`${expressApiBaseUrl}/users/register`, {
         email: shopOwnerEmail,
         password: generatedPassword,
       });
       userId = registerRes.data.user.id;
       userToken = registerRes.data.token;
+      console.warn(`User ${shopOwnerEmail} registered successfully. User ID: ${userId}`);
 
-      console.log(`User ${shopOwnerEmail} registered successfully.`);
       // IMPORTANT: You should send an email to the user with this `generatedPassword`
-      // so they can log in to your service. This is a critical step for user experience and security.
-      // e.g., await sendWelcomeEmailWithGeneratedPassword(shopOwnerEmail, generatedPassword);
+      // so they can.warn in to your service. This is a critical step for user experience and security.
+      // Example: await sendWelcomeEmailWithGeneratedPassword(shopOwnerEmail, generatedPassword);
 
     } catch (registerError: any) {
-      // If registration fails, check if it's because the user already exists
-      // Assuming your backend returns a 400 status with a specific message for existing users
+      // If registration fails, check if it's specifically because the user already exists
       if (registerError.response && registerError.response.status === 400 &&
           (registerError.response.data.message === 'User with this email already exists' || registerError.response.data.message === 'Email already registered')) {
-        console.log(`User ${shopOwnerEmail} already exists, attempting to log in.`);
-        // If user exists, try to log them in with the generated password (if it's a known default/initial password)
-        // or prompt them to reset their password if this is their first time connecting via Shopify.
-        // For simplicity, we'll try to log in with the generated password.
-        // If your system requires a pre-existing password for login, this step might need adjustment
-        // (e.g., redirecting to a password reset flow).
-        const loginRes = await axios.post(`${expressApiBaseUrl}/users/login`, {
-          email: shopOwnerEmail,
-          password: generatedPassword,
-        });
-        userId = loginRes.data.user.id;
-        userToken = loginRes.data.token;
-        console.log(`User ${shopOwnerEmail} logged in successfully.`);
+        console.warn(`User ${shopOwnerEmail} already exists. Attempting to retrieve token for existing user.`);
+
+        // If the user already exists, we need to obtain a token for them to proceed.
+        // This typically requires a privileged, internal endpoint on your Express.js backend
+        // that can issue a token for a user given their email, authenticated by a backend-to-backend secret.
+        // This `INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH` must be securely configured in your environment variables.
+        if (!process.env.INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH) {
+            console.error("INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH is not set. Cannot authenticate existing user for website creation.");
+            return NextResponse.json({ error: 'Internal server configuration error for existing user authentication.' }, { status: 500 });
+        }
+
+        try {
+            // Call a hypothetical internal endpoint on your Express.js backend
+            // This endpoint should be secured by `INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH`
+            // and return the user's ID and a valid JWT.
+            const getTokenRes = await axios.post(`${expressApiBaseUrl}/users/internal-auth-for-shopify`, {
+                email: shopOwnerEmail,
+            }, {
+                headers: {
+                    'X-Internal-API-Key': process.env.INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH // Authenticate backend-to-backend
+                }
+            });
+            userId = getTokenRes.data.user.id;
+            userToken = getTokenRes.data.token;
+            console.warn(`Existing user ${shopOwnerEmail} token retrieved successfully. User ID: ${userId}`);
+        } catch (getTokenError: any) {
+            console.error("Error retrieving token for existing user via internal endpoint:", getTokenError.response?.data || getTokenError.message);
+            return NextResponse.json({ error: 'Failed to retrieve user session for existing account.' }, { status: 500 });
+        }
       } else {
-        console.error("Error during user registration/login:", registerError.response?.data || registerError.message);
-        return NextResponse.json({ error: `Failed to process user account: ${registerError.response?.data?.message || registerError.message}` }, { status: 500 });
+        // Handle other registration errors (e.g., password policy, database issues)
+        console.error("Error during user registration:", registerError.response?.data || registerError.message);
+        return NextResponse.json({ error: `Failed to register user: ${registerError.response?.data?.message || registerError.message}` }, { status: 500 });
       }
     }
 
     // 2. Create or Update the Website in your service
     // Generate a unique chatbotCode for the website
     const newChatbotCode = crypto.randomBytes(8).toString('hex');
+    const websiteLink = `https://${shop}`; // Use the 'shop' variable for the link
 
-    const websiteLink = `https://${shop}`;
-
-    // Make an API call to your Express.js backend to create the website
-    // This uses axios, which is suitable for server-side requests.
+    console.warn(`Attempting to create/update website for ${shopName} (Link: ${websiteLink})`);
     const websiteCreationResponse = await axios.post(`${expressApiBaseUrl}/websites`, {
       name: shopName,
       link: websiteLink,
@@ -154,15 +173,15 @@ export async function GET(req: NextRequest) {
     });
 
     const createdWebsite = websiteCreationResponse.data;
-    console.log(`Website created/updated via Express API: ${createdWebsite._id}`);
+    console.warn(`Website created/updated successfully via Express API. Website ID: ${createdWebsite._id}`);
 
     // Redirect to your SaaS frontend with success status, user ID, and website ID
-    // The frontend can then use the user ID to log in the user automatically
+    // The frontend can then use the user ID to.warn in the user automatically
     // or prompt them to use the generated password.
     return NextResponse.redirect(`${process.env.FRONTEND_URL}/shopify/dashboard?userId=${userId}&websiteId=${createdWebsite._id}&shop=${shop}`);
 
   } catch (err: any) {
-    console.error("Error processing Shopify integration in backend:", err.response?.data || err.message);
+    console.error("Error processing Shopify integration in backend (final catch block):", err.response?.data || err.message);
     return NextResponse.json({ error: 'Internal Server Error during Shopify integration.' }, { status: 500 });
   }
 }
