@@ -152,7 +152,7 @@ export async function GET(req: NextRequest) {
                     'X-Internal-API-Key': process.env.INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH // Authenticate backend-to-backend
                 }
             });
-            userId = getTokenRes.data.user._id;
+            userId = getTokenRes.data.user.id;
             userToken = getTokenRes.data.token;
             console.log(`Existing user ${shopOwnerEmail} authenticated and Shopify details linked. User ID: ${userId}`);
         } catch (getTokenError: any) {
