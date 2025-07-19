@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
         email: shopOwnerEmail,
         password: generatedPassword,
       });
-      userId = registerRes.data.user.id;
+      userId = registerRes.data.user._id;
       userToken = registerRes.data.token;
       console.log(`User ${shopOwnerEmail} registered successfully. User ID: ${userId}`);
 
@@ -152,7 +152,7 @@ export async function GET(req: NextRequest) {
                     'X-Internal-API-Key': process.env.INTERNAL_BACKEND_API_KEY_FOR_SHOPIFY_AUTH // Authenticate backend-to-backend
                 }
             });
-            userId = getTokenRes.data.user.id;
+            userId = getTokenRes.data.user._id;
             userToken = getTokenRes.data.token;
             console.log(`Existing user ${shopOwnerEmail} authenticated and Shopify details linked. User ID: ${userId}`);
         } catch (getTokenError: any) {
