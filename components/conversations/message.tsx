@@ -1,7 +1,10 @@
+// components/website/message.tsx
 "use client"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Bot, Sparkles, User2, Info } from "lucide-react"
+import { marked } from "marked" // Import marked library
+import DOMPurify from "dompurify" // Import DOMPurify for sanitization
 
 interface MessageProps {
   message: {
@@ -32,6 +35,14 @@ export function Message({ message, chatName, chatEmail, isStaff, staffInfo, dash
       .toUpperCase()
       .slice(0, 2)
   }
+
+  // Function to render markdown safely
+  const renderMarkdown = (markdownText: string) => {
+    if (!markdownText) return { __html: "" }; // Handle empty or null text
+    const rawMarkup = marked.parse(markdownText, { breaks: true, gfm: true }) as string;
+    // Sanitize the HTML to prevent XSS attacks
+    return { __html: DOMPurify.sanitize(rawMarkup) };
+  };
 
   // Determine message type and styling
   const isUserMessageFromWidget = message.sender === "user"
@@ -171,7 +182,7 @@ export function Message({ message, chatName, chatEmail, isStaff, staffInfo, dash
         {avatarComponent}
 
         <div className="space-y-1 max-w-[100%]">
-          <div className={`px-3 md:px-4 py-2 md:py-3 rounded-2xl relative shadow-sm  ${messageBubbleClass}`}>
+          <div className={`px-3 md:px-4 py-2 md:py-3 rounded-2xl relative shadow-sm ${messageBubbleClass}`}>
             {isIncomingMessage && (message.sender === "bot" || message.sender === "ai") && (
               <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-current/20">
                 {message.sender === "bot" ? (
@@ -184,7 +195,11 @@ export function Message({ message, chatName, chatEmail, isStaff, staffInfo, dash
                 </span>
               </div>
             )}
-            <p className="text-sm leading-relaxed break-words">{message.text}</p>
+            {/* Markdown parsing applied here */}
+            <p
+              className="markdown-content text-sm leading-relaxed break-words"
+              dangerouslySetInnerHTML={renderMarkdown(message.text)}
+            />
           </div>
           <p
             className={`text-xs px-2 ${

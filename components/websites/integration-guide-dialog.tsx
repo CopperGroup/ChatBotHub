@@ -4,8 +4,9 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Copy, Check } from "lucide-react"
+import { Copy, Check, MoreHorizontal, Settings } from "lucide-react" // Import icons you'll use
 import { toast } from "sonner"
+import React from "react" // Import React
 
 interface IntegrationGuideDialogProps {
   platformName: string
@@ -14,126 +15,248 @@ interface IntegrationGuideDialogProps {
   onClose: () => void
 }
 
-// Correctly type integrationGuides to accept functions that return strings
-const integrationGuides: { [key: string]: (chatbotCode: string) => string } = {
-  Shopify: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>Shopify</strong>, follow these steps:
-    1. Go to your <strong>Shopify admin panel</strong>.
-    2. Navigate to "<strong>Online Store</strong>" > "<strong>Themes</strong>".
-    3. Find your current theme and click "<strong>Actions</strong>" > "<strong>Edit code</strong>".
-    4. In the "<strong>Layout</strong>" directory, click "<strong>theme.liquid</strong>".
-    5. Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    6. Click "<strong>Save</strong>".
-    Your chatbot should now appear on your Shopify store!
-  `,
-  WooCommerce: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>WooCommerce</strong> (WordPress):
-    1. Log in to your <strong>WordPress admin dashboard</strong>.
-    2. Go to "<strong>Appearance</strong>" > "<strong>Theme File Editor</strong>".
-    3. Select your active theme.
-    4. Find and open the "<strong>header.php</strong>" file (or a similar file responsible for your site's <code>&lt;head&gt;</code> section).
-    5. Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    6. Click "<strong>Update File</strong>".
-    The chatbot will now be active on your WooCommerce store.
-  `,
-  Wix: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>Wix</strong>:
-    1. Go to your <strong>Wix dashboard</strong>.
-    2. Navigate to "<strong>Settings</strong>" > "<strong>Custom Code</strong>".
-    3. Click "<strong>+ Add Custom Code</strong>".
-    4. Paste the following script tag into the "<strong>Paste code in head</strong>" section:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    5. Select "<strong>All pages</strong>" under "<strong>Add Code to Pages</strong>" and set "<strong>Place Code in</strong>" to "<strong>Head</strong>".
-    6. Click "<strong>Apply</strong>".
-    Your chatbot is now installed on your Wix site.
-  `,
-  Squarespace: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>Squarespace</strong>:
-    1. From your <strong>Squarespace Home Menu</strong>, go to "<strong>Settings</strong>" > "<strong>Developer Tools</strong>" > "<strong>Code Injection</strong>".
-    2. In the "<strong>Header</strong>" field, paste the following script tag:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    3. Click "<strong>Save</strong>".
-    Your chatbot should now be live on your Squarespace site.
-  `,
-  OpenCart: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>OpenCart</strong>:
-    1. Log in to your <strong>OpenCart admin panel</strong>.
-    2. Go to "<strong>System</strong>" > "<strong>Design</strong>" > "<strong>Theme Editor</strong>".
-    3. Select your store and the template file (e.g., <code>common/header.twig</code> or <code>common/header.tpl</code>).
-    4. Locate the closing <code>&lt;/head&gt;</code> tag.
-    5. Just before <code>&lt;/head&gt;</code>, paste the following script tag:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    6. Save the changes.
-    Your chatbot is now integrated with OpenCart.
-  `,
-  "Custom HTML/CMS": (chatbotCode: string) => `
-    For any <strong>custom HTML website or other CMS</strong>:
-    1. Open the main <strong>HTML file</strong> of your website (e.g., <code>index.html</code>, <code>layout.php</code>, <code>master.blade.php</code>).
-    2. Locate the <code>&lt;head&gt;</code> section of your website.
-    3. Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    4. Save the file and upload it to your web server.
-    Your chatbot should now load on all pages where this script is included.
-  `,
-  BigCommerce: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>BigCommerce</strong>:
-    1. Go to <strong>Storefront</strong> &rarr; <strong>Script Manager</strong>.
-    2. Click <strong>Create a Script</strong>.
-    3. Set <strong>Location</strong> to "<strong>Footer</strong>".
-    4. Set <strong>Pages</strong> to "<strong>All pages</strong>".
-    5. Paste the following script into the "<strong>Script Contents</strong>" field:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    6. Click "<strong>Save</strong>".
-    Your chatbot is now integrated with BigCommerce.
-  `,
-  PrestaShop: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>PrestaShop</strong>:
-    1. Open <code>/themes/YOUR_THEME/footer.tpl</code> (replace <code>YOUR_THEME</code> with your active theme's directory name).
-    2. Add the following script tag just before the closing <code>&lt;/body&gt;</code> tag:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    3. Save the changes.
-    Your chatbot is now integrated with PrestaShop.
-  `,
-  Magento: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>Magento (Adobe Commerce)</strong> via the admin panel:
-    1. Go to <strong>Content</strong> &rarr; <strong>Design</strong> &rarr; <strong>Configuration</strong>.
-    2. Choose your theme and click "<strong>Edit</strong>".
-    3. Under <strong>HTML Head</strong> &rarr; <strong>Scripts and Style Sheets</strong>, paste the following script:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    4. Click "<strong>Save Configuration</strong>".
-    Alternatively, for developers, you can add this via custom layout XML.
-  `,
-  Webflow: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>Webflow</strong>:
-    1. Go to <strong>Project Settings</strong> &rarr; <strong>Custom Code</strong>.
-    2. In the <strong>Footer Code</strong> section, paste the following script:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    3. <strong>Save</strong> changes and <strong>Publish</strong> your site.
-    Your chatbot is now integrated with Webflow.
-  `,
-  WordPress: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>WordPress</strong> (non-WooCommerce sites):
-    1. Log in to your <strong>WordPress admin dashboard</strong>.
-    2. Go to "<strong>Appearance</strong>" > "<strong>Theme File Editor</strong>".
-    3. Select your active theme.
-    4. Find and open the "<strong>header.php</strong>" file (or a similar file responsible for your site's <code>&lt;head&gt;</code> section).
-    5. Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    6. Click "<strong>Update File</strong>".
-    The chatbot will now be active on your WordPress site.
-  `,
-  Framer: (chatbotCode: string) => `
-    To integrate Chatbot Hub with <strong>Framer</strong>:
-    1. Open your project in <strong>Framer</strong>.
-    2. Go to <strong>Project Settings</strong> (the gear icon) > <strong>General</strong>.
-    3. Scroll down to the <strong>Custom Code</strong> section.
-    4. Under "<strong>End of &lt;body&gt;</strong>" (or "Start of &lt;head&gt;"), paste the following script:
-        <code>&lt;script src="${process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode=${chatbotCode}"&gt;&lt;/script&gt;</code>
-    5. <strong>Publish</strong> your site to apply the changes.
-    Your chatbot is now integrated with Framer.
-  `,
+// Correctly type integrationGuides to accept functions that return React.ReactNode
+const integrationGuides: { [key: string]: (chatbotCode: string) => React.ReactNode } = {
+  Shopify: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>Shopify</strong>, follow these steps:
+      </p>
+      <ol>
+        <li>Go to your <strong>Shopify admin panel</strong>.</li>
+        <li>Navigate to "<strong>Online Store</strong>" &gt; "<strong>Themes</strong>".</li>
+        <li>
+          Find your current theme and click "<strong>Actions</strong>"{" "}
+          <MoreHorizontal className="inline-block h-4 w-4 align-text-bottom" /> &gt; "<strong>Edit code</strong>".
+        </li>
+        <li>In the "<strong>Layout</strong>" directory, click "<strong>theme.liquid</strong>".</li>
+        <li>
+          Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Click "<strong>Save</strong>".</li>
+      </ol>
+      <p>Your chatbot should now appear on your Shopify store!</p>
+    </>
+  ),
+  WooCommerce: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>WooCommerce</strong> (WordPress):
+      </p>
+      <ol>
+        <li>Log in to your <strong>WordPress admin dashboard</strong>.</li>
+        <li>Go to "<strong>Appearance</strong>" &gt; "<strong>Theme File Editor</strong>".</li>
+        <li>Select your active theme.</li>
+        <li>Find and open the "<strong>header.php</strong>" file (or a similar file responsible for your site's <code>&lt;/head&gt;</code> section).</li>
+        <li>
+          Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Click "<strong>Update File</strong>".</li>
+      </ol>
+      <p>The chatbot will now be active on your WooCommerce store.</p>
+    </>
+  ),
+  Wix: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>Wix</strong>:
+      </p>
+      <ol>
+        <li>Go to your <strong>Wix dashboard</strong>.</li>
+        <li>
+          Navigate to "<strong>Settings</strong>" <Settings className="inline-block h-4 w-4 align-text-bottom" /> &gt; "<strong>Custom Code</strong>".
+        </li>
+        <li>Click "<strong>+ Add Custom Code</strong>".</li>
+        <li>
+          Paste the following script tag into the "<strong>Paste code in head</strong>" section:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Select "<strong>All pages</strong>" under "<strong>Add Code to Pages</strong>" and set "<strong>Place Code in</strong>" to "<strong>Head</strong>".</li>
+        <li>Click "<strong>Apply</strong>".</li>
+      </ol>
+      <p>Your chatbot is now installed on your Wix site.</p>
+    </>
+  ),
+  Squarespace: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>Squarespace</strong>:
+      </p>
+      <ol>
+        <li>
+          From your <strong>Squarespace Home Menu</strong>, go to "<strong>Settings</strong>"{" "}
+          <Settings className="inline-block h-4 w-4 align-text-bottom" /> &gt; "<strong>Developer Tools</strong>" &gt; "<strong>Code Injection</strong>".
+        </li>
+        <li>
+          In the "<strong>Header</strong>" field, paste the following script tag:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Click "<strong>Save</strong>".</li>
+      </ol>
+      <p>Your chatbot should now be live on your Squarespace site.</p>
+    </>
+  ),
+  OpenCart: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>OpenCart</strong>:
+      </p>
+      <ol>
+        <li>Log in to your <strong>OpenCart admin panel</strong>.</li>
+        <li>Go to "<strong>System</strong>" &gt; "<strong>Design</strong>" &gt; "<strong>Theme Editor</strong>".</li>
+        <li>Select your store and the template file (e.g., <code>common/header.twig</code> or <code>common/header.tpl</code>).</li>
+        <li>Locate the closing <code>&lt;/head&gt;</code> tag.</li>
+        <li>
+          Just before <code>&lt;/head&gt;</code>, paste the following script tag:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Save the changes.</li>
+      </ol>
+      <p>Your chatbot is now integrated with OpenCart.</p>
+    </>
+  ),
+  "Custom HTML/CMS": (chatbotCode: string) => (
+    <>
+      <p>
+        For any <strong>custom HTML website or other CMS</strong>:
+      </p>
+      <ol>
+        <li>Open the main <strong>HTML file</strong> of your website (e.g., <code>index.html</code>, <code>layout.php</code>, <code>master.blade.php</code>).</li>
+        <li>Locate the <code>&lt;head&gt;</code> section of your website.</li>
+        <li>
+          Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Save the file and upload it to your web server.</li>
+      </ol>
+      <p>Your chatbot should now load on all pages where this script is included.</p>
+    </>
+  ),
+  BigCommerce: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>BigCommerce</strong>:
+      </p>
+      <ol>
+        <li>Go to <strong>Storefront</strong> &rarr; <strong>Script Manager</strong>.</li>
+        <li>Click <strong>Create a Script</strong>.</li>
+        <li>Set <strong>Location</strong> to "<strong>Footer</strong>".</li>
+        <li>Set <strong>Pages</strong> to "<strong>All pages</strong>".</li>
+        <li>
+          Paste the following script into the "<strong>Script Contents</strong>" field:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Click "<strong>Save</strong>".</li>
+      </ol>
+      <p>Your chatbot is now integrated with BigCommerce.</p>
+    </>
+  ),
+  PrestaShop: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>PrestaShop</strong>:
+      </p>
+      <ol>
+        <li>Open <code>/themes/YOUR_THEME/footer.tpl</code> (replace <code>YOUR_THEME</code> with your active theme's directory name).</li>
+        <li>
+          Add the following script tag just before the closing <code>&lt;/body&gt;</code> tag:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Save the changes.</li>
+      </ol>
+      <p>Your chatbot is now integrated with PrestaShop.</p>
+    </>
+  ),
+  Magento: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>Magento (Adobe Commerce)</strong> via the admin panel:
+      </p>
+      <ol>
+        <li>Go to <strong>Content</strong> &rarr; <strong>Design</strong> &rarr; <strong>Configuration</strong>.</li>
+        <li>Choose your theme and click "<strong>Edit</strong>".</li>
+        <li>
+          Under <strong>HTML Head</strong> &rarr; <strong>Scripts and Style Sheets</strong>, paste the following script:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Click "<strong>Save Configuration</strong>".</li>
+      </ol>
+      <p>Alternatively, for developers, you can add this via custom layout XML.</p>
+    </>
+  ),
+  Webflow: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>Webflow</strong>:
+      </p>
+      <ol>
+        <li>
+          Go to <strong>Project Settings</strong> <Settings className="inline-block h-4 w-4 align-text-bottom" /> &rarr; <strong>Custom Code</strong>.
+        </li>
+        <li>
+          In the <strong>Footer Code</strong> section, paste the following script:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li><strong>Save</strong> changes and <strong>Publish</strong> your site.</li>
+      </ol>
+      <p>Your chatbot is now integrated with Webflow.</p>
+    </>
+  ),
+  WordPress: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>WordPress</strong> (non-WooCommerce sites):
+      </p>
+      <ol>
+        <li>Log in to your <strong>WordPress admin dashboard</strong>.</li>
+        <li>Go to "<strong>Appearance</strong>" &gt; "<strong>Theme File Editor</strong>".</li>
+        <li>Select your active theme.</li>
+        <li>Find and open the "<strong>header.php</strong>" file (or a similar file responsible for your site's <code>&lt;/head&gt;</code> section).</li>
+        <li>
+          Paste the following script tag just before the closing <code>&lt;/head&gt;</code> tag:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li>Click "<strong>Update File</strong>".</li>
+      </ol>
+      <p>The chatbot will now be active on your WordPress site.</p>
+    </>
+  ),
+  Framer: (chatbotCode: string) => (
+    <>
+      <p>
+        To integrate Chatbot Hub with <strong>Framer</strong>:
+      </p>
+      <ol>
+        <li>Open your project in <strong>Framer</strong>.</li>
+        <li>
+          Go to <strong>Project Settings</strong>{" "}
+          <Settings className="inline-block h-4 w-4 align-text-bottom" /> (the gear icon) &gt;{" "}
+          <strong>General</strong>.
+        </li>
+        <li>Scroll down to the <strong>Custom Code</strong> section.</li>
+        <li>
+          Under "<strong>End of &lt;body&gt;</strong>" (or "Start of &lt;head&gt;"), paste the following script:
+          <br />
+          <code>&lt;script src="{process.env.NEXT_PUBLIC_API_BASE_URL!.replace("/api", "")}/widget/chatbot-widget.js?chatbotCode={chatbotCode}"&gt;&lt;/script&gt;</code>
+        </li>
+        <li><strong>Publish</strong> your site to apply the changes.</li>
+      </ol>
+      <p>Your chatbot is now integrated with Framer.</p>
+    </>
+  ),
 }
 
 export function IntegrationGuideDialog({ platformName, chatbotCode, isOpen, onClose }: IntegrationGuideDialogProps) {
@@ -162,23 +285,8 @@ export function IntegrationGuideDialog({ platformName, chatbotCode, isOpen, onCl
       console.error(`Guide content function not found for key: "${key}"`)
       return "Guide not found for this platform."
     }
-    const content = contentFunction(chatbotCode)
-    return (
-      <div className="prose prose-sm max-w-none text-slate-800">
-        {content.split("\n").map((line, index) => {
-          if (line.trim() === "") return <br key={index} />
-
-          // Using dangerouslySetInnerHTML to render HTML from the guide strings
-          return (
-            <p
-              key={index}
-              className="text-base leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: line.trim() }}
-            />
-          )
-        })}
-      </div>
-    )
+    // Now directly return the JSX from the function
+    return contentFunction(chatbotCode)
   }
 
   return (
@@ -196,7 +304,7 @@ export function IntegrationGuideDialog({ platformName, chatbotCode, isOpen, onCl
             <div className="relative bg-slate-100 text-slate-800 p-4 rounded-xl font-mono text-sm break-all">
               {scriptToCopy}
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={handleCopy}
                 className="absolute top-2 right-2 h-8 w-8 p-0 text-slate-500 hover:bg-slate-200 hover:text-slate-900 rounded-lg"
@@ -207,7 +315,9 @@ export function IntegrationGuideDialog({ platformName, chatbotCode, isOpen, onCl
           </div>
 
           {/* Directly render the content for the activeTab */}
-          {renderGuideContent(activeTab)}
+          <div className="prose prose-sm max-w-none text-slate-800">
+            {renderGuideContent(activeTab)}
+          </div>
         </div>
         <Button onClick={onClose} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3">
           Got It!

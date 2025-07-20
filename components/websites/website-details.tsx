@@ -1,14 +1,25 @@
 "use client"
-
 import { useState, useEffect, Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, MessageSquare, BarChart3, Crown, Loader2, Globe, Calendar, Brain, XCircle, Code } from "lucide-react" // Added Code icon
+import {
+  Users,
+  MessageSquare,
+  BarChart3,
+  Crown,
+  Loader2,
+  Globe,
+  Calendar,
+  Brain,
+  XCircle,
+  Code,
+  Send,
+} from "lucide-react"
 import { WebsiteSettings } from "./website-settings"
 import { StaffManagement } from "./staff-management"
 import { AIManagement } from "./ai-management"
-import { WebsiteIntegrationTab } from "./integration-tab"; // Import the new tab component
+import { WebsiteIntegrationTab } from "./integration-tab" // Import the new tab component
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -91,10 +102,8 @@ function WebsiteDetailsSkeleton() {
         <Skeleton className="h-4 w-96 mb-4" />
         <Skeleton className="h-6 w-48 rounded-lg" />
       </div>
-
       {/* Tabs List Skeleton */}
       <Skeleton className="h-12 w-full rounded-2xl mb-6" />
-
       {/* Overview Tab Content Skeleton */}
       <div className="space-y-6">
         <Skeleton className="h-40 w-full rounded-3xl" /> {/* Plan Info Card */}
@@ -140,6 +149,7 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 800)
+
     return () => clearTimeout(timer)
   }, [])
 
@@ -159,6 +169,7 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     }
 
     setCancellingSubscription(true)
+
     try {
       const res = await authFetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}/cancel-subscription`,
@@ -216,9 +227,34 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
         </div>
       </div>
 
+      {/* Action Buttons Section */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link href={`/websites/${website._id}/conversations`}>
+            <Button
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>Conversations</span>
+            </Button>
+          </Link>
+
+          <Button
+            variant="outline"
+            className="border-2 border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-900 font-semibold px-6 py-3 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100"
+            onClick={() => window.open("https://t.me/chat_bot_hub_bot", "_blank")}
+          >
+            <Send className="w-5 h-5" />
+            <span>Telegram Bot</span>
+          </Button>
+        </div>
+      </div>
+
       {/* Tabs Section (Immediately visible) */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm"> {/* Changed grid-cols-4 to grid-cols-5 */}
+        <TabsList className="grid w-full grid-cols-5 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm">
+          {" "}
+          {/* Changed grid-cols-4 to grid-cols-5 */}
           <TabsTrigger
             value="overview"
             className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
@@ -267,7 +303,6 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
             <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 text-white overflow-hidden rounded-3xl relative">
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
               <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
-
               <CardHeader className="pb-6 relative z-10">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
                   <div className="flex items-start space-x-6">
@@ -297,7 +332,6 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
                       </div>
                     </div>
                   </div>
-
                   <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                     <Link
                       href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
@@ -471,11 +505,8 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
 
         {/* New Tab Content for Integration (using the new component) */}
         <TabsContent value="integration" className="space-y-6 mt-6">
-          <WebsiteIntegrationTab
-            chatbotCode={website.chatbotCode}
-          />
+          <WebsiteIntegrationTab chatbotCode={website.chatbotCode} />
         </TabsContent>
-
 
         {/* Tab Content for Website Settings */}
         <TabsContent value="settings" className="mt-6">

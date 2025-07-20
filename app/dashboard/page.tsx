@@ -35,6 +35,8 @@ import { authFetch } from "@/lib/authFetch"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import BlurText from "@/components/ui/blur-text"
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 // Dashboard Skeleton component for loading states
 function DashboardSkeleton() {
@@ -172,6 +174,11 @@ export default function DashboardPage() {
   const handleAnimationComplete = () => {
     console.log("Welcome animation completed!")
   }
+
+  const renderMarkdown = (markdownText: string) => {
+    const rawMarkup = marked.parse(markdownText, { breaks: true, gfm: true }) as string;
+    return DOMPurify.sanitize(rawMarkup);
+  };
 
   return (
     <DashboardLayout>
@@ -431,15 +438,19 @@ export default function DashboardPage() {
                           notification.type === "message" || notification.type === "bot_message"
                             ? "bg-blue-500"
                             : notification.type === "chat"
-                              ? "bg-emerald-500"
-                              : "bg-slate-400"
+                            ? "bg-emerald-500"
+                            : "bg-slate-400"
                         }`}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-slate-900 font-semibold line-clamp-2 leading-relaxed">
-                          {notification.title}
-                        </p>
-                        <p className="text-xs">{notification.description}</p>
+                        <p
+                          className="text-sm text-slate-900 font-semibold line-clamp-2 leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: renderMarkdown(notification.title) }}
+                        />
+                        <p
+                          className="text-xs text-slate-700 mt-0.5" // Added a bit of top margin and specific text color for distinction
+                          dangerouslySetInnerHTML={{ __html: renderMarkdown(notification.description) }}
+                        />
                         <div className="flex items-center space-x-1 mt-1">
                           <Clock className="w-3 h-3 text-slate-400" />
                           <p className="text-xs text-slate-500 font-medium">
