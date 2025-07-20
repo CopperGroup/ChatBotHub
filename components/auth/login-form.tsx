@@ -1,8 +1,7 @@
-// components/auth/login-form.tsx
 "use client"
 
 import { useState } from "react"
-import Link from "next/link" // Re-import Link for Next.js App Router
+import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -10,20 +9,22 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Zap, Loader2, Mail, Lock, ArrowRight, Check } from "lucide-react"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation" // Import useRouter for client-side navigation
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import BlurText from "@/components/ui/blur-text"
 
 export function LoginForm() {
-  const router = useRouter(); // Initialize router
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isRegistering, setIsRegistering] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [loginSuccess, setLoginSuccess] = useState(false)
+
   // New state for forgot password flow
   const [isForgotPasswordFlow, setIsForgotPasswordFlow] = useState(false)
   const [forgotPasswordEmailSent, setForgotPasswordEmailSent] = useState(false)
-
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,7 +39,9 @@ export function LoginForm() {
     }
 
     const endpoint = isRegistering ? "register" : "login"
-    const successMessage = isRegistering ? "Account created and logged in successfully!" : "Welcome back! Successfully logged in."
+    const successMessage = isRegistering
+      ? "Account created and logged in successfully!"
+      : "Welcome back! Successfully logged in."
 
     console.log(`Attempting to ${endpoint} with email: ${email}`)
 
@@ -48,6 +51,7 @@ export function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       })
+
       const data = await res.json()
 
       if (!res.ok) {
@@ -56,12 +60,12 @@ export function LoginForm() {
         toast.error(data.message || `Failed to ${endpoint}.`)
       } else {
         console.log(`Successfully ${endpoint}. Storing minimal data.`, data)
-        localStorage.setItem("userToken", data.token) // Store JWT token
-        localStorage.setItem("userId", data.user.id) // Store ONLY user ID
+        localStorage.setItem("userToken", data.token)
+        localStorage.setItem("userId", data.user.id)
         toast.success(successMessage)
         setLoginSuccess(true)
         setTimeout(() => {
-          router.push("/dashboard") // Use Next.js router for navigation
+          router.push("/dashboard")
         }, 1000)
       }
     } catch (err) {
@@ -73,7 +77,6 @@ export function LoginForm() {
     }
   }
 
-  // New function to handle forgot password request
   const handleForgotPasswordRequest = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -92,6 +95,7 @@ export function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       })
+
       const data = await res.json()
 
       if (!res.ok) {
@@ -111,223 +115,290 @@ export function LoginForm() {
     }
   }
 
-
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-6 md:mb-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-4 md:mb-6 shadow-lg">
-          <Zap className="w-7 h-7 md:w-8 md:h-8 text-white" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="w-full max-w-md mx-auto"
+    >
+      {/* Header Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="text-center mb-8"
+      >
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-6 shadow-lg relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-emerald-600/20" />
+          <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-br from-emerald-300/30 to-emerald-500/30 rounded-full blur-xl group-hover:scale-105 transition-transform duration-400" />
+          <Zap className="w-8 h-8 text-white relative z-10" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-          {isForgotPasswordFlow ? "Reset Your Password" : isRegistering ? "Create Your Account" : "Welcome Back"}
-        </h1>
-        <p className="text-slate-600 text-sm md:text-base">
+
+        <div className="w-full inline-flex justify-center">
+          <BlurText
+            text={isForgotPasswordFlow ? "Reset Your Password" : isRegistering ? "Create Your Account" : "Welcome Back"}
+            delay={150}
+            animateBy="words"
+            direction="top"
+            className="text-3xl font-bold text-slate-900 mb-3"
+          />
+        </div>
+
+        <p className="text-slate-600 text-base font-medium">
           {isForgotPasswordFlow
             ? "Enter your email to receive a password reset link."
             : isRegistering
-            ? "Sign up to get started with your AI dashboard"
-            : "Sign in to access your AI dashboard"}
+              ? "Sign up to get started with your AI dashboard"
+              : "Sign in to access your AI dashboard"}
         </p>
-      </div>
+      </motion.div>
 
-      <Card className="bg-white border-slate-200 shadow-xl">
-        <CardContent className="p-6 md:p-8">
-          {!isForgotPasswordFlow ? ( // Conditional rendering for login/register vs forgot password
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700 text-sm font-medium">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                    className="pl-10 h-11 md:h-12 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                  />
+      {/* Main Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        whileHover={{ scale: 1.002 }}
+      >
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/30 to-green-50/20" />
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-2xl" />
+
+          <CardContent className="p-8 relative z-10">
+            {!isForgotPasswordFlow ? (
+              // Login/Register Form
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-slate-700 text-sm font-semibold">
+                    Email Address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                      className="pl-10 h-12 bg-white/60 border-slate-200/60 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700 text-sm font-medium">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    className="pl-10 h-11 md:h-12 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-slate-700 text-sm font-semibold">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                      className="pl-10 h-12 bg-white/60 border-slate-200/60 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Forgot password link */}
-              {!isRegistering && (
-                <div className="text-right">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsForgotPasswordFlow(true);
-                      setError(""); // Clear any previous errors
-                      setEmail(""); // Clear email field
-                      setPassword(""); // Clear password field
-                    }}
-                    className="text-sm text-emerald-600 hover:underline font-medium"
+                {/* Forgot password link */}
+                {!isRegistering && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsForgotPasswordFlow(true)
+                        setError("")
+                        setEmail("")
+                        setPassword("")
+                      }}
+                      className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline font-semibold transition-colors duration-200"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    Forgot Password?
-                  </button>
+                    <Alert className="border-red-200/60 bg-gradient-to-r from-red-50/80 to-red-100/60 rounded-xl backdrop-blur-sm">
+                      <AlertCircle className="h-4 w-4 text-red-600" />
+                      <AlertDescription className="text-red-700 font-medium">{error}</AlertDescription>
+                    </Alert>
+                  </motion.div>
+                )}
+
+                {!loginSuccess ? (
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{isRegistering ? "Creating Account..." : "Signing In..."}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center space-x-2">
+                        <span>{isRegistering ? "Create Account" : "Sign In"}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    )}
+                  </Button>
+                ) : (
+                  <Link href="/dashboard">
+                    <Button className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
+                      <div className="flex items-center justify-center space-x-2">
+                        <span>Success</span>
+                        <Check className="w-4 h-4" />
+                      </div>
+                    </Button>
+                  </Link>
+                )}
+              </form>
+            ) : (
+              // Forgot Password Form
+              <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-slate-700 text-sm font-semibold">
+                    Email Address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                      className="pl-10 h-12 bg-white/60 border-slate-200/60 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+                    />
+                  </div>
                 </div>
-              )}
 
-              {error && (
-                <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-red-100 rounded-xl">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-red-700">{error}</AlertDescription>
-                </Alert>
-              )}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Alert className="border-red-200/60 bg-gradient-to-r from-red-50/80 to-red-100/60 rounded-xl backdrop-blur-sm">
+                      <AlertCircle className="h-4 w-4 text-red-600" />
+                      <AlertDescription className="text-red-700 font-medium">{error}</AlertDescription>
+                    </Alert>
+                  </motion.div>
+                )}
 
-              {!loginSuccess ? (
+                {forgotPasswordEmailSent && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Alert className="border-emerald-200/60 bg-gradient-to-r from-emerald-50/80 to-emerald-100/60 rounded-xl backdrop-blur-sm">
+                      <Check className="h-4 w-4 text-emerald-600" />
+                      <AlertDescription className="text-emerald-700 font-medium">
+                        If a user with that email exists, a password reset link has been sent to your inbox. Please
+                        check your email.
+                      </AlertDescription>
+                    </Alert>
+                  </motion.div>
+                )}
+
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full h-11 md:h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg transition-all duration-200 rounded-xl"
+                  disabled={loading || forgotPasswordEmailSent}
+                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center space-x-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{isRegistering ? "Registering..." : "Signing in..."}</span>
+                      <span>Sending Link...</span>
                     </div>
                   ) : (
-                    isRegistering ? "Register Account" : "Sign In"
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>Send Reset Link</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   )}
                 </Button>
-              ) : (
-                <Link href="/dashboard"> {/* Use Next.js Link here */}
-                  <Button
-                    className="w-full h-11 md:h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg transition-all duration-200 rounded-xl"
-                  >
-                    Success <Check className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-            </form>
-          ) : ( // Forgot password form
-            <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700 text-sm font-medium">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                    className="pl-10 h-11 md:h-12 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
-                  />
-                </div>
-              </div>
 
-              {error && (
-                <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-red-100 rounded-xl">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-red-700">{error}</AlertDescription>
-                </Alert>
-              )}
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPasswordFlow(false)
+                    setError("")
+                    setForgotPasswordEmailSent(false)
+                  }}
+                  variant="outline"
+                  className="w-full h-12 border-slate-200/60 bg-white/60 text-slate-700 hover:bg-white hover:text-slate-900 font-semibold shadow-sm hover:shadow-md transition-all duration-300 rounded-xl"
+                >
+                  Back to Login
+                </Button>
+              </form>
+            )}
 
-              {forgotPasswordEmailSent && (
-                <Alert className="border-green-200 bg-gradient-to-r from-green-50 to-green-100 rounded-xl">
-                  <Check className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700">
-                    If a user with that email exists, a password reset link has been sent to your inbox. Please check your email.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                type="submit"
-                disabled={loading || forgotPasswordEmailSent}
-                className="w-full h-11 md:h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg transition-all duration-200 rounded-xl"
+            {/* Toggle Section */}
+            {!isForgotPasswordFlow && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-8 p-4 bg-gradient-to-r from-slate-50/80 to-slate-100/60 rounded-xl border border-slate-200/60 text-center backdrop-blur-sm"
               >
-                {loading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Sending Link...</span>
-                  </div>
-                ) : (
-                  "Send Reset Link"
-                )}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  setIsForgotPasswordFlow(false);
-                  setError("");
-                  setForgotPasswordEmailSent(false);
-                }}
-                className="w-full h-11 md:h-12 bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition-all duration-200 rounded-xl"
-              >
-                Back to Login
-              </Button>
-            </form>
-          )}
-
-          {!isForgotPasswordFlow && ( // Hide this section when in forgot password flow
-            <div className="mt-6 p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200 text-center">
-              <p className="text-xs md:text-sm text-slate-600">
-                {isRegistering ? (
-                  <>
-                    Already have an account?{" "}
-                    <button
-                      onClick={() => {
-                        setIsRegistering(false);
-                        setError("");
-                        setLoginSuccess(false);
-                        setEmail(""); // Clear fields on toggle
-                        setPassword("");
-                      }}
-                      className="text-emerald-600 hover:underline font-medium"
-                      type="button"
-                    >
-                      Sign In
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    New to our platform?{" "}
-                    <button
-                      onClick={() => {
-                        setIsRegistering(true);
-                        setError("");
-                        setLoginSuccess(false);
-                        setEmail(""); // Clear fields on toggle
-                        setPassword("");
-                      }}
-                      className="text-emerald-600 hover:underline font-medium"
-                      type="button"
-                    >
-                      Create an account
-                    </button>{" "}
-                    and get started instantly.
-                  </>
-                )}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+                <p className="text-sm text-slate-600 font-medium">
+                  {isRegistering ? (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        onClick={() => {
+                          setIsRegistering(false)
+                          setError("")
+                          setLoginSuccess(false)
+                          setEmail("")
+                          setPassword("")
+                        }}
+                        className="text-emerald-600 hover:text-emerald-700 hover:underline font-semibold transition-colors duration-200"
+                        type="button"
+                      >
+                        Sign In
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      New to our platform?{" "}
+                      <button
+                        onClick={() => {
+                          setIsRegistering(true)
+                          setError("")
+                          setLoginSuccess(false)
+                          setEmail("")
+                          setPassword("")
+                        }}
+                        className="text-emerald-600 hover:text-emerald-700 hover:underline font-semibold transition-colors duration-200"
+                        type="button"
+                      >
+                        Create an account
+                      </button>{" "}
+                      and get started instantly.
+                    </>
+                  )}
+                </p>
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  )
 }

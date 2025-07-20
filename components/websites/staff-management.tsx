@@ -20,6 +20,7 @@ import {
   Settings,
   UserPlus,
   Building2,
+  Copy, // Import the Copy icon
 } from "lucide-react"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -40,14 +41,12 @@ function StaffLoadingSkeleton() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-
         {/* Stats Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-32 w-full rounded-2xl" />
           ))}
         </div>
-
         {/* Main Content Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
@@ -76,6 +75,9 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
   // Use websiteId from props or website object
   const currentWebsiteId = websiteId || website?._id
   const currentUserId = userId
+
+  // Staff Login URL
+  const staffLoginUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/staff/login`;
 
   useEffect(() => {
     if (currentWebsiteId && currentUserId) {
@@ -153,8 +155,12 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
     }
   }
 
-  const { staffMembers, planInfo } = staffData
+  const handleCopyStaffLoginUrl = () => {
+    navigator.clipboard.writeText(staffLoginUrl);
+    toast.success("Staff Login URL copied to clipboard!");
+  };
 
+  const { staffMembers, planInfo } = staffData
   if (initialLoading) {
     return <StaffLoadingSkeleton />
   }
@@ -170,13 +176,39 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Team Management</h1>
           <p className="text-gray-600">Manage your team members and their access permissions</p>
         </div>
-
         {/* Stats Cards */}
-
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Staff List */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Staff Login URL Card (MOVED TO TOP LEFT) */}
+            <Card className="border-0 shadow-lg rounded-2xl bg-blue-600">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg text-slate-100">Staff Login Portal</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Share this link with your staff members</p>
+                      <p className="text-xs text-gray-500 break-all">{staffLoginUrl}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCopyStaffLoginUrl}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-lg p-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Staff Members Card */}
             <Card className="border-0 shadow-lg rounded-2xl">
               <CardHeader className="pb-6">
@@ -200,7 +232,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                   </Button>
                 </div>
               </CardHeader>
-
               <CardContent className="space-y-6">
                 {/* Add Staff Form */}
                 {showAddForm && (
@@ -221,7 +252,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                           </div>
                           <h3 className="text-lg font-semibold text-gray-900">Add New Team Member</h3>
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <Label htmlFor="name" className="text-gray-700 font-medium text-sm">
@@ -251,7 +281,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                             />
                           </div>
                         </div>
-
                         <div className="space-y-2">
                           <Label htmlFor="password" className="text-gray-700 font-medium text-sm">
                             Password
@@ -266,7 +295,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                             required
                           />
                         </div>
-
                         <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
                           <Button
                             type="submit"
@@ -298,7 +326,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                     )}
                   </div>
                 )}
-
                 {/* Staff List */}
                 <div className="space-y-4">
                   {staffMembers.length === 0 ? (
@@ -367,7 +394,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
               </CardContent>
             </Card>
           </div>
-
           {/* Right Column - Plan Info & Actions */}
           <div className="space-y-8">
             {/* Upgrade Plan Card - Only show if NOT Enterprise plan OR (if it's Enterprise and not full) */}
@@ -389,6 +415,7 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                 </div>
               </Card>
             )}
+
             {/* Plan Information */}
             {planInfo && (
               <Card className="border-0 shadow-lg rounded-2xl">
@@ -413,7 +440,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                         </p>
                       </div>
                     </div>
-
                     <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -429,7 +455,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                       </div>
                     </div>
                   </div>
-
                   {/* Plan Status Alert */}
                   {planInfo.canAddMore ? (
                     <Alert className="border-emerald-200 bg-emerald-50 rounded-xl">
@@ -455,8 +480,6 @@ export function StaffManagement({ website, websiteId, userId }: StaffManagementP
                 </CardContent>
               </Card>
             )}
-
-
             {/* Quick Actions */}
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { LoginForm } from "@/components/auth/login-form"
+import Waves from "@/components/ui/waves"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,7 +17,7 @@ export default function LoginPage() {
   }, [router])
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6">
+    <div className="max-h-screen bg-gradient-to-br from-slate-50/50 via-white to-slate-100/50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <LoginForm />
       </div>
