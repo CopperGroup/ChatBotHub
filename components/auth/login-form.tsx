@@ -9,12 +9,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Zap, Loader2, Mail, Lock, ArrowRight, Check } from "lucide-react"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import BlurText from "@/components/ui/blur-text"
 
 export function LoginForm() {
   const router = useRouter()
+  const pathname = usePathname()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isRegistering, setIsRegistering] = useState(false)
@@ -65,8 +66,14 @@ export function LoginForm() {
         toast.success(successMessage)
         setLoginSuccess(true)
         setTimeout(() => {
-          router.push("/dashboard")
-        }, 1000)
+          console.log(pathname)
+          if(pathname.includes("dashboard")) {
+            console.log("Refreshing")
+            window.location.reload()
+          } else {
+            router.push("/dashboard")
+          }
+        }, 500)
       }
     } catch (err) {
       console.error("Network or unexpected error:", err)

@@ -15,6 +15,7 @@ import {
   XCircle,
   Code,
   Send,
+  MessageCircle,
 } from "lucide-react"
 import { WebsiteSettings } from "./website-settings"
 import { StaffManagement } from "./staff-management"
@@ -25,6 +26,12 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { authFetch } from "@/lib/authFetch" // Import authFetch
+
+// Import Shadcn UI components for the modal
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Website {
   _id: string
@@ -93,6 +100,17 @@ interface WebsiteDetailsProps {
   userId: string
 }
 
+// Reasons for cancellation
+const CANCEL_REASONS = [
+  "Too expensive",
+  "Not using it enough",
+  "Missing features",
+  "Customer support issues",
+  "Found an alternative",
+  "Temporary pause",
+  "Other (please specify)",
+]
+
 function WebsiteDetailsSkeleton() {
   return (
     <div className="space-y-6 px-6 py-8">
@@ -122,9 +140,11 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
   const [website, setWebsite] = useState<Website>(_website)
   const [activeTab, setActiveTab] = useState("overview")
   const [isLoading, setIsLoading] = useState(true)
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false) // State to control modal visibility
+  const [cancellationReason, setCancellationReason] = useState<string>("") // State for selected reason
+  const [cancellationFeedback, setCancellationFeedback] = useState<string>("") // State for feedback
   const [cancellingSubscription, setCancellingSubscription] = useState(false) // State for cancellation loading
 
-  // Derive planInfo directly from the website prop
   const planInfo: PlanInfo = {
     plan: website.plan,
     usage: {
@@ -141,11 +161,9 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     },
   }
 
-  // Check if plan is Enterprise
   const isEnterprisePlan = website.plan.name.toLowerCase().includes("enterprise")
 
   useEffect(() => {
-    // Simulate loading for demonstration
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 800)
@@ -158,13 +176,15 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
     toast.success("Website updated successfully")
   }
 
-  const handleCancelSubscription = async () => {
+  const handleSubmitCancellation = async () => {
     if (!website.stripeSubscriptionId) {
       toast.info("No active subscription to cancel.")
+      setIsCancelModalOpen(false); // Close modal if no subscription
       return
     }
 
-    if (!window.confirm("Are you sure you want to cancel your subscription? This action cannot be undone.")) {
+    if (!cancellationReason) {
+      toast.error("Please select a reason for cancellation.")
       return
     }
 
@@ -178,6 +198,8 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: userId,
+            reason: cancellationReason,
+            feedback: cancellationFeedback,
           }),
         },
       )
@@ -188,7 +210,7 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
       }
 
       toast.success(
-        "Subscription cancellation initiated! Your plan will revert to Free at the end of the current billing period.",
+        "Subscription cancellation initiated! Your plan will revert to Free at the end of the current billing period. Thank you for your feedback.",
       )
 
       // Refetch website data to reflect the updated plan status
@@ -199,6 +221,9 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
       } else {
         console.error("Failed to refetch website after cancellation:", await updatedWebsiteRes.json())
       }
+      setIsCancelModalOpen(false) // Close the modal on successful cancellation
+      setCancellationReason("") // Reset form
+      setCancellationFeedback("") // Reset form
     } catch (error: any) {
       console.error("Error canceling subscription:", error)
       toast.error(error.message || "Failed to cancel subscription. Please try again.")
@@ -254,7 +279,6 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm">
           {" "}
-          {/* Changed grid-cols-4 to grid-cols-5 */}
           <TabsTrigger
             value="overview"
             className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
@@ -342,24 +366,120 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
                       </Button>
                     </Link>
                     {website.stripeSubscriptionId && website.plan.name !== "Free" && (
-                      <Button
-                        variant="ghost"
-                        onClick={handleCancelSubscription}
-                        disabled={cancellingSubscription}
-                        className="text-white hover:bg-white/10 border border-white/20 rounded-2xl px-4 py-3 w-full sm:w-auto transition-all duration-300"
-                      >
-                        {cancellingSubscription ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Cancelling...
-                          </>
-                        ) : (
-                          <>
+                      <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="text-white hover:bg-white/10 border border-white/20 rounded-2xl px-4 py-3 w-full sm:w-auto transition-all duration-300"
+                            disabled={cancellingSubscription}
+                          >
                             <XCircle className="w-4 h-4 mr-2" />
                             Cancel Plan
-                          </>
-                        )}
-                      </Button>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[450px] max-h-[85vh] overflow-y-auto rounded-2xl border-0 shadow-xl bg-white p-0">
+                          {/* Compact header with emerald gradient */}
+                          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-white relative overflow-hidden">
+                            <div className="absolute -top-6 -right-6 w-20 h-20 bg-white/10 rounded-full blur-xl" />
+                            <DialogHeader className="relative z-10">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                                  <MessageCircle className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                  <DialogTitle className="text-lg font-bold text-white">Share Your Feedback</DialogTitle>
+                                  <DialogDescription className="text-emerald-100 text-sm">
+                                    Help us understand your decision
+                                  </DialogDescription>
+                                </div>
+                              </div>
+                            </DialogHeader>
+                          </div>
+
+                          {/* Compact form content */}
+                          <div className="p-4 space-y-4">
+                            {/* Reason selection */}
+                            <div className="space-y-2">
+                              <Label htmlFor="reason" className="text-slate-700 font-medium text-sm">
+                                What's the main reason? *
+                              </Label>
+                              <Select onValueChange={setCancellationReason} value={cancellationReason}>
+                                <SelectTrigger className="h-10 bg-white border-slate-200 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-lg">
+                                  <SelectValue placeholder="Please select..." />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-lg border-0 shadow-lg bg-white">
+                                  {CANCEL_REASONS.map((reason) => (
+                                    <SelectItem
+                                      key={reason}
+                                      value={reason}
+                                      className="rounded-md hover:bg-slate-50 py-2 px-3 cursor-pointer"
+                                    >
+                                      {reason}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Compact feedback textarea */}
+                            <div className="space-y-2">
+                              <Label htmlFor="feedback" className="text-slate-700 font-medium text-sm">
+                                Additional thoughts (optional)
+                              </Label>
+                              <Textarea
+                                id="feedback"
+                                value={cancellationFeedback}
+                                onChange={(e) => setCancellationFeedback(e.target.value)}
+                                className="h-20 bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-lg resize-none text-sm"
+                                placeholder="Any feedback to help us improve..."
+                              />
+                            </div>
+
+                            {/* Compact information box */}
+                            <div className="p-3 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/60 rounded-lg">
+                              <div className="flex items-start space-x-2">
+                                <div className="w-6 h-6 bg-emerald-100 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Calendar className="w-3 h-3 text-emerald-600" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-medium text-emerald-900 mb-1">What happens next?</p>
+                                  <p className="text-xs text-emerald-800 leading-relaxed">
+                                    Your subscription will be instantly canceled, and you wont be able to access your chats anymore
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Compact footer */}
+                          <DialogFooter className="p-4 pt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => setIsCancelModalOpen(false)}
+                              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-lg h-10 px-4 font-medium text-sm w-full sm:w-auto"
+                            >
+                              Keep Plan
+                            </Button>
+                            <Button
+                              onClick={handleSubmitCancellation}
+                              disabled={cancellingSubscription || !cancellationReason}
+                              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg h-10 px-4 font-medium text-sm disabled:opacity-50 w-full sm:w-auto"
+                            >
+                              {cancellingSubscription ? (
+                                <div className="flex items-center justify-center space-x-2">
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <span>Processing...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-center space-x-2">
+                                  <MessageCircle className="w-3 h-3" />
+                                  <span>Send and Cancel</span>
+                                </div>
+                              )}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </div>
                 </div>
