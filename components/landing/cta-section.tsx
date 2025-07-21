@@ -23,7 +23,7 @@ export function CTASection() {
           </h2>
 
           <p className="text-lg md:text-xl text-emerald-100 mb-6 md:mb-8 max-w-3xl mx-auto leading-relaxed">
-            Join thousands of businesses using our AI-powered platform for real-time communications, staff management, 
+            Join tens of businesses using our AI-powered platform for real-time communications, staff management, 
             and exceptional customer support that works 24/7.
           </p>
 

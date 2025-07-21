@@ -79,11 +79,11 @@ export function HeroSection() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 text-sm md:text-base text-slate-600 max-w-2xl mx-auto">
             <div className="flex items-center justify-center space-x-2">
               <Users className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
-              <span className="font-medium">10,000+ websites powered</span>
+              <span className="font-medium">30+ websites powered</span>
             </div>
             <div className="flex items-center justify-center space-x-2">
               <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
-              <span className="font-medium">1M+ conversations handled</span>
+              <span className="font-medium">1K+ conversations handled</span>
             </div>
             <div className="flex items-center justify-center space-x-2">
               <Zap className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />

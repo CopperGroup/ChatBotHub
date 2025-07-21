@@ -224,7 +224,7 @@ export function WorkflowArticle() {
           <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-8 text-white">
             <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Customer Service?</h2>
             <p className="text-xl mb-6 text-emerald-100">
-              Join thousands of businesses already using Workflow Automation to deliver exceptional customer
+              Join tens of businesses already using Workflow Automation to deliver exceptional customer
               experiences.
             </p>
 

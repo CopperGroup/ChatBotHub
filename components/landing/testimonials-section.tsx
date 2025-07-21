@@ -79,7 +79,7 @@ export function TestimonialsSection() {
             Loved by
             <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
               {" "}
-              thousands of businesses
+              tens of businesses
             </span>
           </h2>
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
