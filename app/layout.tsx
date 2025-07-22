@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { AppBridgeProvider } from '@/providers/AppBridgeProvider'
+import { PostHogProvider } from '@/components/providers/PostHog'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
@@ -28,21 +29,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {isEmbedded ? (
-          <AppBridgeProvider
-            config={{
-              apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
-              host: host!,
-              forceRedirect: true,
-            }}
-          >
-            {children}
-          </AppBridgeProvider>
-        ) : (
-          children
-        )}
+        <PostHogProvider>
+            {isEmbedded ? (
+              <AppBridgeProvider
+                config={{
+                  apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
+                  host: host!,
+                  forceRedirect: true,
+                }}
+              >
+                {children}
+              </AppBridgeProvider>
+            ) : (
+              children
+            )}
 
-        <Toaster position="top-right" richColors expand duration={4000} />
+            <Toaster position="top-right" richColors expand duration={4000} />
+        </PostHogProvider>
         <script async src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=c80b9looy8aux8phse4zsj"></script>
       </body>
     </html>
