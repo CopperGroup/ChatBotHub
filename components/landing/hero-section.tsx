@@ -3,132 +3,171 @@
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Play, MessageSquare, Zap, Users, Brain, Bell } from "lucide-react"
+import { ArrowRight, Play, MessageSquare, Zap, Users, Brain, Bell, CheckCircle } from "lucide-react"
+import { motion } from "framer-motion"
+import BlurText from "@/components/ui/blur-text"
 
+// --- DigitalNexusSVG: The Simplified Icon Area ---
+const DigitalNexusSVG = () => (
+  <svg
+    width="100%"
+    height="100%"
+    viewBox="0 0 800 500" // Increased viewBox width and height to make SVG seem larger
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="relative z-0" // Z-index for SVG content itself
+  >
+    {/* Central Hub: Circle, Zap Icon, and "ChatBot Hub" Text */}
+    <motion.circle
+      cx="400" // Adjusted cx for new viewBox center
+      cy="250" // Adjusted cy for new viewBox center
+      r="160"
+      className="fill-emerald-500 shadow-xl"
+      // Removed filter: "url(#glow)" as defs are removed
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 0.5, duration: 0.8, type: "spring", stiffness: 150, damping: 12 }}
+    />
+    <motion.g
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1, duration: 0.5 }}
+    >
+      <Zap
+        x="310" // Adjusted x for new viewBox center and increased icon size
+        y="170" // Adjusted y for new viewBox center and increased icon size
+        width="180" // Increased width
+        height="180" // Increased height
+        className="text-white"
+      />
+      {/* Animated Text: ChatBot Hub - Removed as per request to leave just icon area */}
+    </motion.g>
+  </svg>
+);
+
+// --- HeroSection Component ---
 export function HeroSection() {
-  const router = useRouter()
+  const router = useRouter();
+
+  const handleHeadlineAnimationComplete = () => {
+    // console.log('Hero headline blur animation completed!');
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      type: "spring",
+      stiffness: 100,
+      damping: 10,
+    },
+  };
 
   return (
-    <section className="relative bg-gradient-to-br from-slate-50 via-white to-emerald-50 pt-16 pb-20 sm:pt-24 sm:pb-32 overflow-hidden">
-      {/* Background Pattern */}
-    <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fillRule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%2310b981%22%20fillOpacity%3D%220.03%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center">
-          {/* Badge */}
-          <Badge className="mb-6 md:mb-8 bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border-emerald-300 rounded-full px-4 py-2 shadow-sm">
-            <Zap className="w-3 h-3 mr-2" />
-            AI-Powered Customer Support Platform
-          </Badge>
+    <section className="relative bg-gradient-to-br from-white via-slate-50 to-emerald-50 pt-20 pb-24 sm:pt-28 sm:pb-36 overflow-hidden">
+      {/* Dynamic Background Blobs - Increased size and blur for a grander aura */}
+      <div className="absolute inset-0 z-0 opacity-40">
+        <div className="absolute -top-1/3 -left-1/3 w-[1200px] h-[1200px] bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-0"></div>
+        <div className="absolute -bottom-1/3 -right-1/3 w-[1000px] h-[1000px] bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/4 left-1/4 w-[1100px] h-[1100px] bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
 
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 mb-6 md:mb-8 leading-tight">
-            Transform Your Website with
-            <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
-              {" "}Smart AI Chatbots
-            </span>
-          </h1>
+        {/* Added smaller, polishing elements */}
+        <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-5 animate-blob animation-delay-1000"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-5 animate-blob animation-delay-3000"></div>
+        <div className="absolute top-1/3 right-1/2 w-24 h-24 bg-cyan-200 rounded-full mix-blend-multiply filter blur-2xl opacity-5 animate-blob animation-delay-5000"></div>
+      </div>
 
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl lg:text-2xl text-slate-600 mb-8 md:mb-12 max-w-4xl mx-auto leading-relaxed">
-            Provide instant 24/7 customer support with real-time communications, advanced staff management, 
-            Telegram notifications, and intelligent AI responses. No coding required.
-          </p>
+      {/* On-page open animation for the main content */}
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center"
+      >
+        {/* Left Side: Captivating Text Content */}
+        <div className="text-center lg:text-left pt-10 lg:pt-0">
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
+            <Badge className="mb-6 md:mb-8 bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border-emerald-300 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm animate-fade-in">
+              <Zap className="w-4 h-4 mr-2 text-emerald-600" />
+              Elevate Your Customer Experience
+            </Badge>
+          </motion.div>
 
-          {/* Feature Highlights */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-12 max-w-3xl mx-auto">
-            <div className="flex flex-col items-center space-y-2 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm">
-              <MessageSquare className="w-6 h-6 text-emerald-600" />
-              <span className="text-xs md:text-sm font-medium text-slate-700">Real-time Chat</span>
-            </div>
-            <div className="flex flex-col items-center space-y-2 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm">
-              <Users className="w-6 h-6 text-blue-600" />
-              <span className="text-xs md:text-sm font-medium text-slate-700">Staff Management</span>
-            </div>
-            <div className="flex flex-col items-center space-y-2 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm">
-              <Bell className="w-6 h-6 text-purple-600" />
-              <span className="text-xs md:text-sm font-medium text-slate-700">Live Notifications</span>
-            </div>
-            <div className="flex flex-col items-center space-y-2 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm">
-              <Brain className="w-6 h-6 text-violet-600" />
-              <span className="text-xs md:text-sm font-medium text-slate-700">AI Responses</span>
-            </div>
-          </div>
+          <BlurText
+            text="Seamless Live Chat & AI Automation"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-extrabold text-slate-900 mb-6 md:mb-8 leading-tight tracking-tight lg:max-w-xl"
+            delay={150}
+            animateBy="words"
+            direction="top"
+            onAnimationComplete={handleHeadlineAnimationComplete}
+          />
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 md:mb-16">
+          <motion.p
+            variants={itemVariants}
+            initial="hidden" animate="visible"
+            className="text-lg md:text-xl text-slate-600 mb-10 md:mb-14 leading-relaxed lg:max-w-xl"
+          >
+            Empower your business with 24/7 real-time support, intelligent AI chatbots, and a no-code solution designed for effortless customer engagement.
+          </motion.p>
+
+          <motion.div
+            variants={itemVariants}
+            initial="hidden" animate="visible"
+            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-14 md:mb-20"
+          >
             <Button
               size="lg"
               onClick={() => router.push("/dashboard")}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-200 rounded-xl w-full sm:w-auto"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-7 md:px-9 py-3 md:py-4 text-base md:text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 ease-out rounded-xl transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-emerald-300 focus:ring-opacity-50 w-full sm:w-auto"
             >
-              Start Free Trial
-              <ArrowRight className="w-5 h-5 ml-2" />
+              Start Your Free Trial
+              <ArrowRight className="w-5 h-5 ml-2.5" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="border-slate-300 text-slate-700 hover:bg-slate-50 px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl w-full sm:w-auto"
+              className="border-slate-300 bg-white/70 text-slate-700 hover:bg-slate-100 hover:text-slate-900 px-7 md:px-9 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-slate-200 focus:ring-opacity-50 w-full sm:w-auto"
             >
-              <Play className="w-5 h-5 mr-2" />
-              Watch Demo
+              <Play className="w-5 h-5 mr-2.5" />
+              See It In Action
             </Button>
-          </div>
-
-          {/* Social Proof */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 text-sm md:text-base text-slate-600 max-w-2xl mx-auto">
-            <div className="flex items-center justify-center space-x-2">
-              <Users className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
-              <span className="font-medium">30+ websites powered</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
-              <span className="font-medium">1K+ conversations handled</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <Zap className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
-              <span className="font-medium">99.9% uptime guaranteed</span>
-            </div>
-          </div>
+          </motion.div>
+          {/* Social Proof - Text based */}
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-slate-600 text-sm md:text-base leading-relaxed mt-10 border-t border-slate-200 pt-8 lg:max-w-xl"
+          >
+            <p className="font-semibold mb-4">Join over 100+ businesses:</p>
+            <ul className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 sm:gap-6">
+              <li className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span><strong>Trusted by hundreds websites</strong></span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <MessageSquare className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span><strong>100K+ conversations powered</strong></span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <Zap className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span><strong>Guaranteed 99.9% uptime</strong></span>
+              </li>
+            </ul>
+          </motion.div>
         </div>
 
-        {/* Hero Demo */}
-        <div className="mt-16 md:mt-20 relative">
-          <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-slate-200 p-4 md:p-8 max-w-5xl mx-auto">
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200">
-              <div className="flex items-center space-x-3 mb-4 md:mb-6">
-                <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                <div className="flex-1 bg-white rounded-lg px-3 py-2 text-sm text-slate-600 font-mono">
-                  yourwebsite.com
-                </div>
-              </div>
-              <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4 md:mb-6">
-                  <h3 className="text-lg md:text-xl font-semibold text-slate-900">Welcome to our store!</h3>
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                    <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                  </div>
-                </div>
-                <div className="space-y-3 md:space-y-4">
-                  <div className="bg-slate-100 rounded-xl p-3 md:p-4 max-w-xs">
-                    <p className="text-sm md:text-base text-slate-700">Hi! How can I help you today? 👋</p>
-                  </div>
-                  <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl p-3 md:p-4 max-w-xs ml-auto">
-                    <p className="text-sm md:text-base">I'm looking for running shoes</p>
-                  </div>
-                  <div className="bg-slate-100 rounded-xl p-3 md:p-4 max-w-sm">
-                    <p className="text-sm md:text-base text-slate-700">
-                      Great! I can help you find the perfect running shoes. What's your preferred style and budget? 🏃‍♂️
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Right Side: The Digital Nexus SVG */}
+        <motion.div
+          initial={{ opacity: 0, x: 50, scale: 0.9 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ delay: 0.8, duration: 1.2, ease: "easeOut" }}
+          className="relative flex justify-center items-center h-full w-full max-w-lg mx-auto lg:max-w-none lg:-mt-24 xl:-mt-32"
+        >
+          <DigitalNexusSVG />
+        </motion.div>
+      </motion.div>
     </section>
   )
 }

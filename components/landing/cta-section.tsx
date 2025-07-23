@@ -53,13 +53,6 @@ export function CTASection() {
               Start Your Free Trial
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold backdrop-blur-sm rounded-xl w-full sm:w-auto"
-            >
-              Schedule Demo
-            </Button>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-emerald-100 text-sm">

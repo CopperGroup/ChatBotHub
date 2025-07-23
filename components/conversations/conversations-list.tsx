@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Search, MessageSquare, Clock, LogOut, Users, Sparkles } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -21,7 +21,7 @@ interface ConversationsListProps {
   isVisible?: boolean // New prop for mobile visibility
 }
 
-const TRUNCATE_LENGTH=27
+const TRUNCATE_LENGTH = 27
 export function ConversationsList({
   chats,
   selectedChat,
@@ -269,9 +269,13 @@ export function ConversationsList({
                     <div className="flex items-start space-x-3">
                       <div className="relative">
                         <Avatar className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-600 flex-shrink-0 ring-2 ring-white shadow-sm">
-                          <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-sm font-semibold">
-                            {getInitials(chat.name)}
-                          </AvatarFallback>
+                          {chat.avatar ? ( 
+                            <AvatarImage src={chat.avatar} alt={chat.name} />
+                          ) : (
+                            <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-sm font-semibold">
+                              {getInitials(chat.name)}
+                            </AvatarFallback>
+                          )}
                         </Avatar>
                         {chat.status === "open" && (
                           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></div>
@@ -281,6 +285,22 @@ export function ConversationsList({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <h3 className="text-sm font-semibold text-slate-900 truncate">{chat.name}</h3>
+                          {/* Flag and Country Name */}
+                          {chat.country && (
+                            <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
+                              {chat.country.flag && (
+                                <img
+                                  src={chat.country.flag}
+                                  alt={chat.country.countryCode}
+                                  className="w-4 h-auto border"
+                                  title={chat.country.country}
+                                />
+                              )}
+                              {chat.country.country && (
+                                <span className="text-xs text-slate-500">{chat.country.country}</span>
+                              )}
+                            </div>
+                          )}
                           <Badge
                             variant={chat.status === "open" ? "default" : "secondary"}
                             className={`text-xs font-medium ${
@@ -298,7 +318,9 @@ export function ConversationsList({
                         {lastUserMessage && (
                           <div className="mb-3">
                             <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                              <span className="font-medium text-slate-700">Latest:</span> {lastUserMessage.text.slice(0, TRUNCATE_LENGTH)}{lastUserMessage.text.length > TRUNCATE_LENGTH && "..." }
+                              <span className="font-medium text-slate-700">Latest:</span>{" "}
+                              {lastUserMessage.text.slice(0, TRUNCATE_LENGTH)}
+                              {lastUserMessage.text.length > TRUNCATE_LENGTH && "..."}
                             </p>
                           </div>
                         )}

@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
+  images: {
+    domains: ['cdn.ipwhois.io', 'www.gravatar.com'],
+  },
   async rewrites() {
     return [
       {

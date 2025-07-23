@@ -25,7 +25,7 @@ export function LandingPage() {
         <FAQSection />
         <CTASection />
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   )
 }
