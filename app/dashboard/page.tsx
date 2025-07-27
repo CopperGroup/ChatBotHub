@@ -1,3 +1,4 @@
+// app/(main)/page.tsx
 "use client"
 
 import { useRouter } from "next/navigation"
@@ -37,6 +38,9 @@ import { motion } from "framer-motion"
 import BlurText from "@/components/ui/blur-text"
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+
+// Import your new GroupWheel component
+import GroupWheel from '@/components/groups/GroupWheel'; // <--- IMPORT GROUPWHEEL
 
 // Dashboard Skeleton component for loading states
 function DashboardSkeleton() {
@@ -254,6 +258,21 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
 
+          
+          {/* New GroupWheel Card - styled to match existing Bento Grid cards */}
+          <motion.div
+            className="xl:col-span-2" // This card will span 2 columns on xl screens
+          >
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl h-full relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50/30 to-emerald-50/20" /> {/* Green/Emerald gradient */}
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-green-400/10 to-emerald-500/10 rounded-full blur-2xl" />
+
+              {/* GroupWheel component renders its own CardHeader and CardContent internally */}
+              <GroupWheel /> {/* <--- RENDER GROUPWHEEL HERE */}
+
+            </Card>
+          </motion.div>
+          
           {/* Enhanced Stats Cards */}
           <motion.div whileHover={{ scale: 1.005 }} transition={{ duration: 0.2 }}>
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl h-full relative overflow-hidden group">
@@ -431,33 +450,37 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex items-start space-x-3 p-3 bg-white/60 rounded-xl border border-slate-100 hover:bg-white/80 transition-all duration-200"
+                      whileHover={{ scale: 1.01 }}
                     >
-                      <div
-                        className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 shadow-sm ${
-                          notification.type === "message" || notification.type === "bot_message"
-                            ? "bg-blue-500"
-                            : notification.type === "chat"
-                            ? "bg-emerald-500"
-                            : "bg-slate-400"
-                        }`}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p
-                          className="text-sm text-slate-900 font-semibold line-clamp-2 leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: renderMarkdown(notification.title) }}
-                        />
-                        <p
-                          className="text-xs text-slate-700 mt-0.5" // Added a bit of top margin and specific text color for distinction
-                          dangerouslySetInnerHTML={{ __html: renderMarkdown(notification.description) }}
-                        />
-                        <div className="flex items-center space-x-1 mt-1">
-                          <Clock className="w-3 h-3 text-slate-400" />
-                          <p className="text-xs text-slate-500 font-medium">
-                            {new Date(notification.timestamp).toLocaleTimeString()}
-                          </p>
-                        </div>
-                      </div>
+                      <Card className="bg-white/60 rounded-xl border border-slate-100 hover:bg-white/80 transition-all duration-200">
+                        <CardContent className="p-3 flex items-start space-x-3">
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 shadow-sm ${
+                              notification.type === "message" || notification.type === "bot_message"
+                                ? "bg-blue-500"
+                                : notification.type === "chat"
+                                ? "bg-emerald-500"
+                                : "bg-slate-400"
+                            }`}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className="text-sm text-slate-900 font-semibold line-clamp-2 leading-relaxed"
+                              dangerouslySetInnerHTML={{ __html: renderMarkdown(notification.title) }}
+                            />
+                            <p
+                              className="text-xs text-slate-700 mt-0.5"
+                              dangerouslySetInnerHTML={{ __html: renderMarkdown(notification.description) }}
+                            />
+                            <div className="flex items-center space-x-1 mt-1">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              <p className="text-xs text-slate-500 font-medium">
+                                {new Date(notification.timestamp).toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </motion.div>
                   ))}
                   {liveRecentActivity.length === 0 && (
