@@ -272,7 +272,7 @@ export default function DashboardPage() {
 
             </Card>
           </motion.div>
-          
+
           {/* Enhanced Stats Cards */}
           <motion.div whileHover={{ scale: 1.005 }} transition={{ duration: 0.2 }}>
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl h-full relative overflow-hidden group">

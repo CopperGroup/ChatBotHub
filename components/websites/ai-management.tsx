@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,12 +20,39 @@ import {
   Activity,
   Sparkles,
   Target,
+  PlusCircle,
+  Trash2,
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  Hourglass,
+  Info,
+  FileText, // For AI Summary icon
 } from "lucide-react"
 import { toast } from "sonner"
-import { authFetch } from "@/lib/authFetch"
+import { authFetch } from "@/lib/authFetch" // Assuming authFetch handles token and base URL
 import { TokenUsageChart } from "./token-usage-chart"
 import Link from "next/link"
-import { AIManagementSkeleton } from "./ai-management-skeleton" // Import the new skeleton
+import { AIManagementSkeleton } from "./ai-management-skeleton"
+import { Textarea } from "@/components/ui/textarea" // Assuming you have a Textarea component
+
+// --- START: Markdown Libraries Import ---
+import { marked } from "marked" // Import marked library
+import DOMPurify from "dompurify" // Import DOMPurify for sanitization
+// --- END: Markdown Libraries Import ---
+
+
+// Modal components (simplified for this example, you might use Shadcn Dialog)
+const Modal = ({ children, onClose, fullWidthHeight = false }) => ( // Added fullWidthHeight prop
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className={`bg-white p-8 rounded-3xl shadow-2xl relative ${fullWidthHeight ? 'max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto' : 'max-w-sm w-full'}`}>
+      {children}
+      <Button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200">
+        <XCircle className="w-5 h-5 text-slate-500" />
+      </Button>
+    </div>
+  </div>
+)
 
 interface Website {
   _id: string
@@ -56,10 +83,13 @@ interface Website {
     disallowedPaths?: string[]
     language?: string
     dailyTokenLimit?: number | null
+    // Added scrapePaths and aiSummary
+    scrapePaths?: string[]
   }
   predefinedAnswers: string
   createdAt: string
   updatedAt: string
+  aiSummary?: string
 }
 
 interface AIManagementProps {
@@ -68,26 +98,119 @@ interface AIManagementProps {
   userId: string
 }
 
+// Define possible backend statuses for mapping
+type BackendPathStatus = 'queued' | 'scraping' | 'scraped' | 'failed';
+type FrontendPathStatus = 'Scraped' | 'Failed' | 'Pending' | 'Not Scraped' | 'Scraping...';
+
+// Map backend statuses to frontend display names
+const mapBackendStatusToFrontend = (backendStatus: BackendPathStatus): FrontendPathStatus => {
+  switch (backendStatus) {
+    case 'queued':
+      return 'Pending';
+    case 'scraping':
+      return 'Scraping...';
+    case 'scraped':
+      return 'Scraped';
+    case 'failed':
+      return 'Failed';
+    default:
+      return 'Not Scraped'; // Default for any unhandled or initial state
+  }
+};
+
 export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
   const [allowAIResponses, setAllowAIResponses] = useState(website?.preferences?.allowAIResponses || false)
   const [dailyTokenLimit, setDailyTokenLimit] = useState<string>(website.preferences?.dailyTokenLimit?.toString() || "")
+  const [scrapePaths, setScrapePaths] = useState<string[]>(website.preferences?.scrapePaths || [])
+  // AI summary is now read-only, so we'll manage its display and a full view modal
+  const [aiSummary, setAiSummary] = useState<string>(website.aiSummary || "")
+  const [pathStatuses, setPathStatuses] = useState<{ [key: string]: FrontendPathStatus }>({})
+  const [showScrapeModal, setShowScrapeModal] = useState(false)
+  const [selectedPathToScrape, setSelectedPathToScrape] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [isDataReady, setIsDataReady] = useState(false)
+  const [isScraping, setIsScraping] = useState(false) // For overall scraping activity
+  const [newScrapePath, setNewScrapePath] = useState<string>("")
+
+  console.log(website)
+  // State for full AI summary modal
+  const [showFullSummaryModal, setShowFullSummaryModal] = useState(false)
 
   // Derived values
   const aiEnabledByPlan = website.plan.allowAI
   const currentCredits = website.creditCount
   const isEnterprisePlan = website.plan.name.toLowerCase().includes("enterprise")
 
+  // Truncate AI summary for display
+  const truncatedAiSummary = aiSummary.length > 300 ? aiSummary.substring(0, 300) + "..." : aiSummary;
+  // Scraper Service URL from environment variable
+  const SCRAPER_SERVICE_URL = process.env.NEXT_PUBLIC_SCRAPER_SERVICE_URL;
+
+  // --- START: Markdown Render Function ---
+  // Function to render markdown safely
+  const renderMarkdown = (markdownText: string) => {
+    if (!markdownText) return { __html: "" }; // Handle empty or null text
+    // Use `breaks: true` for newlines to be rendered as <br>
+    const rawMarkup = marked.parse(markdownText, { breaks: true, gfm: true }) as string;
+    // Sanitize the HTML to prevent XSS attacks
+    return { __html: DOMPurify.sanitize(rawMarkup) };
+  };
+  // --- END: Markdown Render Function ---
+
+
+  // Function to fetch actual path statuses from the backend
+  const fetchPathStatuses = useCallback(async () => {
+    if (!SCRAPER_SERVICE_URL || !website._id) {
+      console.warn("SCRAPER_SERVICE_URL or website ID not available for fetching statuses.");
+      return;
+    }
+    setLoading(true); // Indicate loading of statuses
+    try {
+      const res = await authFetch(`${SCRAPER_SERVICE_URL}/api/website-paths/${website._id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          // No paths found for this website, which is fine
+          setPathStatuses({});
+          console.info(`No existing scrape statuses found for website ${website._id}.`);
+        } else {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to fetch path statuses.");
+        }
+      } else {
+        const data = await res.json();
+        const newStatuses: { [key: string]: FrontendPathStatus } = {};
+        data.paths.forEach((p: { pathName: string; status: BackendPathStatus }) => {
+          newStatuses[p.pathName] = mapBackendStatusToFrontend(p.status);
+        });
+        setPathStatuses(newStatuses);
+        console.info(`Fetched ${data.paths.length} scrape statuses for website ${website._id}.`);
+      }
+    } catch (error: any) {
+      console.error("Error fetching path statuses:", error);
+      toast.error(error.message || "Failed to fetch path statuses.");
+    } finally {
+      setLoading(false);
+    }
+  }, [SCRAPER_SERVICE_URL, website._id]);
+
+
   useEffect(() => {
     // Sync internal state with parent website prop changes
     setAllowAIResponses(website.preferences?.allowAIResponses || false)
     setDailyTokenLimit(website.preferences?.dailyTokenLimit?.toString() || "")
-    // Simulate data loading
-    setTimeout(() => {
-      setIsDataReady(true)
-    }, 500)
-  }, [website])
+    setScrapePaths(website.preferences?.scrapePaths || [])
+    setAiSummary(website.aiSummary || "") // Still syncs the full summary
+
+    setIsDataReady(true) // Data from props is ready
+
+    // Fetch statuses when component mounts or website._id changes
+    fetchPathStatuses();
+  }, [website, fetchPathStatuses]);
+
 
   // Handle AI Settings Save
   const handleSave = async () => {
@@ -97,6 +220,8 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
         ...website.preferences,
         allowAIResponses,
         dailyTokenLimit: dailyTokenLimit ? Number.parseInt(dailyTokenLimit) : null,
+        scrapePaths, // Include scrapePaths
+        aiSummary, // Include aiSummary (even if read-only, it's part of preferences)
       }
 
       const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`, {
@@ -132,8 +257,137 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
   const resetToDefaults = () => {
     setAllowAIResponses(false)
     setDailyTokenLimit("")
+    setScrapePaths([]) // Reset scrape paths
+    setAiSummary("") // Reset AI Summary
+    setPathStatuses({}) // Clear statuses
     toast.info("AI settings reset to defaults")
   }
+
+  const handleAddPath = () => {
+    if (newScrapePath.trim() === "") {
+      toast.error("Path cannot be empty.")
+      return
+    }
+    // Format the path: ensure it starts with a slash
+    let formattedPath = newScrapePath.trim();
+    if (!formattedPath.startsWith('/')) {
+      formattedPath = '/' + formattedPath;
+    }
+
+    if (scrapePaths.includes(formattedPath)) {
+      toast.info("This path already exists.")
+      setNewScrapePath("")
+      return
+    }
+
+    setScrapePaths((prevPaths) => [...prevPaths, formattedPath])
+    setNewScrapePath("")
+    setPathStatuses((prevStatuses) => ({ ...prevStatuses, [formattedPath]: 'Not Scraped' })); // Set initial status
+    toast.success("Path added. Remember to save changes!")
+  }
+
+  const handleRemovePath = (pathToRemove: string) => {
+    setScrapePaths((prevPaths) => prevPaths.filter((path) => path !== pathToRemove))
+    setPathStatuses((prevStatuses) => {
+      const newStatuses = { ...prevStatuses };
+      delete newStatuses[pathToRemove];
+      return newStatuses;
+    });
+    toast.info("Path removed. Remember to save changes!")
+  }
+
+  const handleScrapePath = (path: string) => {
+    setSelectedPathToScrape(path)
+    if (pathStatuses[path] === 'Scraped') {
+      setShowScrapeModal(true) // Show modal if already scraped
+    } else {
+      confirmScrape(path) // Directly confirm if not scraped
+    }
+  }
+
+  const confirmScrape = async (path: string) => {
+    setShowScrapeModal(false) // Close modal if open
+    setIsScraping(true) // Set overall scraping state
+    // Update individual path status to 'Scraping...' immediately
+    setPathStatuses((prevStatuses) => ({ ...prevStatuses, [path]: 'Scraping...' }));
+    toast.info(`Scraping started for: ${path}`)
+
+    try {
+      if (!SCRAPER_SERVICE_URL) {
+        throw new Error("Scraper service URL is not configured.");
+      }
+
+      const scrapePayload = {
+        websiteId: website._id,
+        paths: [{ path: path, needsScraping: true }],
+        baseWebsiteUrl: website.link, // Use the website's main link as base URL
+      };
+
+
+      console.log(website._id)
+      const res = await authFetch(`${SCRAPER_SERVICE_URL}/api/scrape-queue`, { // Changed to authFetch
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(scrapePayload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to initiate scraping.");
+      }
+
+      // Backend should immediately return 202 Accepted if queued
+      toast.success(`Scraping request sent for: ${path}. Status will update shortly.`);
+
+      // Optionally, you could set up a polling mechanism here to fetch statuses
+      // For now, we'll rely on a re-fetch after a short delay or user refresh.
+      // A more advanced solution would involve WebSockets for real-time updates.
+      setTimeout(() => {
+        fetchPathStatuses(); // Re-fetch all statuses after a short delay
+      }, 5000); // Wait 5 seconds before re-fetching statuses
+
+    } catch (error: any) {
+      console.error("Error during scraping initiation:", error);
+      setPathStatuses((prevStatuses) => ({ ...prevStatuses, [path]: 'Failed' })); // Set to failed on initiation error
+      toast.error(error.message || `Error initiating scraping for: ${path}`);
+    } finally {
+      setIsScraping(false) // Reset overall scraping state
+    }
+  }
+
+  const getStatusIcon = (status: FrontendPathStatus) => {
+    switch (status) {
+      case 'Scraped':
+        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+      case 'Failed':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'Pending':
+        return <Hourglass className="w-4 h-4 text-amber-500" />;
+      case 'Not Scraped':
+        return <Info className="w-4 h-4 text-slate-500" />;
+      case 'Scraping...':
+        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusTextClass = (status: FrontendPathStatus) => {
+    switch (status) {
+      case 'Scraped':
+        return 'text-emerald-700';
+      case 'Failed':
+        return 'text-red-700';
+      case 'Pending':
+        return 'text-amber-700';
+      case 'Not Scraped':
+        return 'text-slate-700';
+      case 'Scraping...':
+        return 'text-blue-700';
+      default:
+        return '';
+    }
+  };
 
   if (!isDataReady) {
     return <AIManagementSkeleton />
@@ -360,6 +614,138 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
                 )}
               </CardContent>
             </Card>
+
+            {/* AI Content Management Card (Consolidated AI Summary and Scrape Paths) */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-cyan-500/10 rounded-full blur-2xl" />
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-slate-900">AI Content Management</CardTitle>
+                    <p className="text-slate-600 text-sm">Configure AI's understanding and data sources.</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-8 relative z-10">
+                {/* AI Summary Section */}
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-200">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <Label htmlFor="aiSummary" className="text-slate-900 font-semibold text-lg">
+                      AI Summary
+                    </Label>
+                  </div>
+                  <div className="space-y-4">
+                    {/* Replaced Textarea with a div for Markdown rendering in truncated preview */}
+                    <div
+                      id="aiSummary"
+                      className="markdown-content bg-slate-50/80 border border-slate-200/60 text-slate-900 focus:border-purple-500 focus:ring-purple-500/20 rounded-2xl font-medium p-3 min-h-[100px] overflow-y-auto" // Added p-3 and min-h for better display
+                      dangerouslySetInnerHTML={renderMarkdown(truncatedAiSummary)}
+                      // Removed disabled, readOnly, and onChange props as it's now a display div
+                    />
+                    {aiSummary.length > 300 && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowFullSummaryModal(true)}
+                        className="w-full h-10 border-slate-200/60 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-2xl bg-white/60 shadow-sm hover:shadow-md transition-all duration-300"
+                        disabled={!aiEnabledByPlan}
+                      >
+                        See Full Summary
+                      </Button>
+                    )}
+                    <p className="text-slate-600 text-sm">
+                      This summary is generated by AI to help it understand your website's context.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Website Scrape Paths Section */}
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-200">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                      <ExternalLink className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <Label htmlFor="newScrapePath" className="text-slate-900 font-semibold text-lg">
+                      Website Scrape Paths
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Input
+                      type="text"
+                      value={newScrapePath}
+                      onChange={(e) => setNewScrapePath(e.target.value)}
+                      placeholder={`e.g., /about-us or contact`}
+                      className="flex-1 h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-blue-500 focus:ring-blue-500/20 rounded-2xl font-medium"
+                      disabled={!aiEnabledByPlan}
+                    />
+                    <Button
+                      onClick={handleAddPath}
+                      disabled={!aiEnabledByPlan || newScrapePath.trim() === ""}
+                      className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-md transition-all duration-300"
+                    >
+                      <PlusCircle className="w-4 h-4 mr-2" />
+                      Add Path
+                    </Button>
+                  </div>
+                  {scrapePaths.length === 0 ? (
+                    <p className="text-slate-500 text-sm italic">No scrape paths added yet.</p>
+                  ) : (
+                    <ul className="space-y-3">
+                      {scrapePaths.map((path, index) => (
+                        <li key={index} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 flex-1 min-w-0">
+                            <span className="font-medium text-slate-800 truncate" title={path}>
+                              {path}
+                            </span>
+                            <div className="flex items-center space-x-2 text-sm mt-1 sm:mt-0">
+                              {getStatusIcon(pathStatuses[path] || 'Not Scraped')}
+                              <span className={`font-medium ${getStatusTextClass(pathStatuses[path] || 'Not Scraped')}`}>
+                                {pathStatuses[path] || 'Not Scraped'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleScrapePath(path)}
+                              disabled={!aiEnabledByPlan || isScraping}
+                              className="h-9 px-4 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-300"
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Scrape
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRemovePath(path)}
+                              disabled={!aiEnabledByPlan}
+                              className="h-9 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all duration-300"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {!aiEnabledByPlan && (
+                    <Alert className="border-amber-200 bg-amber-50 rounded-2xl mt-4">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-800">
+                        Scraping features require AI to be enabled on your plan.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Token Usage Analytics */}
             {aiEnabledByPlan && <TokenUsageChart websiteId={website._id} />}
           </div>
@@ -413,6 +799,49 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
           </div>
         </div>
       </div>
+
+      {showScrapeModal && selectedPathToScrape && (
+        <Modal onClose={() => setShowScrapeModal(false)}>
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Scrape Again?</h3>
+          <p className="text-slate-700 mb-6">
+            The path <span className="font-semibold">{selectedPathToScrape}</span> has already been scraped. Do you want to scrape it again? This will refresh its content.
+          </p>
+          <div className="flex justify-end space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowScrapeModal(false)}
+              className="px-6 py-2 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-100"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => confirmScrape(selectedPathToScrape)}
+              className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Yes, Scrape Again
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {showFullSummaryModal && (
+        <Modal onClose={() => setShowFullSummaryModal(false)} fullWidthHeight={true}> {/* Pass fullWidthHeight prop */}
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Full AI Summary</h3>
+          {/* Replaced Textarea with a div for Markdown rendering */}
+          <div
+            className="markdown-content bg-slate-50/80 border border-slate-200/60 text-slate-900 rounded-2xl p-4 mb-6 overflow-y-auto max-h-[60vh] text-sm" // Added p-4 for padding and overflow/max-height for scrolling
+            dangerouslySetInnerHTML={renderMarkdown(aiSummary)}
+          />
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setShowFullSummaryModal(false)}
+              className="px-6 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Close
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
