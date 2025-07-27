@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
     },
   ],
   images: {
-    domains: ['cdn.ipwhois.io', 'www.gravatar.com'],
+    domains: ['cdn.ipwhois.io', 'www.gravatar.com', 'media.chatboth.com'],
   },
   async rewrites() {
     return [
