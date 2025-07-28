@@ -139,6 +139,9 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
     const [isEditingAiSummary, setIsEditingAiSummary] = useState(false)
     // State for Markdown help modal
     const [showMarkdownHelpModal, setShowMarkdownHelpModal] = useState(false)
+    // State for scraping cost modal
+    const [showScrapingCostModal, setShowScrapingCostModal] = useState(false)
+
 
     // Derived values
     const aiEnabledByPlan = website.plan.allowAI
@@ -736,6 +739,15 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
                                             Website Scrape Paths
                                         </Label>
                                     </div>
+                                    <p className="text-slate-600 text-sm mb-4">
+                                        Reduced price for scraping is <strong>10 tokens</strong>.{" "}
+                                        <span
+                                            className="text-blue-600 cursor-pointer underline hover:text-blue-800"
+                                            onClick={() => setShowScrapingCostModal(true)}
+                                        >
+                                            Why?
+                                        </span>
+                                    </p>
                                     <div className="flex items-center space-x-2 mb-4">
                                         <Input
                                             type="text"
@@ -790,6 +802,7 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
                                                             className="h-9 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all duration-300"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
+                                                            Remove
                                                         </Button>
                                                     </div>
                                                 </li>
@@ -911,7 +924,7 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
                     <h3 className="text-xl font-bold text-slate-900 mb-4">What is Markdown?</h3>
                     <div className="markdown-content prose dark:prose-invert max-w-none">
                         <p className="text-slate-700 mb-4">
-                            <strong>Markdown</strong> is a lightweight markup language that allows you to format plain text. It's designed to be easy to read and write, and it can be converted into HTML (what web pages are made of) for display.
+                            **Markdown** is a lightweight markup language that allows you to format plain text. It's designed to be easy to read and write, and it can be converted into HTML (what web pages are made of) for display.
                         </p>
                         <p className="text-slate-700 mb-4">
                             Large Language Models (LLMs) like the AI powering your chatbot often use Markdown because it provides a simple yet effective way to structure their output, making it clear and readable for both humans and other AI systems.
@@ -946,6 +959,24 @@ export function AIManagement({ website, onUpdate, userId }: AIManagementProps) {
                         <p className="text-slate-700 italic mt-6">
                             When you save your custom summary, this Markdown formatting will be processed and rendered by the system.
                         </p>
+                    </div>
+                </Modal>
+            )}
+
+            {/* New Scraping Cost Modal */}
+            {showScrapingCostModal && (
+                <Modal onClose={() => setShowScrapingCostModal(false)}>
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">Why do scrapings cost tokens?</h3>
+                    <p className="text-slate-700 mb-6">
+                        We are actively working on <strong>reducing the scraping prices</strong>. We have to charge for scraping to prevent any malicious usage of AI services and guarantee a smooth operation of AI across our entire platform. Your understanding helps us maintain a reliable and secure environment for your visitors.
+                    </p>
+                    <div className="flex justify-end">
+                        <Button
+                            onClick={() => setShowScrapingCostModal(false)}
+                            className="px-6 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
+                        >
+                            Got It
+                        </Button>
                     </div>
                 </Modal>
             )}
