@@ -11,7 +11,7 @@ export function useAuth() {
 
   // Memoized logout function
   const logout = useCallback(() => {
-    console.log("useAuth: Performing user logout (clearing localStorage).");
+    // console.log("useAuth: Performing user logout (clearing localStorage).");
     if (typeof window !== 'undefined') { // Ensure localStorage is available
       localStorage.removeItem("userToken");
       localStorage.removeItem("userId"); // FIX: Also remove userId
@@ -52,7 +52,7 @@ export function useAuth() {
     }
 
     try {
-      console.log(`useAuth: Attempting to fetch/refresh user data for user ID: ${currentUserId}`); // FIX: Use currentUserId
+      // console.log(`useAuth: Attempting to fetch/refresh user data for user ID: ${currentUserId}`); // FIX: Use currentUserId
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${currentUserId}`, { // FIX: Use currentUserId in URL
         headers: {
           'x-auth-token': currentToken,
@@ -65,23 +65,23 @@ export function useAuth() {
         const freshUserData = await res.json();
         setUser(freshUserData);
         setToken(currentToken); // Confirm token is still active
-        console.log("useAuth: User data successfully fetched/re-verified from server.");
+        // console.log("useAuth: User data successfully fetched/re-verified from server.");
         return true; // Refresh successful
       } else if (res.status === 401 || res.status === 403) {
         console.warn(`useAuth: Token invalid or unauthorized (Status: ${res.status}). Logging out.`);
         logout();
-        toast.error("Your session has expired. Please log in again.");
+        // toast.error("Your session has expired. Please log in again.");
         return false;
       } else {
         console.error(`useAuth: Server responded with status ${res.status} during refresh.`, await res.text());
-        toast.warning("Could not refresh user data. Displaying cached information (if any, but likely null now).");
+        // toast.warning("Could not refresh user data. Displaying cached information (if any, but likely null now).");
         // User state might already be null if there was no userData, or it remains as optimistically set before this call.
         // We do NOT logout here unless explicitly 401/403.
         return false;
       }
     } catch (networkError) {
       console.error("useAuth: Network error during user data fetch/refresh.", networkError);
-      toast.warning("Could not connect to authentication server. Displaying cached information (if any).");
+      // toast.warning("Could not connect to authentication server. Displaying cached information (if any).");
       // Keep optimistic user state if it was set, do NOT logout on network error.
       return false;
     } finally {
@@ -90,7 +90,7 @@ export function useAuth() {
   }, [logout]);
 
   useEffect(() => {
-    console.log("useAuth: Initializing authentication status.");
+    // console.log("useAuth: Initializing authentication status.");
     refreshUser(); // Call refreshUser immediately on mount to load/verify session
   }, [refreshUser]); // `refreshUser` is a dependency as it's a useCallback
 
