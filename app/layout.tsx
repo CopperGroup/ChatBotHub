@@ -46,7 +46,7 @@ export default function RootLayout({
 
             <Toaster position="top-right" richColors expand duration={4000} />
         </PostHogProvider>
-        <script async src="https://chatbothubserver.up.railway.app/widget/chatbot-widget.js?chatbotCode=73ctl78r4st6ccjg4o3e1o"></script>
+        <script async src={process.env.CHAT_WIDJET_URL}></script>
       </body>
     </html>
   )
