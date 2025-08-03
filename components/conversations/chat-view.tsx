@@ -1,64 +1,76 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { MessageSquare, Send, Brain, UserCheck, UserX, XCircle, ArrowLeft, MoreVertical, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import { Message } from "./message"
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  MessageSquare,
+  Send,
+  Brain,
+  UserCheck,
+  UserX,
+  XCircle,
+  ArrowLeft,
+  MoreVertical,
+  Loader2,
+  Paperclip,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Message } from "./message";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { authFetch } from "@/lib/authFetch"
+} from "@/components/ui/dropdown-menu";
+import { authFetch } from "@/lib/authFetch";
 
 interface ChatMessage {
-  sender: string
-  text: string
-  timestamp: string
-  url?: string
+  sender: string;
+  text: string;
+  timestamp: string;
+  fileUrl?: string;
+  fileName?: string;
 }
 
 interface ChatViewProps {
   chat: {
-    _id: string
-    name: string
-    email: string
-    messages: string
-    status: string
-    aiResponsesEnabled: boolean
-    createdAt: string
-    updatedAt: string
+    _id: string;
+    name: string;
+    email: string;
+    messages: string;
+    status: string;
+    aiResponsesEnabled: boolean;
+    createdAt: string;
+    updatedAt: string;
     leadingStaff?: {
-      _id: string
-      name: string
-    } | null
-  } | null
+      _id: string;
+      name: string;
+    } | null;
+  } | null;
   website: {
-    _id: string
-    name: string
-    link: string
-    description: string
-  }
-  socket: any
-  onUpdateChats: (updater: (chats: any[]) => any[]) => void
-  isStaff?: boolean
+    _id: string;
+    name: string;
+    link: string;
+    description: string;
+  };
+  socket: any;
+  onUpdateChats: (updater: (chats: any[]) => any[]) => void;
+  isStaff?: boolean;
   staffInfo?: {
-    id: string
-    name: string
-    email: string
-    websiteId: string
-  }
-  dashboardUserId?: string
-  onBackToList?: () => void
-  isVisible?: boolean
+    id: string;
+    name: string;
+    email: string;
+    websiteId: string;
+  };
+  dashboardUserId?: string;
+  onBackToList?: () => void;
+  isVisible?: boolean;
 }
 
 export function ChatView({
@@ -72,85 +84,95 @@ export function ChatView({
   onBackToList,
   isVisible = true,
 }: ChatViewProps) {
-  const [messageInput, setMessageInput] = useState("")
-  const [aiResponsesEnabled, setAiResponsesEnabled] = useState(chat?.aiResponsesEnabled ?? true)
-  const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([])
-  const [isTogglingAI, setIsTogglingAI] = useState(false) // New state for loading
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const [showCloseChatModal, setShowCloseChatModal] = useState(false)
+  const [messageInput, setMessageInput] = useState("");
+  const [aiResponsesEnabled, setAiResponsesEnabled] = useState(
+    chat?.aiResponsesEnabled ?? true
+  );
+  const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
+  const [isTogglingAI, setIsTogglingAI] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [showCloseChatModal, setShowCloseChatModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [isSending, setIsSending] = useState(false); // New state to prevent multiple sends
 
-  const currentUserId = isStaff ? staffInfo?.id : dashboardUserId
-  const currentUserType = isStaff ? "staff" : "owner"
-  const currentUserName = isStaff ? staffInfo?.name : "Owner"
+  const currentUserId = isStaff ? staffInfo?.id : dashboardUserId;
+  const currentUserType = isStaff ? "staff" : "owner";
+  const currentUserName = isStaff ? staffInfo?.name : "Owner";
 
   const getInitials = (name: string) => {
-    if (!name) return ""
+    if (!name) return "";
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
 
   const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 1) {
-      return "Just now"
+      return "Just now";
     } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`
+      return `${Math.floor(diffInHours)}h ago`;
     } else {
-      return date.toLocaleDateString()
+      return date.toLocaleDateString();
     }
-  }
+  };
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector("[data-radix-scroll-area-viewport]")
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
       if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }
+  };
 
   useEffect(() => {
     if (chat) {
       try {
-        const messages: ChatMessage[] = JSON.parse(chat.messages || "[]")
-        setCurrentMessages(messages)
-        setAiResponsesEnabled(chat.aiResponsesEnabled ?? true)
-        setTimeout(scrollToBottom, 100)
+        const messages: ChatMessage[] = JSON.parse(chat.messages || "[]");
+        setCurrentMessages(messages);
+        setAiResponsesEnabled(chat.aiResponsesEnabled ?? true);
+        setTimeout(scrollToBottom, 100);
       } catch (error) {
-        console.error("Error parsing chat messages:", error)
-        setCurrentMessages([])
+        console.error("Error parsing chat messages:", error);
+        setCurrentMessages([]);
       }
     } else {
-      setCurrentMessages([])
+      setCurrentMessages([]);
     }
-  }, [chat])
+  }, [chat]);
 
   useEffect(() => {
-    if (!socket || !chat) return
+    if (!socket || !chat) return;
 
     const handleChatUpdate = (data: {
-      chatId: string
-      aiResponsesEnabled?: boolean
-      message?: string
-      sender?: string
-      status?: string
-      leadingStaff?: { _id: string; name: string } | null
+      chatId: string;
+      aiResponsesEnabled?: boolean;
+      message?: string;
+      sender?: string;
+      status?: string;
+      leadingStaff?: { _id: string; name: string } | null;
+      fileUrl?: string;
     }) => {
       if (data.chatId === chat._id) {
-        console.log("Received chat_update:", data) // Debug log
+        console.log("Received chat_update:", data);
 
-        // Update AI responses state immediately when received from socket
         if (typeof data.aiResponsesEnabled === "boolean") {
-          console.log("Updating AI responses enabled to:", data.aiResponsesEnabled) // Debug log
-          setAiResponsesEnabled(data.aiResponsesEnabled)
-          setIsTogglingAI(false) // Stop loading state
+          console.log(
+            "Updating AI responses enabled to:",
+            data.aiResponsesEnabled
+          );
+          setAiResponsesEnabled(data.aiResponsesEnabled);
+          setIsTogglingAI(false);
         }
 
         if (data.status || data.leadingStaff !== undefined) {
@@ -160,14 +182,18 @@ export function ChatView({
                 return {
                   ...c,
                   ...(data.status && { status: data.status }),
-                  ...(data.leadingStaff !== undefined && { leadingStaff: data.leadingStaff }),
-                  ...(data.aiResponsesEnabled !== undefined && { aiResponsesEnabled: data.aiResponsesEnabled }),
+                  ...(data.leadingStaff !== undefined && {
+                    leadingStaff: data.leadingStaff,
+                  }),
+                  ...(data.aiResponsesEnabled !== undefined && {
+                    aiResponsesEnabled: data.aiResponsesEnabled,
+                  }),
                   updatedAt: new Date().toISOString(),
-                }
+                };
               }
-              return c
-            }),
-          )
+              return c;
+            })
+          );
         }
 
         if (data.message) {
@@ -176,131 +202,211 @@ export function ChatView({
               sender: data.sender || "system",
               text: data.message,
               timestamp: new Date().toISOString(),
+              fileUrl: data.url,
+            };
+            if (
+              !prevMessages.some(
+                (m) =>
+                  m.text === systemMessage.text &&
+                  m.timestamp === systemMessage.timestamp
+              )
+            ) {
+              return [...prevMessages, systemMessage];
             }
-            if (!prevMessages.some((m) => m.text === systemMessage.text && m.timestamp === systemMessage.timestamp)) {
-              return [...prevMessages, systemMessage]
-            }
-            return prevMessages
-          })
+            return prevMessages;
+          });
         }
-        setTimeout(scrollToBottom, 100)
+        setTimeout(scrollToBottom, 100);
       }
-    }
+    };
 
-    // Enhanced socket event listener with better error handling
     const handleSocketError = (error: any) => {
-      console.error("Socket error:", error)
-      setIsTogglingAI(false) // Reset loading state on error
-      toast.error("Connection error. Please try again.")
-    }
+      console.error("Socket error:", error);
+      setIsTogglingAI(false);
+      toast.error("Connection error. Please try again.");
+    };
 
     const handleSocketDisconnect = () => {
-      console.log("Socket disconnected")
-      setIsTogglingAI(false) // Reset loading state on disconnect
-    }
+      console.log("Socket disconnected");
+      setIsTogglingAI(false);
+    };
 
-    socket.on("chat_update", handleChatUpdate)
-    socket.on("error", handleSocketError)
-    socket.on("disconnect", handleSocketDisconnect)
+    socket.on("chat_update", handleChatUpdate);
+    socket.on("error", handleSocketError);
+    socket.on("disconnect", handleSocketDisconnect);
 
     return () => {
-      socket.off("chat_update", handleChatUpdate)
-      socket.off("error", handleSocketError)
-      socket.off("disconnect", handleSocketDisconnect)
-    }
-  }, [socket, chat, onUpdateChats])
+      socket.off("chat_update", handleChatUpdate);
+      socket.off("error", handleSocketError);
+      socket.off("disconnect", handleSocketDisconnect);
+    };
+  }, [socket, chat, onUpdateChats]);
 
   useEffect(() => {
-    scrollToBottom()
-  }, [currentMessages])
+    scrollToBottom();
+  }, [currentMessages]);
 
-  // Enhanced AI toggle function with better error handling and loading states
   const toggleAiResponses = async () => {
     if (!chat || !socket || !currentUserId) {
-      toast.error("Unable to toggle AI responses - missing required data")
-      return
+      toast.error("Unable to toggle AI responses - missing required data");
+      return;
     }
 
     if (isTogglingAI) {
-      toast.info("AI toggle already in progress...")
-      return
+      toast.info("AI toggle already in progress...");
+      return;
     }
 
     try {
-      setIsTogglingAI(true) // Start loading state
-      const newAiState = !aiResponsesEnabled
+      setIsTogglingAI(true);
+      const newAiState = !aiResponsesEnabled;
 
       console.log("Toggling AI responses:", {
         chatId: chat._id,
         enable: newAiState,
         userId: currentUserId,
         isStaff: isStaff,
-      }) // Debug log
+      });
 
-      // Emit the toggle event to socket
       socket.emit("toggle_ai_responses", {
         chatId: chat._id,
         enable: newAiState,
         userId: currentUserId,
         isStaff: isStaff,
-      })
+      });
 
-      // Set a timeout to reset loading state if no response received
       const timeoutId = setTimeout(() => {
         if (isTogglingAI) {
-          setIsTogglingAI(false)
-          toast.error("AI toggle request timed out. Please try again.")
+          setIsTogglingAI(false);
+          toast.error("AI toggle request timed out. Please try again.");
         }
-      }, 10000) // 10 second timeout
+      }, 10000);
 
-      // Store timeout ID to clear it if response comes back
-      socket.toggleTimeoutId = timeoutId
-
-      toast.info(`${newAiState ? "Enabling" : "Disabling"} AI responses...`)
+      toast.info(`${newAiState ? "Enabling" : "Disabling"} AI responses...`);
     } catch (err) {
-      console.error("Error toggling AI responses:", err)
-      setIsTogglingAI(false)
-      toast.error("Failed to toggle AI responses")
+      console.error("Error toggling AI responses:", err);
+      setIsTogglingAI(false);
+      toast.error("Failed to toggle AI responses");
     }
-  }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setAttachedFile(event.target.files[0]);
+    } else {
+      setAttachedFile(null);
+    }
+  };
+
+  const handleAttachButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveAttachedFile = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleMessageSend = async () => {
-    if (!chat || !messageInput.trim()) return
-    if (chat.status === "closed") {
-      toast.error("Cannot send messages to a closed conversation")
-      setMessageInput("")
-      return
+    if (isSending) {
+      toast.info("Sending message already in progress...");
+      return;
     }
 
-    let senderType: string
+    if (!chat || (!messageInput.trim() && !attachedFile)) return;
+    if (chat.status === "closed") {
+      toast.error("Cannot send messages to a closed conversation");
+      setMessageInput("");
+      setAttachedFile(null);
+      return;
+    }
+
+    setIsSending(true); // Start sending state
+
+    let senderType: string;
     if (isStaff && staffInfo?.name) {
-      senderType = `staff-${staffInfo.name}`
+      senderType = `staff-${staffInfo.name}`;
     } else if (dashboardUserId) {
-      senderType = "owner"
+      senderType = "owner";
     } else {
-      senderType = "owner"
+      senderType = "owner";
+    }
+
+    let uploadedFileUrl = "";
+    if (attachedFile) {
+      try {
+        const formData = new FormData();
+        formData.append("media", attachedFile); // Use "media" as per your example
+        formData.append("chatId", chat._id); // Assuming your backend needs chatId
+
+        toast.info("Uploading file...");
+
+        const uploadResponse = await authFetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/files`,
+          {
+            // Adjust this path if different
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.message || "File upload failed.");
+        }
+
+        const uploadResult = await uploadResponse.json();
+        uploadedFileUrl = uploadResult.data.url; // Assuming the URL is nested under data.url
+        toast.success("File uploaded successfully!");
+      } catch (uploadError: any) {
+        console.error("Error uploading file:", uploadError);
+        toast.error(
+          `Failed to upload file: ${uploadError.message || "Unknown error"}`
+        );
+        setIsSending(false); // Reset sending state on error
+        setAttachedFile(null); // Clear attached file on failure
+        return; // Stop execution if file upload fails
+      }
     }
 
     const newMessage: ChatMessage = {
       sender: senderType,
-      text: messageInput,
+      text: messageInput.trim(),
       timestamp: new Date().toISOString(),
-    }
+      fileUrl: uploadedFileUrl || undefined, // Use the uploaded URL or undefined
+    };
 
-    setCurrentMessages((prevMessages) => [...prevMessages, newMessage])
-    setMessageInput("")
-    setTimeout(scrollToBottom, 50)
+    setCurrentMessages((prevMessages) => [...prevMessages, newMessage]);
+    setMessageInput("");
+    setAttachedFile(null); // Clear the attached file
+    if (fileInputRef.current) {
+      // Also clear the native file input value
+      fileInputRef.current.value = "";
+    }
+    setTimeout(scrollToBottom, 50);
 
     try {
-      const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chats/${chat._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: JSON.stringify([...JSON.parse(chat.messages || "[]"), newMessage]) }),
-      })
+      const res = await authFetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/chats/${chat._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: JSON.stringify([
+              ...JSON.parse(chat.messages || "[]"),
+              newMessage,
+            ]),
+          }),
+        }
+      );
 
       if (!res.ok) {
-        const errorData = await res.json()
-        toast.error(`Failed to send message: ${errorData.message || "Unknown error"}`)
+        const errorData = await res.json();
+        toast.error(
+          `Failed to send message: ${errorData.message || "Unknown error"}`
+        );
         setCurrentMessages((prevMessages) =>
           prevMessages.filter(
             (msg) =>
@@ -308,10 +414,10 @@ export function ChatView({
                 msg.sender === newMessage.sender &&
                 msg.text === newMessage.text &&
                 msg.timestamp === newMessage.timestamp
-              ),
-          ),
-        )
-        return
+              )
+          )
+        );
+        return;
       }
 
       if (socket) {
@@ -320,7 +426,7 @@ export function ChatView({
           message: newMessage,
           websiteName: website?.name,
           chatName: chat.name,
-        })
+        });
       }
 
       onUpdateChats((prevChats) =>
@@ -329,20 +435,25 @@ export function ChatView({
             c._id === chat._id
               ? {
                   ...c,
-                  messages: JSON.stringify([...JSON.parse(c.messages || "[]"), newMessage]),
+                  messages: JSON.stringify([
+                    ...JSON.parse(c.messages || "[]"),
+                    newMessage,
+                  ]),
                   updatedAt: new Date().toISOString(),
                 }
-              : c,
+              : c
           )
           .sort(
-            (a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime(),
-          ),
-      )
+            (a, b) =>
+              new Date(b.updatedAt || b.createdAt).getTime() -
+              new Date(a.updatedAt || a.createdAt).getTime()
+          )
+      );
 
-      toast.success("Message sent!")
+      toast.success("Message sent!");
     } catch (err) {
-      console.error("Error sending message:", err)
-      toast.error("Failed to send message")
+      console.error("Error sending message:", err);
+      toast.error("Failed to send message");
       setCurrentMessages((prevMessages) =>
         prevMessages.filter(
           (msg) =>
@@ -350,33 +461,35 @@ export function ChatView({
               msg.sender === newMessage.sender &&
               msg.text === newMessage.text &&
               msg.timestamp === newMessage.timestamp
-            ),
-        ),
-      )
+            )
+        )
+      );
+    } finally {
+      setIsSending(false); // Always reset sending state
     }
-  }
+  };
 
   const handleCloseChatClick = () => {
-    if (chat?.status === "closed") return
-    setShowCloseChatModal(true)
-  }
+    if (chat?.status === "closed") return;
+    setShowCloseChatModal(true);
+  };
 
   const handleConfirmCloseChat = async () => {
     if (!chat || !socket) {
-      toast.error("Unable to close chat")
-      setShowCloseChatModal(false)
-      return
+      toast.error("Unable to close chat");
+      setShowCloseChatModal(false);
+      return;
     }
 
     try {
-      const closerId = currentUserId
-      const closerType = currentUserType
-      const closerName = currentUserName
+      const closerId = currentUserId;
+      const closerType = currentUserType;
+      const closerName = currentUserName;
 
       if (!closerId) {
-        toast.error("Error: Could not identify chat closer")
-        setShowCloseChatModal(false)
-        return
+        toast.error("Error: Could not identify chat closer");
+        setShowCloseChatModal(false);
+        return;
       }
 
       socket.emit("close_chat", {
@@ -385,29 +498,31 @@ export function ChatView({
         closerType,
         closerName,
         websiteId: website._id,
-      })
+      });
 
       onUpdateChats((prevChats) =>
         prevChats.map((c) =>
-          c._id === chat._id ? { ...c, status: "closed", updatedAt: new Date().toISOString() } : c,
-        ),
-      )
-      setAiResponsesEnabled(false)
-      setMessageInput("")
+          c._id === chat._id
+            ? { ...c, status: "closed", updatedAt: new Date().toISOString() }
+            : c
+        )
+      );
+      setAiResponsesEnabled(false);
+      setMessageInput("");
 
-      toast.success("Chat closed successfully")
-      setShowCloseChatModal(false)
+      toast.success("Chat closed successfully");
+      setShowCloseChatModal(false);
     } catch (error) {
-      console.error("Error closing chat:", error)
-      toast.error("Failed to close chat")
-      setShowCloseChatModal(false)
+      console.error("Error closing chat:", error);
+      toast.error("Failed to close chat");
+      setShowCloseChatModal(false);
     }
-  }
+  };
 
   const handleJoinChat = async () => {
     if (!chat || chat.status === "closed" || !socket || !currentUserId) {
-      toast.error("Unable to join chat")
-      return
+      toast.error("Unable to join chat");
+      return;
     }
 
     try {
@@ -417,18 +532,24 @@ export function ChatView({
         assigneeName: currentUserName,
         assigneeType: currentUserType,
         websiteId: website._id,
-      })
-      toast.info("Join request sent")
+      });
+      toast.info("Join request sent");
     } catch (error) {
-      console.error("Error joining chat:", error)
-      toast.error("Failed to join chat")
+      console.error("Error joining chat:", error);
+      toast.error("Failed to join chat");
     }
-  }
+  };
 
   const handleLeaveChat = async () => {
-    if (!chat || chat.status === "closed" || !socket || !currentUserId || chat.leadingStaff?._id !== currentUserId) {
-      toast.error("Unable to leave chat")
-      return
+    if (
+      !chat ||
+      chat.status === "closed" ||
+      !socket ||
+      !currentUserId ||
+      chat.leadingStaff?._id !== currentUserId
+    ) {
+      toast.error("Unable to leave chat");
+      return;
     }
 
     try {
@@ -437,18 +558,24 @@ export function ChatView({
         assigneeId: currentUserId,
         assigneeType: currentUserType,
         websiteId: website._id,
-      })
-      toast.info("Leave request sent")
+      });
+      toast.info("Leave request sent");
     } catch (error) {
-      console.error("Error leaving chat:", error)
-      toast.error("Failed to leave chat")
+      console.error("Error leaving chat:", error);
+      toast.error("Failed to leave chat");
     }
-  }
+  };
 
   const handleRemoveStaff = async () => {
-    if (!chat || chat.status === "closed" || !socket || !chat.leadingStaff || isStaff) {
-      toast.error("Unable to remove staff")
-      return
+    if (
+      !chat ||
+      chat.status === "closed" ||
+      !socket ||
+      !chat.leadingStaff ||
+      isStaff
+    ) {
+      toast.error("Unable to remove staff");
+      return;
     }
 
     try {
@@ -458,21 +585,27 @@ export function ChatView({
         assigneeType: "staff",
         websiteId: website._id,
         actionBy: "owner",
-      })
-      toast.info("Remove staff request sent")
+      });
+      toast.info("Remove staff request sent");
     } catch (error) {
-      console.error("Error removing staff:", error)
-      toast.error("Failed to remove staff")
+      console.error("Error removing staff:", error);
+      toast.error("Failed to remove staff");
     }
-  }
+  };
 
-  const isCurrentUserLeading = chat?.leadingStaff?._id === currentUserId
-  const isSomeoneElseLeading = chat?.leadingStaff && chat.leadingStaff._id !== currentUserId
-  const isInputDisabled = chat?.status === "closed" || (isStaff && isSomeoneElseLeading)
+  const isCurrentUserLeading = chat?.leadingStaff?._id === currentUserId;
+  const isSomeoneElseLeading =
+    chat?.leadingStaff && chat.leadingStaff._id !== currentUserId;
+  const isInputDisabled =
+    chat?.status === "closed" || (isStaff && isSomeoneElseLeading) || isSending;
 
-  const shouldShowJoinButtonForStaff = isStaff && chat?.status === "open" && !isCurrentUserLeading
+  const shouldShowJoinButtonForStaff =
+    isStaff && chat?.status === "open" && !isCurrentUserLeading;
   const shouldShowRemoveStaffButtonForOwner =
-    !isStaff && chat?.leadingStaff && chat.leadingStaff.name !== "Owner" && chat.status === "open"
+    !isStaff &&
+    chat?.leadingStaff &&
+    chat.leadingStaff.name !== "Owner" &&
+    chat.status === "open";
 
   if (!chat) {
     return (
@@ -485,17 +618,24 @@ export function ChatView({
           <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <MessageSquare className="w-10 h-10 text-slate-400" />
           </div>
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">Select a conversation</h3>
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">
+            Select a conversation
+          </h3>
           <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
-            Choose a conversation from the sidebar to view messages and respond to your customers.
+            Choose a conversation from the sidebar to view messages and respond
+            to your customers.
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
-    <div className={`flex-1 flex flex-col bg-white ${isVisible ? "flex" : "hidden md:flex"}`}>
+    <div
+      className={`flex-1 flex flex-col bg-white ${
+        isVisible ? "flex" : "hidden md:flex"
+      }`}
+    >
       {/* Close Chat Modal */}
       {showCloseChatModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -504,12 +644,19 @@ export function ChatView({
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <XCircle className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Close Conversation</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                Close Conversation
+              </h3>
               <p className="text-slate-600 mb-6 leading-relaxed">
-                Are you sure you want to close this conversation? The customer will no longer be able to send messages.
+                Are you sure you want to close this conversation? The customer
+                will no longer be able to send messages.
               </p>
               <div className="flex space-x-3">
-                <Button variant="outline" onClick={() => setShowCloseChatModal(false)} className="flex-1 rounded-xl">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCloseChatModal(false)}
+                  className="flex-1 rounded-xl"
+                >
                   Cancel
                 </Button>
                 <Button
@@ -551,11 +698,15 @@ export function ChatView({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-base md:text-lg font-semibold text-slate-900 truncate">{chat.name}</h3>
+              <h3 className="text-base md:text-lg font-semibold text-slate-900 truncate">
+                {chat.name}
+              </h3>
               <p className="text-xs md:text-sm text-slate-500 flex items-center space-x-2 truncate">
                 <span className="font-medium truncate">{chat.email}</span>
                 <span className="hidden sm:inline">•</span>
-                <span className="hidden sm:inline">{formatTime(chat.updatedAt || chat.createdAt)}</span>
+                <span className="hidden sm:inline">
+                  {formatTime(chat.updatedAt || chat.createdAt)}
+                </span>
               </p>
             </div>
           </div>
@@ -581,7 +732,8 @@ export function ChatView({
                     ) : (
                       <Brain className="w-4 h-4 mr-2" />
                     )}
-                    AI {isTogglingAI ? "..." : aiResponsesEnabled ? "ON" : "OFF"}
+                    AI{" "}
+                    {isTogglingAI ? "..." : aiResponsesEnabled ? "ON" : "OFF"}
                   </Button>
 
                   {shouldShowJoinButtonForStaff && (
@@ -633,15 +785,26 @@ export function ChatView({
                         <MoreVertical className="w-4 h-4 text-slate-600" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg border-slate-200">
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-48 rounded-xl shadow-lg border-slate-200"
+                    >
                       <DropdownMenuItem
                         onClick={toggleAiResponses}
                         disabled={isTogglingAI}
                         className="flex items-center space-x-2 rounded-lg"
                       >
-                        {isTogglingAI ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
+                        {isTogglingAI ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Brain className="w-4 h-4" />
+                        )}
                         <span>
-                          {isTogglingAI ? "Toggling AI..." : aiResponsesEnabled ? "Turn AI Off" : "Turn AI On"}
+                          {isTogglingAI
+                            ? "Toggling AI..."
+                            : aiResponsesEnabled
+                            ? "Turn AI Off"
+                            : "Turn AI On"}
                         </span>
                       </DropdownMenuItem>
 
@@ -691,7 +854,9 @@ export function ChatView({
                 {isSomeoneElseLeading && (
                   <Badge className="bg-slate-100 text-slate-600 border-slate-200 px-2 py-1 rounded-full text-xs md:hidden">
                     <UserCheck className="w-3 h-3 mr-1" />
-                    <span className="truncate max-w-[60px]">{chat.leadingStaff?.name}</span>
+                    <span className="truncate max-w-[60px]">
+                      {chat.leadingStaff?.name}
+                    </span>
                   </Badge>
                 )}
               </>
@@ -701,7 +866,9 @@ export function ChatView({
             <Button
               variant="outline"
               size="sm"
-              onClick={chat.status === "open" ? handleCloseChatClick : undefined}
+              onClick={
+                chat.status === "open" ? handleCloseChatClick : undefined
+              }
               disabled={chat.status === "closed"}
               className={`rounded-xl font-medium transition-all text-xs md:text-sm ${
                 chat.status === "open"
@@ -721,9 +888,12 @@ export function ChatView({
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <UserCheck className="w-10 h-10 text-blue-600" />
             </div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Join this conversation</h3>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">
+              Join this conversation
+            </h3>
             <p className="text-slate-500 max-w-md mx-auto mb-6 leading-relaxed">
-              This chat is currently unassigned or handled by another staff member. Join to respond to the customer.
+              This chat is currently unassigned or handled by another staff
+              member. Join to respond to the customer.
             </p>
             <Button
               onClick={handleJoinChat}
@@ -734,14 +904,19 @@ export function ChatView({
               Join Chat
             </Button>
             {isSomeoneElseLeading && (
-              <p className="text-sm text-slate-400 mt-3">Currently handled by {chat.leadingStaff?.name}</p>
+              <p className="text-sm text-slate-400 mt-3">
+                Currently handled by {chat.leadingStaff?.name}
+              </p>
             )}
           </CardContent>
         </div>
       ) : (
         <>
           {/* Messages */}
-          <ScrollArea className="flex-1 h-0 bg-gradient-to-b from-slate-50/30 to-white" ref={scrollAreaRef}>
+          <ScrollArea
+            className="flex-1 h-0 bg-gradient-to-b from-slate-50/30 to-white"
+            ref={scrollAreaRef}
+          >
             <div className="p-4 md:p-6 space-y-4">
               {currentMessages.map((msg, index) => (
                 <Message
@@ -760,6 +935,20 @@ export function ChatView({
           {/* Input */}
           {chat.status === "open" ? (
             <div className="p-4 md:p-6 border-t border-slate-100 bg-white flex-shrink-0">
+              {attachedFile && (
+                <div className="flex items-center space-x-2 mb-2 px-2 py-1 bg-slate-100 rounded-lg text-sm text-slate-700">
+                  <Paperclip className="w-4 h-4 text-slate-500" />
+                  <span className="truncate">{attachedFile.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto h-auto p-1 rounded-full text-slate-500 hover:text-red-500"
+                    onClick={handleRemoveAttachedFile}
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
               <div className="flex space-x-3 md:space-x-4">
                 <Input
                   type="text"
@@ -770,24 +959,52 @@ export function ChatView({
                       ? chat?.leadingStaff
                         ? `Chat handled by ${chat.leadingStaff.name}`
                         : "This chat is closed."
+                      : attachedFile
+                      ? "Add a message with your file (optional)..."
                       : "Type your message..."
                   }
                   className={`flex-1 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl py-3 text-sm md:text-base ${
                     isInputDisabled ? "cursor-not-allowed bg-slate-100" : ""
                   }`}
-                  onKeyPress={(e) => e.key === "Enter" && !isInputDisabled && handleMessageSend()}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && !isInputDisabled && handleMessageSend()
+                  }
+                  disabled={isInputDisabled}
+                />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  style={{ display: "none" }}
                   disabled={isInputDisabled}
                 />
                 <Button
+                  onClick={handleAttachButtonClick}
+                  variant="outline"
+                  size="icon"
+                  className={`rounded-xl shadow-lg transition-all min-w-[44px] ${
+                    isInputDisabled ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={isInputDisabled}
+                >
+                  <Paperclip className="w-4 h-4 text-slate-600" />
+                </Button>
+                <Button
                   onClick={handleMessageSend}
-                  disabled={isInputDisabled || !messageInput.trim()}
+                  disabled={
+                    isInputDisabled || (!messageInput.trim() && !attachedFile)
+                  }
                   className={`rounded-xl px-4 md:px-6 shadow-lg transition-all min-w-[44px] ${
                     isStaff
                       ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                       : "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
                   } text-white disabled:opacity-50`}
                 >
-                  <Send className="w-4 h-4" />
+                  {isSending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -796,11 +1013,13 @@ export function ChatView({
               <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
                 <XCircle className="w-6 h-6 text-slate-400" />
               </div>
-              <p className="text-slate-500 font-medium text-sm md:text-base">This conversation has been closed</p>
+              <p className="text-slate-500 font-medium text-sm md:text-base">
+                This conversation has been closed
+              </p>
             </div>
           )}
         </>
       )}
     </div>
-  )
+  );
 }
