@@ -41,7 +41,7 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
           const parsed = JSON.parse(storedNotifications) as NotificationItem[];
           return parsed.map(n => ({ ...n, timestamp: new Date(n.timestamp) }));
         } catch (e) {
-          console.error("Failed to parse live notifications from session storage", e);
+          // console.error("Failed to parse live notifications from session storage", e);
           return [];
         }
       }
@@ -89,19 +89,19 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
     if (userType === 'owner' && user && Array.isArray(user.websites) && user.websites.length > 0) {
       connectionCriteriaMet = true;
       queryParams = { dashboardUser: user._id, userEmail: user.email };
-      console.log("useRealTime: Owner criteria met.");
+      // console.log("useRealTime: Owner criteria met.");
     } else if (userType === 'staff' && user && user.id && user.websiteId) {
       connectionCriteriaMet = true;
       queryParams = { staffId: user.id, websiteId: user.websiteId, isStaff: 'true', staffName: user.name || 'Unknown Staff' };
-      console.log("useRealTime: Staff criteria met.");
+      // console.log("useRealTime: Staff criteria met.");
     } else {
-      console.log("useRealTime: Connection criteria NOT met for user type:", userType, "User data:", user);
+      // console.log("useRealTime: Connection criteria NOT met for user type:", userType, "User data:", user);
     }
 
     if (!connectionCriteriaMet) {
       // If criteria are not met, ensure no socket is active from previous states
       if (socketRef.current) {
-        console.log("useRealTime: Criteria unmet, ensuring socket disconnect.");
+        // console.log("useRealTime: Criteria unmet, ensuring socket disconnect.");
         socketRef.current.disconnect(); // This will trigger 'disconnect' handler and cleanup
         socketRef.current = null;
       }
@@ -123,11 +123,11 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
     if (!currentSocketInstance || !currentSocketInstance.connected || currentSocketInstance.io.opts.query.dashboardUser !== queryParams.dashboardUser || currentSocketInstance.io.opts.query.staffId !== queryParams.staffId) {
         // If no socket, or if current socket's query params are different (e.g., user changed), or if it's explicitly disconnected, create new
         if (currentSocketInstance) {
-            console.log("useRealTime: User/type changed or existing socket stale, disconnecting old socket before new one.");
+            // console.log("useRealTime: User/type changed or existing socket stale, disconnecting old socket before new one.");
             currentSocketInstance.disconnect(); // Clean up old socket explicitly
             currentSocketInstance = null;
         }
-        console.log("useRealTime: Creating new Socket.IO instance for connection.");
+        // console.log("useRealTime: Creating new Socket.IO instance for connection.");
         currentSocketInstance = io(`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}`, {
             query: queryParams,
             reconnection: false, // We handle reconnection logic manually
@@ -136,11 +136,11 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
         socketRef.current = currentSocketInstance;
     } else if (currentSocketInstance && !currentSocketInstance.connected && !isAttemptingConnection) {
         // If socket instance exists but is disconnected and we're not already trying to connect, connect it.
-        console.log("useRealTime: Existing socket instance found but disconnected, attempting to connect.");
+        // console.log("useRealTime: Existing socket instance found but disconnected, attempting to connect.");
         currentSocketInstance.connect(); // This will trigger the 'connect' event listener if successful
         if (isMounted.current) setIsAttemptingConnection(true);
     } else {
-        console.log("useRealTime: Socket instance already in desired state (connected or attempting).");
+        // console.log("useRealTime: Socket instance already in desired state (connected or attempting).");
     }
 
     // --- Attach Event Listeners (Only attach once per socket instance) ---
@@ -150,7 +150,7 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
         sock.off(); // Remove all old listeners to prevent duplicates for this socket instance
         
         sock.on("connect", () => {
-            console.log(`useRealTime: ${userType} connected to real-time server`);
+            // console.log(`useRealTime: ${userType} connected to real-time server`);
             if (isMounted.current) {
                 setIsCurrentlyConnected(true);
                 setIsAttemptingConnection(false);
@@ -163,19 +163,19 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
         });
 
         sock.on("disconnect", (reason) => {
-            console.log(`useRealTime: ${userType} disconnected from real-time server:`, reason);
+            // console.log(`useRealTime: ${userType} disconnected from real-time server:`, reason);
             if (isMounted.current) setIsCurrentlyConnected(false); // Immediately reflect disconnected state
 
             // Only attempt reconnect if it's an unexpected disconnect
             if (reason !== 'io client disconnect' && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-                console.log(`useRealTime: Disconnect reason: ${reason}. Retrying connection... Attempt #${reconnectAttemptsRef.current + 1}`);
+                // console.log(`useRealTime: Disconnect reason: ${reason}. Retrying connection... Attempt #${reconnectAttemptsRef.current + 1}`);
                 if (isMounted.current) setIsAttemptingConnection(true); // Indicate we are retrying
                 reconnectAttemptsRef.current++;
                 reconnectTimerRef.current = setTimeout(() => {
                     sock.connect(); // Try to connect the existing socket instance
                 }, RECONNECT_INTERVAL_MS * reconnectAttemptsRef.current); // Backoff strategy
             } else {
-                console.log(`useRealTime: Deliberate disconnect (${reason}) or max attempts reached.`);
+                // console.log(`useRealTime: Deliberate disconnect (${reason}) or max attempts reached.`);
                 if (isMounted.current) {
                     setIsAttemptingConnection(false); // Stop showing connecting
                     setIsCurrentlyConnected(false); // Ensure disconnected state
@@ -191,18 +191,18 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
         });
 
         sock.on("connect_error", (error) => {
-            console.error(`useRealTime: Socket connect error:`, error);
+            // console.error(`useRealTime: Socket connect error:`, error);
             if (isMounted.current) setIsCurrentlyConnected(false); // Immediately reflect disconnected state
 
             if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-                console.log(`useRealTime: Connect error. Retrying connection... Attempt #${reconnectAttemptsRef.current + 1}`);
+                // console.log(`useRealTime: Connect error. Retrying connection... Attempt #${reconnectAttemptsRef.current + 1}`);
                 if (isMounted.current) setIsAttemptingConnection(true); // Indicate retrying
                 reconnectAttemptsRef.current++;
                 reconnectTimerRef.current = setTimeout(() => {
                     sock.connect(); // Try to connect the existing socket instance
                 }, RECONNECT_INTERVAL_MS * reconnectAttemptsRef.current); // Backoff strategy
             } else {
-                console.log(`useRealTime: Max reconnect attempts (${MAX_RECONNECT_ATTEMPTS}) reached for connect_error.`);
+                // console.log(`useRealTime: Max reconnect attempts (${MAX_RECONNECT_ATTEMPTS}) reached for connect_error.`);
                 if (isMounted.current) {
                     setIsAttemptingConnection(false);
                     toast.error(`❌ Connection failed after multiple attempts.`);
@@ -217,10 +217,10 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
             if (message && message.sender === "user") {
                 newNotification = { id: Date.now(), type: "message", title: `New message in ${websiteName}`, description: `${chatName}: ${message.text.substring(0, 50)}...`, timestamp: new Date(), chatId, websiteName, };
 
-                console.log("Message", message)
+                // console.log("Message", message)
                 if(!message.silent) {
                   if(user.preferences) {
-                    console.log(user.preferences)
+                    // console.log(user.preferences)
                     if(user.preferences.sound) {
                       playNotificationSound()
                     }
@@ -290,7 +290,7 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
         setupSocketListeners(currentSocketInstance); // Setup listeners for the current instance
         // Initiate connection if not already connected (e.g., initial load or after a manual disconnect/cleanup)
         if (!currentSocketInstance.connected && !isAttemptingConnection) {
-            console.log("useRealTime: Initializing connection attempt for the socket instance.");
+            // console.log("useRealTime: Initializing connection attempt for the socket instance.");
             currentSocketInstance.connect(); // Trigger connect
             if (isMounted.current) setIsAttemptingConnection(true);
         }
@@ -299,12 +299,12 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
 
     // Cleanup function for this useEffect: runs on unmount or when dependencies change significantly
     return () => {
-      console.log("useRealTime: Main useEffect cleanup function triggered.");
+      // console.log("useRealTime: Main useEffect cleanup function triggered.");
       clearReconnectMechanisms(); // Always clear any pending timers on cleanup
 
       if (socketRef.current) {
         // Disconnect with 'io client disconnect' reason which signals no auto-retry
-        console.log("useRealTime: Disconnecting socket on cleanup.");
+        // console.log("useRealTime: Disconnecting socket on cleanup.");
         socketRef.current.disconnect();
         socketRef.current = null; // Clear ref
       }
@@ -330,7 +330,7 @@ export function useRealTime({ user, userType }: UseRealTimeProps = { user: null,
   // isLoading for UI: True during the initial connection handshake or active retry backoff, before actual connection.
   const isLoadingForUI = isAttemptingConnection && !isCurrentlyConnected;
 
-  console.log("useRealTime: Rendering. isConnectedForUI:", isConnectedForUI, "isLoadingForUI:", isLoadingForUI, "isCurrentlyConnected:", isCurrentlyConnected, "isAttemptingConnection:", isAttemptingConnection, "Attempts:", reconnectAttemptsRef.current);
+  // console.log("useRealTime: Rendering. isConnectedForUI:", isConnectedForUI, "isLoadingForUI:", isLoadingForUI, "isCurrentlyConnected:", isCurrentlyConnected, "isAttemptingConnection:", isAttemptingConnection, "Attempts:", reconnectAttemptsRef.current);
 
   return {
     socket,

@@ -90,7 +90,8 @@ interface Website {
     predefinedAnswers: string
     createdAt: string
     updatedAt: string
-    aiSummary?: string
+    aiSummary?: string,
+    faqs: any;
 }
 
 interface AIManagementProps {

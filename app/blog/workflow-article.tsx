@@ -250,7 +250,7 @@ export function WorkflowArticle() {
             <div className="flex flex-wrap items-center gap-6 text-emerald-100">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
-                <span>Free 14-day trial</span>
+                <span>Free 3-day trial</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />

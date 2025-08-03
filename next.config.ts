@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
       headers: [
         {
           key: 'Content-Security-Policy',
-          value: "frame-ancestors https://*.myshopify.com https://admin.shopify.com;",
+          value: "frame-ancestors https://*.myshopify.com https://admin.shopify.com https://widjet.chatboth.com http://127.0.0.1:5500/widjet",
         },
       ],
     },

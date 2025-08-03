@@ -16,11 +16,13 @@ import {
   Code,
   Send,
   MessageCircle,
+  Palette, // Import Palette icon
 } from "lucide-react"
 import { WebsiteSettings } from "./website-settings"
 import { StaffManagement } from "./staff-management"
 import { AIManagement } from "./ai-management"
 import { WebsiteIntegrationTab } from "./integration-tab" // Import the new tab component
+import { ChatbotAppearance } from "./chatbot-appearance" // Import the new appearance component
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -62,6 +64,7 @@ interface Website {
     allowedPaths?: string[]
     disallowedPaths?: string[]
     language?: string
+    dynamiclyAdaptToLanguage?: boolean
     dailyTokenLimit?: number | null
   }
   createdAt: string
@@ -70,6 +73,13 @@ interface Website {
   freeTrialPlanId?: string
   freeTrialEnded?: boolean
   exlusiveCustomer?: boolean
+  faqs: FAQ[]; // Add faqs to the Website interface
+}
+
+interface FAQ {
+  title: string;
+  description: string;
+  answer: string;
 }
 
 interface PlanInfo {
@@ -277,7 +287,7 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
 
       {/* Tabs Section (Immediately visible) */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm">
+        <TabsList className="grid w-full grid-cols-6 bg-slate-100 p-1 rounded-2xl h-auto shadow-sm">
           {" "}
           <TabsTrigger
             value="overview"
@@ -310,6 +320,15 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
             <div className="flex items-center space-x-2">
               <Code className="h-4 w-4" /> {/* Integration icon */}
               <span>Integration</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger
+            value="appearance" // New tab trigger for appearance
+            className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md py-2.5 px-3 text-sm font-semibold transition-all duration-200"
+          >
+            <div className="flex items-center space-x-2">
+              <Palette className="h-4 w-4" /> {/* Palette icon */}
+              <span>Appearance</span>
             </div>
           </TabsTrigger>
           <TabsTrigger
@@ -626,6 +645,22 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
         {/* New Tab Content for Integration (using the new component) */}
         <TabsContent value="integration" className="space-y-6 mt-6">
           <WebsiteIntegrationTab chatbotCode={website.chatbotCode} />
+        </TabsContent>
+
+        {/* New Tab Content for Appearance */}
+        <TabsContent value="appearance" className="mt-6">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center p-8 md:p-12 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-3xl shadow-lg">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  <p className="text-slate-600 text-base font-medium">Loading appearance settings...</p>
+                </div>
+              </div>
+            }
+          >
+            <ChatbotAppearance website={website} userId={userId} onUpdate={handleWebsiteUpdate} />
+          </Suspense>
         </TabsContent>
 
         {/* Tab Content for Website Settings */}

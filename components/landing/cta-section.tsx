@@ -57,7 +57,7 @@ export function CTASection() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-emerald-100 text-sm">
             <span>✓ No credit card required</span>
-            <span>✓ 14-day free trial</span>
+            <span>✓ 3-day free trial</span>
             <span>✓ Cancel anytime</span>
           </div>
         </div>

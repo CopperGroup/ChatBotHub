@@ -127,4 +127,210 @@
   .markdown-content a:hover {
     color: #059669; /* A slightly darker emerald for hover state (emerald-600) */
   }
+
+  .prose {
+    /* Basic text and line height */
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-size: 1rem; /* Equivalent to prose-base */
+    line-height: 1.75;
+    color: oklch(0.141 0.005 285.823); /* Equivalent to text-gray-900 or text-slate-800 */
+    max-width: 65ch; /* Common prose line width, adjust or remove if max-w-none is always used */
+  }
+
+  .dark .prose {
+    color: oklch(0.985 0 0); /* Equivalent to text-gray-100 for dark mode */
+  }
+
+  /* Headings */
+  .prose h1 {
+    font-size: 3em; /* Equivalent to text-5xl or larger */
+    font-weight: 800; /* Extra bold */
+    line-height: 1.1;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    color: inherit; /* Inherit text color from prose container */
+  }
+
+  .prose h2 {
+    font-size: 2.25em; /* Equivalent to text-4xl */
+    font-weight: 700; /* Bold */
+    line-height: 1.2;
+    margin-top: 1.3333333em;
+    margin-bottom: 0.8em;
+    color: inherit;
+  }
+
+  .prose h3 {
+    font-size: 1.75em; /* Equivalent to text-3xl */
+    font-weight: 700;
+    line-height: 1.25;
+    margin-top: 1em;
+    margin-bottom: 0.6em;
+    color: inherit;
+  }
+
+  .prose h4 {
+    font-size: 1.25em; /* Equivalent to text-xl */
+    font-weight: 700;
+    line-height: 1.5;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: inherit;
+  }
+
+  /* Paragraphs */
+  .prose p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  /* Links */
+  .prose a {
+    color: oklch(0.21 0.006 285.885); /* Example: Primary color from your theme */
+    text-decoration: underline;
+    font-weight: 500;
+  }
+  .prose a:hover {
+    color: oklch(0.141 0.005 285.823); /* Slightly darker on hover */
+  }
+
+  /* Lists */
+  .prose ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  .prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  .prose li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose li p { /* Paragraphs inside list items */
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+  }
+
+  /* Blockquotes */
+  .prose blockquote {
+    font-style: italic;
+    border-left: 0.25em solid oklch(0.92 0.004 286.32); /* border-border */
+    padding-left: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    color: oklch(0.552 0.016 285.938); /* muted-foreground */
+  }
+
+  .dark .prose blockquote {
+    border-left-color: oklch(1 0 0 / 10%); /* border-border in dark mode */
+    color: oklch(0.705 0.015 286.067); /* muted-foreground in dark mode */
+  }
+
+
+  /* Code Blocks */
+  .prose pre {
+    background-color: oklch(0.967 0.001 286.375); /* secondary background */
+    color: oklch(0.21 0.006 285.885); /* secondary-foreground */
+    padding: 0.75em 1em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+  }
+
+  .dark .prose pre {
+    background-color: oklch(0.274 0.006 286.033); /* secondary background dark */
+    color: oklch(0.985 0 0); /* secondary-foreground dark */
+  }
+
+  .prose code { /* Inline code */
+    background-color: oklch(0.967 0.001 286.375); /* muted background */
+    color: oklch(0.21 0.006 285.885); /* muted-foreground */
+    padding: 0.2em 0.4em;
+    border-radius: 0.3em;
+    font-size: 0.875em;
+  }
+
+  .dark .prose code {
+    background-color: oklch(0.274 0.006 286.033); /* muted background dark */
+    color: oklch(0.705 0.015 286.067); /* muted-foreground dark */
+  }
+
+  /* Horizontal Rule */
+  .prose hr {
+    margin-top: 3em;
+    margin-bottom: 3em;
+    border-width: 1px;
+    border-color: oklch(0.92 0.004 286.32); /* border-border */
+    border-style: solid;
+  }
+
+  .dark .prose hr {
+    border-color: oklch(1 0 0 / 10%);
+  }
+
+  /* Images */
+  .prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  /* Tables (basic styling) */
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+  .prose th, .prose td {
+    border: 1px solid oklch(0.92 0.004 286.32); /* border-border */
+    padding: 0.5em 0.75em;
+    text-align: left;
+  }
+  .prose th {
+    background-color: oklch(0.967 0.001 286.375); /* secondary background */
+    font-weight: 600;
+  }
+  .dark .prose th {
+    background-color: oklch(0.274 0.006 286.033); /* secondary background dark */
+  }
+
+  /* Specific styles for small prose (prose-sm) */
+  .prose.prose-sm {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.5714286;
+    max-width: 55ch; /* Smaller line width */
+  }
+  .prose.prose-sm h1 { font-size: 2em; }
+  .prose.prose-sm h2 { font-size: 1.5em; }
+  .prose.prose-sm h3 { font-size: 1.25em; }
+  .prose.prose-sm h4 { font-size: 1em; }
+  .prose.prose-sm ul, .prose.prose-sm ol { padding-left: 1.25em; }
+  .prose.prose-sm blockquote { padding-left: 0.75em; }
+  /* Add more specific prose-sm adjustments here */
+
+  /* Specific styles for dark mode invert (dark:prose-invert) */
+  .dark .prose.prose-invert h1,
+  .dark .prose.prose-invert h2,
+  .dark .prose.prose-invert h3,
+  .dark .prose.prose-invert h4,
+  .dark .prose.prose-invert strong {
+    color: oklch(0.985 0 0); /* text-white or text-gray-50 for headings/strong in dark mode */
+  }
+  .dark .prose.prose-invert code {
+    color: oklch(0.985 0 0); /* white/light gray for code in dark mode */
+  }
+  .dark .prose.prose-invert a {
+    color: oklch(0.6 0.118 184.704); /* chart-2 or similar light color for links in dark mode */
+  }
 }

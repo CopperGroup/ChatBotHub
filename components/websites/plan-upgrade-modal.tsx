@@ -257,7 +257,7 @@ export function PlanUpgradeModal({
             <div className="text-center mt-8 md:mt-12">
               <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl p-6 md:p-8 border border-slate-200 max-w-2xl mx-auto">
                 <p className="text-slate-700 mb-4 font-medium">
-                  All plans include a 14-day free trial. No credit card required.
+                  All plans include a 3-day free trial. No credit card required.
                 </p>
                 <p className="text-sm text-slate-600">
                   Need a custom solution with advanced integrations?{" "}

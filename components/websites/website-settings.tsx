@@ -1,3 +1,4 @@
+// components/website-settings.tsx (Modified)
 "use client"
 
 import { useState, useEffect } from "react"
@@ -24,6 +25,8 @@ import {
   Sparkles,
   Languages,
   HelpCircle,
+  FolderOpen, // New icon for FAQs
+  Trash2, // New icon for deleting FAQs
 } from "lucide-react"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
@@ -39,56 +42,69 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog" // Import Dialog components
+  DialogFooter,
+} from "@/components/ui/dialog"
+import dynamic from "next/dynamic";
+
+// Dynamically import RichTextEditor, ensuring it's only rendered on the client
+// The 'loading' option is optional, but good for UX.
+const RichTextEditor = dynamic(() => import("@/components/ui/rich-text-editor"), { // Corrected import path
+  ssr: false, // This is the crucial part: disable server-side rendering
+  loading: () => <Skeleton className="min-h-[150px] w-full rounded-lg" />, // Optional loading placeholder
+});
+interface FAQ {
+  title: string;
+  description: string;
+  answer: string;
+}
 
 interface Website {
-  _id: string
-  name: string
-  link: string
-  description: string
-  chatbotCode: string
-  chats: string[]
+  _id: string;
+  name: string;
+  link: string;
+  description: string;
+  chatbotCode: string;
+  chats: string[];
   plan: {
-    _id: string
-    name: string
-    description: string
-    priceMonthly: number
-    maxStaffMembers: number
-    allowAI: boolean
-    creditBoostMonthly: number
-  }
-  creditCount: number
-  staffMembers: string[]
+    _id: string;
+    name: string;
+    description: string;
+    priceMonthly: number;
+    maxStaffMembers: number;
+    allowAI: boolean;
+    creditBoostMonthly: number;
+  };
+  creditCount: number;
+  staffMembers: string[];
   preferences: {
     colors: {
-      gradient1: string
-      gradient2: string
-    }
-    header: string
-    allowAIResponses: boolean
-    allowedPaths?: string[]
-    disallowedPaths?: string[]
-    language?: string
-    dynamiclyAdaptToLanguage?: boolean // Added new field
-    dailyTokenLimit?: number | null
-  }
-  predefinedAnswers: string
-  createdAt: string
-  updatedAt: string
-  stripeSubscriptionId?: string
+      gradient1: string;
+      gradient2: string;
+    };
+    header: string;
+    allowAIResponses: boolean;
+    allowedPaths?: string[];
+    disallowedPaths?: string[];
+    language?: string;
+    dynamiclyAdaptToLanguage?: boolean;
+    dailyTokenLimit?: number | null;
+  };
+  predefinedAnswers: string;
+  createdAt: string;
+  updatedAt: string;
+  stripeSubscriptionId?: string;
+  faqs: FAQ[]; // Add faqs to the Website interface
 }
 
 interface WebsiteSettingsProps {
-  website: Website
-  onUpdate: (website: Website) => void
-  userId: string
+  website: Website;
+  onUpdate: (website: Website) => void;
+  userId: string;
 }
 
 function SettingsLoadingSkeleton() {
   return (
     <div className="bg-gradient-to-br from-slate-50/50 via-white to-slate-100/50">
-      {" "}
-      {/* Removed min-h-screen */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
           <Skeleton className="h-8 w-64 mb-3" />
@@ -99,16 +115,13 @@ function SettingsLoadingSkeleton() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            {[1, 2, 3, 4].map(
-              (
-                i, // Added one more skeleton for the new language card
-              ) => (
+            {[1, 2, 3, 4, 5].map(
+              (i) => (
                 <Skeleton key={i} className="h-96 w-full rounded-3xl" />
               ),
             )}
           </div>
           <div className="space-y-8">
-            {/* Sticky container for right column */}
             <div className="sticky top-4 space-y-8">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-64 w-full rounded-3xl" />
@@ -118,92 +131,100 @@ function SettingsLoadingSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   // States for general website info
-  const [name, setName] = useState(website.name)
-  const [link, setLink] = useState(website.link)
-  const [description, setDescription] = useState(website.description)
+  const [name, setName] = useState(website.name);
+  const [link, setLink] = useState(website.link);
+  const [description, setDescription] = useState(website.description);
 
   // States for chatbot preferences
-  const [header, setHeader] = useState(website?.preferences?.header || "Chat Support")
-  const [gradient1, setGradient1] = useState(website?.preferences?.colors?.gradient1 || "#10b981")
-  const [gradient2, setGradient2] = useState(website?.preferences?.colors?.gradient2 || "#059669")
-  const [selectedLanguage, setSelectedLanguage] = useState(website.preferences?.language || "en")
+  // const [header, setHeader] = useState(website?.preferences?.header || "Chat Support"); // MOVED
+  // const [gradient1, setGradient1] = useState(website?.preferences?.colors?.gradient1 || "#10b981"); // MOVED
+  // const [gradient2, setGradient2] = useState(website?.preferences?.colors?.gradient2 || "#059669"); // MOVED
+  const [selectedLanguage, setSelectedLanguage] = useState(website.preferences?.language || "en");
   const [dynamiclyAdaptToLanguage, setDynamiclyAdaptToLanguage] = useState(
     website.preferences?.dynamiclyAdaptToLanguage || false
-  ) // New state for dynamic language adaptation
+  );
 
   // States for paths
-  const [allowedPathsText, setAllowedPathsText] = useState(website.preferences?.allowedPaths?.join("\n") || "")
-  const [disallowedPathsText, setDisallowedPathsText] = useState(website.preferences?.disallowedPaths?.join("\n") || "")
+  const [allowedPathsText, setAllowedPathsText] = useState(website.preferences?.allowedPaths?.join("\n") || "");
+  const [disallowedPathsText, setDisallowedPathsText] = useState(website.preferences?.disallowedPaths?.join("\n") || "");
 
-  const [loading, setLoading] = useState(false)
-  const [isDataReady, setIsDataReady] = useState(false)
-  const [cancellingSubscription, setCancellingSubscription] = useState(false)
+  // States for FAQs
+  const [faqs, setFaqs] = useState<FAQ[]>(website.faqs || []);
+  const [editingFaqIndex, setEditingFaqIndex] = useState<number | null>(null);
+  const [currentFaq, setCurrentFaq] = useState<FAQ>({ title: "", description: "", answer: "" });
+  const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
+  const [cancellingSubscription, setCancellingSubscription] = useState(false);
 
   // Derived values for current plan usage
-  const currentStaffMembers = website.staffMembers.length
-  const maxStaffMembers = website.plan.maxStaffMembers
-  const aiEnabledByPlan = website.plan.allowAI
-  const currentCredits = website.creditCount
+  const currentStaffMembers = website.staffMembers.length;
+  const maxStaffMembers = website.plan.maxStaffMembers;
+  const aiEnabledByPlan = website.plan.allowAI;
+  const currentCredits = website.creditCount;
 
-  const isEnterprisePlan = website.plan.name.toLowerCase().includes("enterprise")
+  const isEnterprisePlan = website.plan.name.toLowerCase().includes("enterprise");
   // Check if predefined workflows exist
   const hasWorkflows = () => {
     try {
-      return website.predefinedAnswers.length > 0
+      return website.predefinedAnswers.length > 0;
     } catch {
-      return false
+      return false;
     }
-  }
+  };
 
   useEffect(() => {
     // Sync internal state with parent website prop changes
-    setName(website.name)
-    setLink(website.link)
-    setDescription(website.description)
-    setHeader(website.preferences?.header || "Chat Support")
-    setGradient1(website.preferences?.colors?.gradient1 || "#10b981")
-    setGradient2(website.preferences?.colors?.gradient2 || "#059669")
-    setSelectedLanguage(website.preferences?.language || "en")
-    setDynamiclyAdaptToLanguage(website.preferences?.dynamiclyAdaptToLanguage || false) // Sync new state
-    setAllowedPathsText(website.preferences?.allowedPaths?.join("\n") || "")
-    setDisallowedPathsText(website.preferences?.disallowedPaths?.join("\n") || "")
+    setName(website.name);
+    setLink(website.link);
+    setDescription(website.description);
+    // setHeader(website.preferences?.header || "Chat Support"); // MOVED
+    // setGradient1(website.preferences?.colors?.gradient1 || "#10b981"); // MOVED
+    // setGradient2(website.preferences?.colors?.gradient2 || "#059669"); // MOVED
+    setSelectedLanguage(website.preferences?.language || "en");
+    setDynamiclyAdaptToLanguage(website.preferences?.dynamiclyAdaptToLanguage || false);
+    setAllowedPathsText(website.preferences?.allowedPaths?.join("\n") || "");
+    setDisallowedPathsText(website.preferences?.disallowedPaths?.join("\n") || "");
+    setFaqs(website.faqs || []); // Sync FAQs
 
     // Simulate data loading
     setTimeout(() => {
-      setIsDataReady(true)
-    }, 500)
-  }, [website])
+      setIsDataReady(true);
+    }, 500);
+  }, [website]);
 
   // Helper to parse textarea input into an array of clean paths
   const parsePathsInput = (text: string): string[] => {
     return text
       .split("\n")
       .map((path) => path.trim())
-      .filter((path) => path.length > 0)
-  }
+      .filter((path) => path.length > 0);
+  };
 
   // Handle Website Settings Save
   const handleSave = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const updatedPreferences = {
-        header,
-        colors: {
-          gradient1,
-          gradient2,
-        },
+        ...website.preferences, // Keep existing preferences
+        // header, // MOVED
+        // colors: { // MOVED
+        //   gradient1, // MOVED
+        //   gradient2, // MOVED
+        // }, // MOVED
         allowedPaths: parsePathsInput(allowedPathsText),
         disallowedPaths: parsePathsInput(disallowedPathsText),
         language: selectedLanguage,
-        dynamiclyAdaptToLanguage, // Include new field in save payload
-      }
+        dynamiclyAdaptToLanguage,
+      };
 
       const res = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`, {
         method: "PUT",
@@ -213,59 +234,51 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
           link,
           description,
           preferences: updatedPreferences,
+          faqs: faqs, // Include FAQs in the save payload
           userId: userId,
         }),
-      })
+      });
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || "Failed to update website settings.")
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to update website settings.");
       }
 
-      const responseData = await res.json()
+      const responseData = await res.json();
       if (onUpdate) {
-        onUpdate(responseData.website)
+        onUpdate(responseData.website);
       }
-      toast.success("Settings saved successfully!")
+      toast.success("Settings saved successfully!");
     } catch (error: any) {
-      console.error("Error saving website settings:", error)
-      toast.error(error.message || "Failed to update website settings. Please try again.")
+      console.error("Error saving website settings:", error);
+      toast.error(error.message || "Failed to update website settings. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const resetToDefaults = () => {
-    setHeader("Chat Support")
-    setGradient1("#10b981")
-    setGradient2("#059669")
-    setSelectedLanguage("en")
-    setDynamiclyAdaptToLanguage(false) // Reset new state
-    setAllowedPathsText("")
-    setDisallowedPathsText("")
-    toast.info("Chatbot settings reset to defaults")
-  }
+    // setHeader("Chat Support"); // MOVED
+    // setGradient1("#10b981"); // MOVED
+    // setGradient2("#059669"); // MOVED
+    setSelectedLanguage("en");
+    setDynamiclyAdaptToLanguage(false);
+    setAllowedPathsText("");
+    setDisallowedPathsText("");
+    toast.info("Chatbot settings reset to defaults");
+  };
 
   const handleCancelSubscription = async () => {
     if (!website.stripeSubscriptionId) {
-      toast.info("No active subscription to cancel.")
-      return
+      toast.info("No active subscription to cancel.");
+      return;
     }
 
-    
-    // IMPORTANT: Do NOT use confirm() or window.confirm(). Use a custom modal UI instead.
-    // For this example, I'll simulate a confirmation with a direct return.
-    // In a real application, you would replace this with a proper modal.
-    // if (!window.confirm("Are you sure you want to cancel your subscription?")) {
-    //   return
-    // }
-    // As per instructions, replacing window.confirm with a message box or direct action for now.
-    // For a real app, integrate a proper shadcn/ui Dialog for confirmation.
-    toast.info("Please confirm cancellation via a dedicated modal (not implemented in this snippet).")
+    toast.info("Please confirm cancellation via a dedicated modal (not implemented in this snippet).");
     return;
 
 
-    setCancellingSubscription(true)
+    setCancellingSubscription(true);
     try {
       const res = await authFetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}/cancel-subscription`,
@@ -276,38 +289,75 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
             userId: userId,
           }),
         },
-      )
+      );
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || "Failed to cancel subscription.")
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to cancel subscription.");
       }
 
-      toast.success("Subscription cancellation initiated! Your plan will revert to Free.")
+      toast.success("Subscription cancellation initiated! Your plan will revert to Free.");
 
-      const updatedWebsiteRes = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`)
+      const updatedWebsiteRes = await authFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`);
       if (updatedWebsiteRes.ok) {
-        const updatedWebsiteData = await updatedWebsiteRes.json()
-        onUpdate(updatedWebsiteData)
+        const updatedWebsiteData = await updatedWebsiteRes.json();
+        onUpdate(updatedWebsiteData);
       } else {
-        console.error("Failed to refetch website after cancellation:", await updatedWebsiteRes.json())
+        console.error("Failed to refetch website after cancellation:", await updatedWebsiteRes.json());
       }
     } catch (error: any) {
-      console.error("Error canceling subscription:", error)
-      toast.error(error.message || "Failed to cancel subscription. Please try again.")
+      console.error("Error canceling subscription:", error);
+      toast.error(error.message || "Failed to cancel subscription. Please try again.");
     } finally {
-      setCancellingSubscription(false)
+      setCancellingSubscription(false);
     }
-  }
+  };
+
+  const handleAddFaq = () => {
+    setEditingFaqIndex(null);
+    setCurrentFaq({ title: "", description: "", answer: "" });
+    setIsFaqDialogOpen(true);
+  };
+
+  const handleEditFaq = (index: number) => {
+    setEditingFaqIndex(index);
+    setCurrentFaq({ ...faqs[index] });
+    setIsFaqDialogOpen(true);
+  };
+
+  const handleDeleteFaq = (index: number) => {
+    if (window.confirm("Are you sure you want to delete this FAQ?")) {
+      const updatedFaqs = faqs.filter((_, i) => i !== index);
+      setFaqs(updatedFaqs);
+      toast.success("FAQ deleted successfully.");
+    }
+  };
+
+  const handleSaveFaq = () => {
+    if (currentFaq.title.trim() === "" || currentFaq.answer.trim() === "") {
+      toast.error("FAQ Title and Answer cannot be empty.");
+      return;
+    }
+
+    let updatedFaqs;
+    if (editingFaqIndex !== null) {
+      updatedFaqs = faqs.map((faq, i) =>
+        i === editingFaqIndex ? currentFaq : faq
+      );
+    } else {
+      updatedFaqs = [...faqs, currentFaq];
+    }
+    setFaqs(updatedFaqs);
+    setIsFaqDialogOpen(false);
+    toast.success("FAQ saved successfully!");
+  };
 
   if (!isDataReady) {
-    return <SettingsLoadingSkeleton />
+    return <SettingsLoadingSkeleton />;
   }
 
   return (
     <div className="bg-gradient-to-br from-slate-50/50 via-white to-slate-100/50">
-      {" "}
-      {/* Removed min-h-screen */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -357,10 +407,10 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                   <Link
                     href={`/pricing?websiteId=${website._id.toString()}&currentPlanId=${website.plan._id.toString()}`}
                   >
-                      <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
-                        <Crown className="w-4 h-4 mr-2" />
-                        {isEnterprisePlan ? "Change Plan" : "Upgrade Plan"} {/* Conditional text */}
-                      </Button>
+                    <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
+                      <Crown className="w-4 h-4 mr-2" />
+                      {isEnterprisePlan ? "Change Plan" : "Upgrade Plan"}
+                    </Button>
                   </Link>
                   {website.stripeSubscriptionId && website.plan.name !== "Free" && (
                     <Button
@@ -454,114 +504,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
               </CardContent>
             </Card>
 
-            {/* Chatbot Configuration */}
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
-              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-2xl" />
-
-              <CardHeader className="pb-6 relative z-10">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center shadow-md">
-                    <MessageSquare className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold text-slate-900">Chatbot Configuration</CardTitle>
-                    <p className="text-slate-600 text-sm font-medium">Customize your chatbot behavior and appearance</p>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-8 relative z-10">
-                {/* Basic Settings (excluding language) */}
-                <div className="space-y-3">
-                  <Label className="text-slate-700 font-semibold text-sm">Chat Header Title</Label>
-                  <Input
-                    value={header}
-                    onChange={(e) => setHeader(e.target.value)}
-                    placeholder="e.g., Chat Support, Help Center"
-                    className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-medium"
-                  />
-                </div>
-
-                {/* Color Customization */}
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
-                      <Palette className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <h4 className="text-lg font-bold text-slate-900">Color Customization</h4>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label className="text-slate-700 font-semibold text-sm">Primary Color</Label>
-                      <div className="flex items-center space-x-3">
-                        <Input
-                          type="color"
-                          value={gradient1}
-                          onChange={(e) => setGradient1(e.target.value)}
-                          className="h-12 w-16 rounded-2xl border-2 border-slate-200/60 p-1 shadow-sm"
-                        />
-                        <Input
-                          type="text"
-                          value={gradient1}
-                          onChange={(e) => setGradient1(e.target.value)}
-                          className="flex-1 h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-mono text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-slate-700 font-semibold text-sm">Secondary Color</Label>
-                      <div className="flex items-center space-x-3">
-                        <Input
-                          type="color"
-                          value={gradient2}
-                          onChange={(e) => setGradient2(e.target.value)}
-                          className="h-12 w-16 rounded-2xl border-2 border-slate-200/60 p-1 shadow-sm"
-                        />
-                        <Input
-                          type="text"
-                          value={gradient2}
-                          onChange={(e) => setGradient2(e.target.value)}
-                          className="flex-1 h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-mono text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Color Preview */}
-                  <div className="p-6 bg-gradient-to-r from-slate-50/80 to-white/80 rounded-3xl border border-slate-200/60">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Label className="text-slate-700 font-semibold text-sm">Live Preview</Label>
-                      <div className="flex items-center space-x-1 text-emerald-600">
-                        <Sparkles className="w-3 h-3" />
-                        <span className="text-xs font-medium">Real-time</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-6">
-                      <div
-                        className="w-16 h-16 rounded-3xl shadow-lg"
-                        style={{
-                          background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
-                        }}
-                      />
-                      <div className="flex-1">
-                        <div
-                          className="px-6 py-3 rounded-2xl text-white text-sm font-semibold inline-block shadow-lg"
-                          style={{
-                            background: `linear-gradient(135deg, ${gradient1}, ${gradient2})`,
-                          }}
-                        >
-                          {header}
-                        </div>
-                        <p className="text-xs text-slate-500 mt-2 font-medium">Chat widget preview</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Chatbot Language Card (New) */}
+            {/* Chatbot Language Card */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
               <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-purple-400/10 to-violet-500/10 rounded-full blur-2xl" />
 
@@ -582,7 +525,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                 </div>
               </CardHeader>
               <CardContent className="relative z-10">
-                <div className="space-y-6"> {/* Changed from space-y-3 to space-y-6 for better spacing */}
+                <div className="space-y-6">
                   <div className="space-y-3">
                     <Label htmlFor="language" className="text-slate-700 font-semibold text-sm">
                       Select Language
@@ -614,11 +557,10 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     <Button
                       type="button"
                       onClick={() => setDynamiclyAdaptToLanguage(!dynamiclyAdaptToLanguage)}
-                      className={`h-10 px-4 rounded-full font-semibold transition-colors duration-200 ${
-                        dynamiclyAdaptToLanguage
-                          ? "bg-purple-600 text-white hover:bg-purple-700"
-                          : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                      }`}
+                      className={`h-10 px-4 rounded-full font-semibold transition-colors duration-200 ${dynamiclyAdaptToLanguage
+                        ? "bg-purple-600 text-white hover:bg-purple-700"
+                        : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                        }`}
                     >
                       {dynamiclyAdaptToLanguage ? "Enabled" : "Disabled"}
                     </Button>
@@ -634,7 +576,7 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
               <CardHeader className="pb-6 relative z-10">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-2xl flex items-center justify-center shadow-md">
-                    <MessageSquare className="w-6 h-6 text-indigo-600" /> {/* Changed icon to Globe */}
+                    <MessageSquare className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-slate-900 flex items-center">
@@ -664,8 +606,12 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                               <strong>Disallowed Paths</strong> specify where the widget <strong>should NOT</strong> appear.
                             </p>
                             <p>
-                              <strong>Allowed paths will always override disallowed paths.</strong> For example, if <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog</code> is
-                              allowed and <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog/private</code> is disallowed, the widget will still appear on <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog/private</code>
+                              <strong>Allowed paths will always override disallowed paths.</strong> For example, if{" "}
+                              <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog</code> is
+                              allowed and{" "}
+                              <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog/private</code>{" "}
+                              is disallowed, the widget will still appear on{" "}
+                              <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/blog/private</code>{" "}
                               because the allowed rule takes precedence.
                             </p>
                             <p>The path <code className="bg-neutral-300 px-1 py-0.5 rounded-xs shadow-md mx-0.5">/</code> corresponds to your website's home page.</p>
@@ -717,6 +663,155 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
                     </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* FAQs Card (NEW) */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-3xl relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-red-400/10 to-orange-500/10 rounded-full blur-2xl" />
+
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-orange-200 rounded-2xl flex items-center justify-center shadow-md">
+                    <HelpCircle className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-slate-900">
+                      Frequently Asked Questions
+                    </CardTitle>
+                    <p className="text-slate-600 text-sm font-medium">
+                      Manage common questions and their answers for your chatbot.
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-6 relative z-10">
+                {faqs.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>No FAQs added yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {faqs.map((faq, index) => (
+                      <div key={index} className="border border-slate-200 rounded-xl p-4 bg-slate-50/80 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-slate-900 text-lg flex-1">{faq.title}</h4>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditFaq(index)}
+                              className="text-blue-500 hover:text-blue-700 p-2 h-auto"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteFaq(index)}
+                              className="text-red-500 hover:text-red-700 p-2 h-auto"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        {faq.description && <p className="text-sm text-slate-600 mb-2">{faq.description}</p>}
+                        <div className="text-sm text-slate-800">
+                          <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleAddFaq}
+                  className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl shadow-lg hover:shadow-xl font-semibold transition-all duration-300"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New FAQ
+                </Button>
+
+                {/* FAQ Dialog */}
+                <Dialog open={isFaqDialogOpen} onOpenChange={setIsFaqDialogOpen}>
+                  {/* BEGIN: MODIFIED DIALOG CONTENT - Adjusted for centering with shadcn/ui */}
+                  <DialogContent className="fixed z-50 grid w-full gap-4 rounded-b-lg border bg-background p-6 shadow-lg sm:rounded-lg md:grid-cols-[1fr_2fr] lg:grid-cols-[1fr_2fr] max-w-screen-xl data-[state=open]:!max-w-[calc(100vw-2rem)] data-[state=open]:!max-h-[90vh] data-[state=open]:!translate-x-[-50%] data-[state=open]:!translate-y-[-50%] data-[state=open]:!left-[50%] data-[state=open]:!top-[50%] flex flex-col items-stretch justify-center max-h-[90vh] overflow-hidden">
+                    <DialogHeader className="mb-4 flex-shrink-0 md:col-span-3 lg:col-span-3"> {/* Span across all columns */}
+                      <DialogTitle className="text-slate-900 text-2xl font-bold">
+                        {editingFaqIndex !== null ? "Edit FAQ" : "Add New FAQ"}
+                      </DialogTitle>
+                      <DialogDescription className="text-slate-600">
+                        Enter the question, an optional short description, and the rich-text answer for your FAQ.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    {/* Main content area, now using flex for internal scrolling */}
+                    <div className="flex-grow flex flex-col md:flex-row gap-6 overflow-y-auto custom-scrollbar">
+                      {/* Left Column: Title, Description, and Action Buttons */}
+                      <div className="md:w-1/3 flex flex-col space-y-6 pr-4 md:border-r md:border-r-slate-200/60 flex-shrink-0"> {/* Adjusted width and added flex-shrink-0 */}
+                        <div className="space-y-2">
+                          <Label htmlFor="faq-title" className="text-slate-700 font-semibold text-sm">
+                            FAQ Title (Question)
+                          </Label>
+                          <Input
+                            id="faq-title"
+                            value={currentFaq.title}
+                            onChange={(e) => setCurrentFaq({ ...currentFaq, title: e.target.value })}
+                            placeholder="e.g., What is your return policy?"
+                            className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-orange-500 focus:ring-orange-500/20 rounded-2xl font-medium"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="faq-description" className="text-slate-700 font-semibold text-sm">
+                            Short Description (Optional)
+                          </Label>
+                          <Input
+                            id="faq-description"
+                            value={currentFaq.description}
+                            onChange={(e) => setCurrentFaq({ ...currentFaq, description: e.target.value })}
+                            placeholder="e.g., Information about product returns and exchanges."
+                            className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 focus:border-orange-500 focus:ring-orange-500/20 rounded-2xl font-medium"
+                          />
+                        </div>
+
+                        {/* Action buttons moved here */}
+                        <div className="flex flex-col space-y-3 mt-auto pt-6 border-t md:border-t-slate-200/60">
+                          <Button
+                            type="button"
+                            onClick={handleSaveFaq}
+                            className="h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl shadow-lg hover:shadow-xl font-semibold"
+                          >
+                            {editingFaqIndex !== null ? "Save Changes" : "Add FAQ"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsFaqDialogOpen(false)}
+                            className="h-12 border-slate-200/60 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-2xl bg-white/60 shadow-sm hover:shadow-md"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Rich Text Editor */}
+                      <div className="md:w-2/3 flex flex-col space-y-2 flex-grow min-h-0"> {/* Adjusted width and flex-grow */}
+                        <Label htmlFor="faq-answer" className="text-slate-700 font-semibold text-sm">
+                          FAQ Answer
+                        </Label>
+                        <div className="flex-grow min-h-0">
+                          <RichTextEditor
+                            content={currentFaq.answer}
+                            onContentChange={(html) => setCurrentFaq({ ...currentFaq, answer: html })}
+                            placeholder="Provide a detailed answer here..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                  {/* END: MODIFIED DIALOG CONTENT */}
+                </Dialog>
               </CardContent>
             </Card>
           </div>
@@ -799,5 +894,5 @@ export function WebsiteSettings({ website, onUpdate, userId }: WebsiteSettingsPr
         </div>
       </div>
     </div>
-  )
+  );
 }
