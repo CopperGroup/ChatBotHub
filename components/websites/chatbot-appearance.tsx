@@ -47,6 +47,50 @@ const getIconNameBySvg = (svgString: string | undefined): string | undefined => 
 };
 // --- END GLOBAL ICON DEFINITIONS & HELPERS ---
 
+const deafultTranslations = {
+    "We're here to help!": "Ми тут, щоб допомогти!",
+    "Welcome!": "Ласкаво просимо!",
+    "Please enter your email address to start a conversation with our support team.":
+      "Будь ласка, введіть свою електронну адресу, щоб почати розмову з нашою службою підтримки.",
+    "Enter your email address": "Введіть свою електронну адресу",
+    "Start Conversation": "Почати розмову",
+    "Your Conversations": "Ваші розмови",
+    "Select a chat or start new one": "Виберіть чат або почніть новий",
+    "No conversations yet": "Немає розмов",
+    'Click "Start New Conversation" to begin!': "Натисніть \"Почати нову розмову\", щоб почати!",
+    "Created:": "Створено:",
+    "Last Update:": "Останнє оновлення:",
+    "Click to view conversation": "Натисніть, щоб переглянути розмову",
+    "✨ Start New Conversation": "✨ Почати нову розмову",
+    "Live Chat": "Чат у реальному часі",
+    "Connected with support": "Підключено до підтримки",
+    "Support Team": "Команда підтримки",
+    "Type your message...": "Введіть ваше повідомление...",
+    "Send": "Надіслати",
+    "You": "Ви",
+    "Bot": "Бот",
+    "AI Assistant": "AI Асистент",
+    "Owner": "Власник",
+    "Error loading chat history.": "Помилка завантаження історії чату.",
+    "Error loading your chats.": "Помилка завантаження ваших чатів.",
+    "Error starting a new chat.": "Помилка початку нового чату.",
+    "This conversation has been closed.": "Цю розмову завершено.",
+    "Hi! What is your name?": "Привіт! Як вас звати?",
+    "open": "ВІДКРИТО",
+    "closed": "ЗАКРИТО",
+    "Please choose an option to continue.": "Будь ласка, виберіть варіант, щоб продовжити.",
+    "Ok, I already transferred your message to the staff team, they will join this chat soon.":
+      "Добре, я вже передав ваше повідомлення команді підтримки, вони скоро приєднаються до чату.",
+    "Error processing your message.": "Помилка обробки вашого повідомлення.",
+    "Powered by": "Працює на базі",
+    "Home": "Головна",
+    "Messages": "Повідомлення",
+    "Help": "Допомога",
+    "Search for help": "Пошук допомоги",
+    "Find answers to common questions and get help with using our platform.":
+      "Знайдіть відповіді на поширені запитання та отримайте допомогу щодо використання нашої платformи.",
+    "Help & Support": "Допомога та підтримка",
+  }
 
 // --- Interface Definitions (as in your last provided code) ---
 interface QuickActionButton {
@@ -202,6 +246,7 @@ export function ChatbotAppearance({ website, onUpdate, userId }: ChatbotAppearan
   const [isHelpSectionOpen, setIsHelpSectionOpen] = useState(true);
   const [isStaffInitialsOpen, setIsStaffInitialsOpen] = useState(true);
 
+  const [translations, setTranslations] = useState(deafultTranslations)
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -329,6 +374,29 @@ export function ChatbotAppearance({ website, onUpdate, userId }: ChatbotAppearan
     fetchStaff();
   }, [website._id, userId]);
 
+  useEffect(() => {
+    if (!website._id) return;
+
+    const fetchTranslations = async () => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/getInterfaceLanguage/${website.preferences.language}`);
+
+            if(!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to fetch translations');
+            }
+            const data = await res.json();
+            
+            setTranslations(data)
+        } catch (error: any) {
+            console.error("Error fetching translations:", error);
+            toast.error(error.message || "Failed to load translations.");
+        }
+    }
+
+    fetchTranslations()
+  }, [website._id])
+
 
   // Effect to trigger iframe re-render with debounce
   useEffect(() => {
@@ -410,50 +478,7 @@ export function ChatbotAppearance({ website, onUpdate, userId }: ChatbotAppearan
                 }))
             })
           },
-          translatedPhrases: {
-            "We're here to help!": "Ми тут, щоб допомогти!",
-            "Welcome!": "Ласкаво просимо!",
-            "Please enter your email address to start a conversation with our support team.":
-              "Будь ласка, введіть свою електронну адресу, щоб почати розмову з нашою службою підтримки.",
-            "Enter your email address": "Введіть свою електронну адресу",
-            "Start Conversation": "Почати розмову",
-            "Your Conversations": "Ваші розмови",
-            "Select a chat or start new one": "Виберіть чат або почніть новий",
-            "No conversations yet": "Немає розмов",
-            'Click "Start New Conversation" to begin!': "Натисніть \"Почати нову розмову\", щоб почати!",
-            "Created:": "Створено:",
-            "Last Update:": "Останнє оновлення:",
-            "Click to view conversation": "Натисніть, щоб переглянути розмову",
-            "✨ Start New Conversation": "✨ Почати нову розмову",
-            "Live Chat": "Чат у реальному часі",
-            "Connected with support": "Підключено до підтримки",
-            "Support Team": "Команда підтримки",
-            "Type your message...": "Введіть ваше повідомление...",
-            "Send": "Надіслати",
-            "You": "Ви",
-            "Bot": "Бот",
-            "AI Assistant": "AI Асистент",
-            "Owner": "Власник",
-            "Error loading chat history.": "Помилка завантаження історії чату.",
-            "Error loading your chats.": "Помилка завантаження ваших чатів.",
-            "Error starting a new chat.": "Помилка початку нового чату.",
-            "This conversation has been closed.": "Цю розмову завершено.",
-            "Hi! What is your name?": "Привіт! Як вас звати?",
-            "open": "ВІДКРИТО",
-            "closed": "ЗАКРИТО",
-            "Please choose an option to continue.": "Будь ласка, виберіть варіант, щоб продовжити.",
-            "Ok, I already transferred your message to the staff team, they will join this chat soon.":
-              "Добре, я вже передав ваше повідомлення команді підтримки, вони скоро приєднаються до чату.",
-            "Error processing your message.": "Помилка обробки вашого повідомлення.",
-            "Powered by": "Працює на базі",
-            "Home": "Головна",
-            "Messages": "Повідомлення",
-            "Help": "Допомога",
-            "Search for help": "Пошук допомоги",
-            "Find answers to common questions and get help with using our platform.":
-              "Знайдіть відповіді на поширені запитання та отримайте допомогу щодо використання нашої платformи.",
-            "Help & Support": "Допомога та підтримка",
-          },
+          translatedPhrases: translations,
           socketIoUrl: "http://localhost:3001",
           backendUrl: "http://localhost:3001",
         };
@@ -1037,7 +1062,7 @@ export function ChatbotAppearance({ website, onUpdate, userId }: ChatbotAppearan
                   className="flex items-center justify-between w-full p-4 bg-slate-100/80 border border-slate-200/60 rounded-2xl shadow-sm text-slate-700 hover:bg-slate-100 transition-all duration-200 cursor-pointer"
                 >
                   <span className="flex items-center space-x-2 font-semibold">
-                    <Users className="w-4 h-4 text-teal-500" /> Staff Initials Display
+                    <Users className="w-4 h-4 text-teal-500 mr-2" /> Staff Initials Display
                   </span>
                   <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isStaffInitialsOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -1413,11 +1438,11 @@ export function ChatbotAppearance({ website, onUpdate, userId }: ChatbotAppearan
               {/* Branding Option */}
               <div className="space-y-3">
                 <Label className="text-slate-700 font-semibold text-sm flex items-center">
-                  <Zap className="w-4 h-4 mr-2 text-yellow-500" /> Remove "Powered by" Branding
+                  <Zap className="w-4 h-4 mr-2 text-yellow-500" /> Our Branding
                 </Label>
                 <div className="flex items-center justify-between p-4 bg-slate-50/80 border border-slate-200/60 rounded-2xl">
                   <span className={`text-slate-900 font-medium ${!isProOrEnterprise ? 'opacity-50' : ''}`}>
-                    Show "Powered by YourProduct"
+                    Do not show "Powered by ChatBot Hub"
                   </span>
                   <Switch
                     checked={!branding}
