@@ -39,6 +39,16 @@ export function HeroSection() {
         <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-5 animate-blob animation-delay-1000"></div>
         <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-5 animate-blob animation-delay-3000"></div>
         <div className="absolute top-1/3 right-1/2 w-24 h-24 bg-cyan-200 rounded-full mix-blend-multiply filter blur-2xl opacity-5 animate-blob animation-delay-5000"></div>
+        <div
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(255,255,255,1) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255,255,255,1) 1px, transparent 1px)
+            `,
+            backgroundSize: '128px 128px',
+          }}
+        />
       </div>
 
       {/* On-page open animation for the main content */}
@@ -53,7 +63,7 @@ export function HeroSection() {
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <Badge className="mb-6 md:mb-8 bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border-emerald-300 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm animate-fade-in">
               <Zap className="w-4 h-4 mr-2 text-emerald-600" />
-              Elevate Your Customer Experience
+              Boost Sales with Smart Chat Automation
             </Badge>
           </motion.div>
 
@@ -61,9 +71,9 @@ export function HeroSection() {
             variants={itemVariants}
             initial="hidden"
             animate="visible"
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-white mb-6 md:mb-8 leading-tight tracking-tight"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 md:mb-8 leading-tight tracking-tight"
           >
-            Seamless Live Chat & AI Automation
+            Engage Customers Instantly with Live Chat & AI
           </motion.h1>
 
           <motion.p
@@ -72,8 +82,8 @@ export function HeroSection() {
             animate="visible"
             className="text-lg md:text-xl text-white/90 mb-10 md:mb-14 leading-relaxed max-w-3xl mx-auto"
           >
-            Empower your business with 24/7 real-time support, intelligent AI chatbots, and a no-code solution designed
-            for effortless customer engagement.
+              Deliver instant support, automate common questions, and close more sales with our AI-powered chatbot platform.
+              No code needed. Just plug it in and watch engagement grow.
           </motion.p>
 
           {/* Social Proof - Text based */}
@@ -81,14 +91,14 @@ export function HeroSection() {
             variants={itemVariants}
             initial="hidden"
             animate="visible"
-            className="text-white/80 text-sm md:text-base leading-relaxed mt-10 border-t border-white/20 pt-8 max-w-3xl mx-auto"
+            className="text-white/80 text-sm md:text-base leading-relaxed mt-10 pt-8 max-w-3xl mx-auto"
           >
             <p className="font-semibold mb-4">Join over 100+ businesses:</p>
             <ul className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
               <li className="flex items-center space-x-2">
                 <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <span>
-                  <strong>Trusted by hundreds websites</strong>
+                  <strong>Trusted by 100+ businesses worldwide</strong>
                 </span>
               </li>
               <li className="flex items-center space-x-2">
@@ -100,7 +110,7 @@ export function HeroSection() {
               <li className="flex items-center space-x-2">
                 <Zap className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <span>
-                  <strong>Guaranteed 99.9% uptime</strong>
+                  <strong>Reliable 99.9% uptime guarantee</strong>
                 </span>
               </li>
             </ul>
