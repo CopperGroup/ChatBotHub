@@ -56,16 +56,9 @@ const ICON_SVG_LOOKUP: { [key: string]: string } = {
   MessageSquare:
     '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" /></svg>',
   Link: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" /></svg>',
-  BookOpen:
-    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.03 0-1.979.317-2.816.894M12 6.042V6a7.5 7.5 0 0 1 7.5 7.5v1.5a2.25 2.25 0 0 1-2.25 2.25h-1.5a2.25 2.25 0 0 0-2.25 2.25m-1.5-1.5v2.25m-1.5-1.5v3.75V16.5m-1.5-1.5v3.75m-1.5-1.5h8.25m-3-9.75a3 3 0 0 1 3 3V16.5a3 3 0 0 1-3 3H7.5m.75-9.75h9.75" /></svg>',
-  Send: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>',
   HelpCircle:
     '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>',
   Home: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>',
-  ClipboardList:
-    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75 9.309-9.309a1.5 1.5 0 0 0 0-2.122 1.5 1.5 0 0 0-2.122 0L8.25 12.003m9.309 9.309a1.5 1.5 0 0 0 0-2.122 1.5 1.5 0 0 0-2.122 0M10.25 12.003L4.97 6.723M19.5 21l-9.309-9.309m0 0a3.375 3.375 0 1 1-4.773-4.773 3.375 3.375 0 0 1 4.773 4.773Z" /></svg>',
-  FileText:
-    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" height="16" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75v-1.5A1.125 1.125 0 0 1 9.375 12h1.5a3.375 3.375 0 0 0 3.375-3.375V7.5m0 4.5a3.375 3.375 0 0 1-3.375 3.375H9.375a1.125 1.125 0 0 0-1.125 1.125v1.5a3.375 3.375 0 0 0 3.375 3.375h1.5a1.125 1.125 0 0 0 1.125-1.125V19.5M19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75V19.5a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 19.5V6.75A2.25 2.25 0 0 0 19.5 4.5Z" /></svg>',
 };
 
 // This is the array of objects { name: string, svg: string } used to populate the Select
@@ -2067,7 +2060,7 @@ export function ChatbotAppearance({
             <iframe
               key={iframeKey}
               ref={iframeRef}
-              src="http://127.0.0.1:5500/widjet-chatbothub/index.html"
+              src="http://127.0.0.1:5500/widjet/"
               title="Chatbot Widget Preview"
               className={`w-full h-full border-0 rounded-2xl transition-opacity duration-300 ${
                 iframeLoading ? "opacity-0" : "opacity-100"
