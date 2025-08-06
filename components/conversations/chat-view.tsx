@@ -58,6 +58,9 @@ interface ChatViewProps {
     name: string;
     link: string;
     description: string;
+    plan: {
+      name: string
+    }
   };
   socket: any;
   onUpdateChats: (updater: (chats: any[]) => any[]) => void;
@@ -978,17 +981,19 @@ export function ChatView({
                   style={{ display: "none" }}
                   disabled={isInputDisabled}
                 />
-                <Button
-                  onClick={handleAttachButtonClick}
-                  variant="outline"
-                  size="icon"
-                  className={`rounded-xl shadow-lg transition-all min-w-[44px] ${
-                    isInputDisabled ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                  disabled={isInputDisabled}
-                >
-                  <Paperclip className="w-4 h-4 text-slate-600" />
-                </Button>
+                {["Pro", "Enterprise"].includes(website.plan.name) && (
+                  <Button
+                    onClick={handleAttachButtonClick}
+                    variant="outline"
+                    size="icon"
+                    className={`rounded-xl shadow-lg transition-all min-w-[44px] ${
+                      isInputDisabled ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={isInputDisabled}
+                  >
+                    <Paperclip className="w-4 h-4 text-slate-600" />
+                  </Button>
+                )}
                 <Button
                   onClick={handleMessageSend}
                   disabled={
