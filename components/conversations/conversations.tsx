@@ -244,8 +244,7 @@ export default function Conversations({ websiteId, chatId }: { websiteId: string
   console.log("ConversationsPage: Rendering with", chats.length, "chats, showChatView:", showChatView)
 
   return (
-    <DashboardLayout>
-      <div className="flex h-full">
+      <div className="flex h-[89vh]">
         <ConversationsList
           chats={chats}
           selectedChat={selectedChat}
@@ -264,6 +263,5 @@ export default function Conversations({ websiteId, chatId }: { websiteId: string
           isVisible={showChatView || !selectedChat} // Show on mobile when chat is selected or no chat selected
         />
       </div>
-    </DashboardLayout>
   )
 }

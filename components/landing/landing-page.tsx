@@ -13,7 +13,7 @@ import { WorkflowAutomationBanner } from "./new-feature"
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <Header />
       <main>
         <HeroSection />

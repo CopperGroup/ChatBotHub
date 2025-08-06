@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion" // Import motion, AnimatePresence, useScroll, useTransform
 
 const faqs = [
   {
@@ -18,7 +19,7 @@ const faqs = [
   {
     question: "What are Telegram live notifications?",
     answer:
-      "Get instant notifications directly to your Telegram account when new messages arrive, chats are assigned to you, or urgent customer issues need attention. This ensures you never miss important customer interactions, even when away from your desk.",
+    "Get instant notifications directly to your Telegram account when new messages arrive, chats are assigned to you, or urgent customer issues need attention. This ensures you never miss important customer interactions, even when away from your desk.",
   },
   {
     question: "Can I create custom workflows for my business?",
@@ -49,14 +50,30 @@ const faqs = [
 
 export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const sectionRef = useRef<HTMLDivElement>(null); // Create a ref for the section
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
   }
 
+  // Use Framer Motion's useScroll hook to track scroll progress within the section
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"], // Track from the moment the element enters the viewport to when it leaves
+  });
+
+  // Use useTransform to create the parallax effect for the background
+  // This will move the background from -50px to 50px as the user scrolls
+  const yBg = useTransform(scrollYProgress, [0, 1], ["-50px", "50px"]);
+
   return (
-    <section id="faq" className="py-16 md:py-20 bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <motion.section // Make the section a motion component
+      id="faq"
+      ref={sectionRef} // Attach the ref here
+      className="relative py-16 md:py-20 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden mt-10" // Added relative and overflow-hidden
+      style={{ y: yBg }} // Apply the parallax motion to the section's background
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"> {/* Added relative and z-10 */}
         <div className="text-center mb-12 md:mb-16">
           <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
             <HelpCircle className="w-6 h-6 md:w-8 md:h-8 text-white" />
@@ -82,40 +99,55 @@ export function FAQSection() {
 
         <div className="space-y-4 md:space-y-6">
           {faqs.map((faq, index) => (
-            <Card
+            <motion.div // Wrap each FAQ card in motion.div for entry animation
               key={index}
-              className="bg-white border-slate-200 hover:border-emerald-200 transition-all duration-200 shadow-sm hover:shadow-md"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: index * 0.05 }} // Staggered animation for cards
             >
-              <CardContent className="p-0">
-                <button
-                  onClick={() => toggleFAQ(index)}
-                  className="w-full text-left p-4 md:p-6 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset rounded-xl"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base md:text-lg font-semibold text-slate-900 pr-4 leading-relaxed">
-                      {faq.question}
-                    </h3>
-                    <div className="flex-shrink-0">
-                      {openIndex === index ? (
-                        <ChevronUp className="w-5 h-5 text-emerald-600" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-slate-500" />
-                      )}
+              <Card
+                className="bg-white border-slate-200 hover:border-emerald-200 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <CardContent className="p-0">
+                  <button
+                    onClick={() => toggleFAQ(index)}
+                    className="w-full text-left p-4 md:p-6 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset rounded-xl"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base md:text-lg font-semibold text-slate-900 pr-4 leading-relaxed">
+                        {faq.question}
+                      </h3>
+                      <div className="flex-shrink-0">
+                        {openIndex === index ? (
+                          <ChevronUp className="w-5 h-5 text-emerald-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-slate-500" />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </button>
-                {openIndex === index && (
-                  <div className="px-4 md:px-6 pb-4 md:pb-6">
-                    <div className="pt-2 border-t border-slate-100">
-                      <p className="text-slate-600 leading-relaxed text-sm md:text-base">{faq.answer}</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </button>
+                  <AnimatePresence> {/* Use AnimatePresence for exit animations */}
+                    {openIndex === index && (
+                      <motion.div // motion.div for expanding/collapsing answer
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="px-4 md:px-6 pb-4 md:pb-6 overflow-hidden" // overflow-hidden is crucial for height animation
+                      >
+                        <div className="pt-2 border-t border-slate-100">
+                          <p className="text-slate-600 leading-relaxed text-sm md:text-base">{faq.answer}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   )
 }

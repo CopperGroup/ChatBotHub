@@ -2,9 +2,27 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Zap, CheckCircle, MessageSquare } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, useScroll, useTransform } from "framer-motion"
+import { useRef } from "react"
 
 export function HeroSection() {
+  // Use a ref to track the scroll position of the section
+  const sectionRef = useRef(null)
+
+  // Use Framer Motion's useScroll hook to track scroll progress within the section
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"], // Track from the moment the element enters the viewport to when it leaves
+  })
+
+  // Use useTransform to create the parallax effect for the background image
+  // This will move the background from -100px to 100px as the user scrolls
+  const yBg = useTransform(scrollYProgress, [0, 1], ["-100px", "100px"])
+
+  // Use useTransform for a slightly faster parallax effect for the blobs
+  // This adds a more dynamic layered effect.
+  const yBlobs = useTransform(scrollYProgress, [0, 1], ["-150px", "150px"])
+
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -17,9 +35,12 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Full-width background image with tint */}
-      <div className="absolute inset-0 z-0">
+    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Parallax Background Image with Tint */}
+      <motion.div
+        className="absolute inset-0 z-0"
+        style={{ y: yBg }} // Apply the parallax motion to the background container
+      >
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
@@ -28,10 +49,13 @@ export function HeroSection() {
         />
         {/* Tint overlay */}
         <div className="absolute inset-0 bg-black/50" />
-      </div>
+      </motion.div>
 
-      {/* Dynamic Background Blobs - Increased size and blur for a grander aura */}
-      <div className="absolute inset-0 z-10 opacity-20">
+      {/* Dynamic Background Blobs with Parallax Effect */}
+      <motion.div
+        className="absolute inset-0 z-10 opacity-20"
+        style={{ y: yBlobs }} // Apply a slightly faster parallax motion to the blobs
+      >
         <div className="absolute -top-1/3 -left-1/3 w-[1200px] h-[1200px] bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-0"></div>
         <div className="absolute -bottom-1/3 -right-1/3 w-[1000px] h-[1000px] bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
         <div className="absolute top-1/4 left-1/4 w-[1100px] h-[1100px] bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
@@ -49,7 +73,7 @@ export function HeroSection() {
             backgroundSize: '128px 128px',
           }}
         />
-      </div>
+      </motion.div>
 
       {/* On-page open animation for the main content */}
       <motion.div
@@ -60,8 +84,8 @@ export function HeroSection() {
       >
         {/* Captivating Text Content */}
         <div className="pt-10 lg:pt-0">
-          <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <Badge className="mb-6 md:mb-8 bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border-emerald-300 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm animate-fade-in">
+          <motion.div variants={itemVariants} initial="hidden" animate="visible" className="opacity-0">
+            <Badge className="mb-6 md:mb-8 bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border-emerald-300 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm animate-fade-in opacity-0">
               <Zap className="w-4 h-4 mr-2 text-emerald-600" />
               Boost Sales with Smart Chat Automation
             </Badge>
@@ -82,8 +106,8 @@ export function HeroSection() {
             animate="visible"
             className="text-lg md:text-xl text-white/90 mb-10 md:mb-14 leading-relaxed max-w-3xl mx-auto"
           >
-              Deliver instant support, automate common questions, and close more sales with our AI-powered chatbot platform.
-              No code needed. Just plug it in and watch engagement grow.
+            Deliver instant support, automate common questions, and close more sales with our AI-powered chatbot platform.
+            No code needed. Just plug it in and watch engagement grow.
           </motion.p>
 
           {/* Social Proof - Text based */}

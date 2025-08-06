@@ -788,9 +788,54 @@ export function ChatbotAppearance({
     );
   };
 
+// --- New Helper Function for File Upload ---
+const uploadFile = async (file: File, websiteId: string) => {
+    const formData = new FormData();
+    formData.append("media", file);
+    formData.append("websiteId", websiteId); 
+  
+    try {
+      const res = await authFetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/files/public`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+  
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "File upload failed.");
+      }
+  
+      const data = await res.json();
+      return data.data.url;
+    } catch (error) {
+      console.error("Upload file error:", error);
+      throw error;
+    }
+  };
+  
+  // --- Modified handleSaveAppearance function ---
   const handleSaveAppearance = async () => {
     setButtonLoading(true);
     try {
+      let finalLogoUrl = website?.preferences?.logoUrl || "./logo.png";
+      let finalBgImageUrl = website?.preferences?.bgImageUrl || "bg-image.png";
+  
+      // 1. Upload logo file if a new one was selected
+      if (logoInputRef.current?.files?.[0]) {
+        toast.info("Uploading logo...");
+        finalLogoUrl = await uploadFile(logoInputRef.current.files[0], website._id);
+      }
+  
+      // 2. Upload background image file if a new one was selected
+      if (backgroundType === "image" && bgImageInputRef.current?.files?.[0]) {
+        toast.info("Uploading background image...");
+        finalBgImageUrl = await uploadFile(bgImageInputRef.current.files[0],  website._id);
+      }
+      
+      // 3. Construct the updated preferences object
       const updatedPreferences = {
         ...website.preferences,
         header,
@@ -809,16 +854,18 @@ export function ChatbotAppearance({
         branding,
         tabsMode: tabsMode,
         backgroundType: backgroundType,
+  
+        // Set final logo URL
+        logoUrl: finalLogoUrl === "./logo.png" ? undefined : finalLogoUrl,
+  
         // Conditionally save bgImageUrl or bgColor based on type
-        ...(backgroundType === "image" && {
-          bgImageUrl:
-            currentBgImageUrl === "./bg-image.png"
-              ? undefined
-              : currentBgImageUrl,
-        }),
-        ...(backgroundType === "solid" && { bgColor: singleBackgroundColor }),
-        // If 'gradient', neither bgImageUrl nor bgColor is passed (or they are explicitly undefined)
-
+        ...(backgroundType === "image"
+          ? { bgImageUrl: finalBgImageUrl === "bg-image.png" ? undefined : finalBgImageUrl }
+          : { bgImageUrl: undefined }),
+        ...(backgroundType === "solid"
+          ? { bgColor: singleBackgroundColor }
+          : { bgColor: undefined }),
+  
         ...(showQuickActions && {
           quickActions: quickActions.map((action) => ({
             text: action.text,
@@ -827,7 +874,7 @@ export function ChatbotAppearance({
             internalTab: action.internalTab,
             internalView: action.internalView,
             internalItemId: action.internalItemId,
-            icon: action.icon, // Icon is already SVG string
+            icon: action.icon,
           })),
         }),
         ...(showHomeTabHelpSection && {
@@ -840,7 +887,8 @@ export function ChatbotAppearance({
         showHomeTabHelpSection: showHomeTabHelpSection,
         showStaffInitials: showStaffInitials,
       };
-
+  
+      // 4. Send the updated preferences to the server
       const res = await authFetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/websites/${website._id}`,
         {
@@ -852,48 +900,36 @@ export function ChatbotAppearance({
           }),
         }
       );
-
+  
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(
           errorData.message || "Failed to update chatbot appearance."
         );
       }
-
+  
       const responseData = await res.json();
       if (onUpdate) {
         const updatedWebsite = {
           ...responseData.website,
           preferences: {
             ...responseData.website.preferences,
+            // Map quick actions and other nested objects
             quickActions: responseData.website.preferences.quickActions?.map(
               (action: any) => ({
                 ...action,
-                // When onUpdate is called, the icon received from DB will be SVG string, no mapping needed.
-                icon: action.icon, // Already SVG string from DB
+                icon: action.icon,
               })
             ),
-            showQuickActions: responseData.website.preferences.showQuickActions,
-            showHomeTabHelpSection:
-              responseData.website.preferences.showHomeTabHelpSection,
-            selectedHomeTabHelpArticles:
-              responseData.website.preferences.selectedHomeTabHelpArticles,
-            showStaffInitials:
-              responseData.website.preferences.showStaffInitials,
-            selectedStaffInitials:
-              responseData.website.preferences.selectedStaffInitials,
             heading: responseData.website.preferences.heading
               ? {
                   text: responseData.website.preferences.heading.text,
                   color: responseData.website.preferences.heading.color,
                   shadow: responseData.website.preferences.heading.shadow,
-                  shadowColor:
-                    responseData.website.preferences.heading.shadowColor,
+                  shadowColor: responseData.website.preferences.heading.shadowColor,
                   fontSize: responseData.website.preferences.heading.fontSize,
                 }
               : undefined,
-            backgroundType: responseData.website.preferences.backgroundType,
-            bgColor: responseData.website.preferences.bgColor,
           },
         };
         onUpdate(updatedWebsite);
@@ -903,7 +939,7 @@ export function ChatbotAppearance({
       console.error("Error saving chatbot appearance:", error);
       toast.error(
         error.message ||
-          "Failed to update chatbot appearance. Please try again."
+        "Failed to update chatbot appearance. Please try again."
       );
     } finally {
       setButtonLoading(false);

@@ -124,13 +124,14 @@ export function ConversationsList({
 
   return (
     <div
-      className={`w-full md:w-80 border-r border-slate-200 bg-white flex flex-col shadow-sm ${
+      className={`w-full h-full md:w-80 border-r border-slate-200 bg-white flex flex-col shadow-sm ${
         isVisible ? "flex" : "hidden md:flex"
       }`}
     >
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-        {isStaff && staffInfo ? (
+      
+        {isStaff && staffInfo && (
+          <div className="p-4 md:p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
           <div className="flex items-center justify-between">
             <div className="space-y-1 min-w-0 flex-1">
               <div className="flex items-center space-x-2">
@@ -149,16 +150,9 @@ export function ConversationsList({
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
-        ) : (
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Conversations</h2>
-            </div>
-            <p className="text-sm text-slate-600 truncate">{website?.name}</p>
           </div>
         )}
-      </div>
+      
 
       {/* Search */}
       <div className="p-4 border-b border-slate-100">
