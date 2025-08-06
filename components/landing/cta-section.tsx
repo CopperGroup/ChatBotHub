@@ -64,7 +64,7 @@ export function CTASection() {
           </motion.h2>
 
           <motion.p variants={itemVariants} className="text-lg md:text-xl text-emerald-100 mb-6 md:mb-8 max-w-3xl mx-auto leading-relaxed">
-            Join hundreds of thriving businesses leveraging our **AI-powered platform** for instant communications, seamless staff management, and **24/7 exceptional customer support**.
+            Join hundreds of thriving businesses leveraging our <strong>AI-powered platform</strong> for instant communications, seamless staff management, and <strong>24/7 exceptional customer support</strong>.
           </motion.p>
 
           {/* Feature Highlights */}
