@@ -584,6 +584,7 @@ export function ChatbotAppearance({
           theme: theme,
           branding: branding,
           tabsMode: tabsMode,
+          allowFileSharing: ["Pro", "Enterprise"].includes(website.plan.name),
           autoOpen: true, 
           logoUrl: currentLogoUrl,
           ...(bgColorToSend && { bgColor: bgColorToSend }),
@@ -2103,7 +2104,7 @@ const uploadFile = async (file: File, websiteId: string) => {
             <iframe
               key={iframeKey}
               ref={iframeRef}
-              src="http://127.0.0.1:5500/widjet/"
+              src={process.env.NEXT_PUBLIC_WIDGET_URL}
               title="Chatbot Widget Preview"
               className={`w-full h-full border-0 rounded-2xl transition-opacity duration-300 ${
                 iframeLoading ? "opacity-0" : "opacity-100"
