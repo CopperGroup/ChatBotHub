@@ -10,6 +10,7 @@ import { CTASection } from "./cta-section"
 import { Footer } from "./footer"
 import { Header } from "./header"
 import { WorkflowAutomationBanner } from "./new-feature"
+import { WorksWithSection } from "./works-with"
 
 export function LandingPage() {
   return (
@@ -19,6 +20,7 @@ export function LandingPage() {
         <HeroSection />
         {/* <WorkflowAutomationBanner/> */}
         <FeaturesSection />
+        <WorksWithSection/>
         <HowItWorksSection />
         <TestimonialsSection />
         <PricingSection />
