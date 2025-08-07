@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WebsiteAnalytics } from "./WebsiteAnalytics";
 
 interface Website {
   _id: string;
@@ -540,6 +541,14 @@ export function WebsiteDetails({ _website, userId }: WebsiteDetailsProps) {
             <span className="truncate font-medium">Website ID: {website._id}</span>
           </CardFooter>
         </Card>
+
+                {/* --- NEW ANALYTICS SECTION --- */}
+          <div className="mt-8">
+            <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-3xl p-6">
+                <h2 className="text-2xl font-bold text-slate-900 mb-6">Website Analytics</h2>
+                <WebsiteAnalytics websiteId={website._id.toString()} />
+            </Card>
+        </div>
       </div>
     </div>
   );
