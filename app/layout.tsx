@@ -10,8 +10,31 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Chat Bot Hub',
-  description: 'Ready Chat Bot for your website in 5 minutes!',
+  title: 'Live Chat Software for Websites | Chatboth.com',
+  description: 'Add live chat software to your website in just 5 minutes. Boost customer support, generate sales leads, and improve user engagement. Get started with a free trial today!',
+  openGraph: {
+    title: 'Live Chat Software for Websites | Chatboth.com',
+    description: 'Add live chat software to your website in just 5 minutes. Boost customer support, generate sales leads, and improve user engagement.',
+    url: 'https://www.chatboth.com',
+    siteName: 'Chatboth',
+    images: [
+      {
+        url: 'https://www.chatboth.com/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Chatboth - Live Chat Software Solution',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Live Chat Software for Websites | Chatboth.com',
+    description: 'Add live chat software to your website in just 5 minutes. Boost customer support, generate sales leads, and improve user engagement.',
+    creator: '@chat_bot_hub',
+    images: ['https://www.chatboth.com/opengraph-image.png'],
+  },
 }
 
 export default function RootLayout({
