@@ -40,6 +40,13 @@ export function CreateWebsiteForm({ userId, userWebsitesCount }: CreateWebsiteFo
     setError("")
     setChatbotCodeSnippet(null) // Clear snippet on new submission attempt
 
+    // Field validation to prevent empty submissions
+    if (!formData.name || !formData.link || !formData.description) {
+      setError("All fields are required. Please fill them out before submitting.")
+      setLoading(false)
+      return
+    }
+
     const generatedChatbotCode =
       Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 
@@ -148,9 +155,9 @@ export function CreateWebsiteForm({ userId, userWebsitesCount }: CreateWebsiteFo
           <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Globe className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Create New Website</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Linking Your Website to Our Widget Hub</h1>
           <p className="text-slate-600 max-w-2xl mx-auto text-base">
-            Add your website to start using our AI-powered chatbot and customer support system
+            Add your website details below to get started with our AI-powered chatbot and customer support system.
           </p>
         </div>
 
@@ -160,10 +167,11 @@ export function CreateWebsiteForm({ userId, userWebsitesCount }: CreateWebsiteFo
             <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-green-500/10 rounded-full blur-2xl" />
             <CardHeader className="pb-6 relative z-10">
               <CardTitle className="text-xl font-bold text-slate-900">Website Details</CardTitle>
-              <p className="text-slate-600 text-sm font-medium">Provide basic information about your website</p>
+              <p className="text-slate-600 text-sm font-medium">Let's get some basic info about your site</p>
+              <p className="text-xs text-slate-500 font-medium">Don't worry, you can always change these details later.</p>
             </CardHeader>
             <CardContent className="space-y-6 relative z-10">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <div className="space-y-3">
                   <Label htmlFor="name" className="text-slate-700 font-semibold text-sm">
                     Website Name
@@ -183,6 +191,7 @@ export function CreateWebsiteForm({ userId, userWebsitesCount }: CreateWebsiteFo
                   <Label htmlFor="link" className="text-slate-700 font-semibold text-sm">
                     Website URL
                   </Label>
+                  <p className="text-sm text-slate-500 font-normal mt-1">The full address of your website (e.g., https://www.example.com).</p>
                   <Input
                     id="link"
                     type="url"
@@ -194,21 +203,22 @@ export function CreateWebsiteForm({ userId, userWebsitesCount }: CreateWebsiteFo
                     className="h-12 bg-slate-50/80 border-slate-200/60 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl font-medium"
                   />
                 </div>
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="description" className="text-slate-700 font-semibold text-sm">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Brief description of your website and what it offers..."
-                  required
-                  rows={4}
-                  className="bg-slate-50/80 border-slate-200/60 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl resize-none font-medium"
-                />
+                <div className="space-y-3">
+                  <Label htmlFor="description" className="text-slate-700 font-semibold text-sm">
+                    Description
+                  </Label>
+                  <p className="text-sm text-slate-500 font-normal mt-1">This will be passed to our AI services, allowing our agent to provide better, more accurate information to your users.</p>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Brief description of your website and what it offers..."
+                    required
+                    rows={4}
+                    className="bg-slate-50/80 border-slate-200/60 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-2xl resize-none font-medium"
+                  />
+                </div>
               </div>
               {error && (
                 <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-red-100 rounded-2xl shadow-sm">
